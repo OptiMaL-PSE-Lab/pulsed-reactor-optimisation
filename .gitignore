@@ -1,7 +1,7 @@
 literature/
 slides/
 preprint/
-data/
 paper/
+data/helical_coil_data.xlsx
 .pre-commit-config.yaml
 .flake8
