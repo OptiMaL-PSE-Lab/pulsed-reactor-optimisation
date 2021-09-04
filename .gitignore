@@ -1,6 +1,7 @@
 literature/
 slides/
 preprint/
+data/
 paper/
 .pre-commit-config.yaml
 .flake8
