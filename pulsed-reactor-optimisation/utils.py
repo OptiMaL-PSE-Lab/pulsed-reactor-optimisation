@@ -15,3 +15,9 @@ def read_data():
 def discretise_design(dataframe):
     dataframe["Design"] = int(np.round((dataframe["Design"]), 0))
     return dataframe
+
+
+def CFD_function(inputs):
+    # code to evaluate CFD here
+    target = 0
+    return target

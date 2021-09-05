@@ -1,5 +1,6 @@
 from bayes_opt import BayesianOptimization, UtilityFunction
-from utils import read_data, discretise_design
+import numpy as np
+from utils import read_data, discretise_design, CFD_function
 
 data = read_data()  # reading data from csv
 inputs = data[
@@ -13,7 +14,7 @@ outputs = outputs.values[:, 0]  # producing a list of outputs
 utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)
 # setting up the optimisation problem
 optimizer = BayesianOptimization(
-    f=None,
+    f=CFD_function,
     pbounds={
         "Design": (1, 6),
         "Dt (mm)": (5, 7.5),
@@ -32,8 +33,13 @@ optimizer = BayesianOptimization(
 for i in range(len(outputs)):
     optimizer.register(params=inputs[i], target=outputs[i])
 
-# obtaining the next suggested point
-next_point = optimizer.suggest(utility)
-
-# discretising the design variable
-next_point = discretise_design(next_point)
+while True:
+    # obtaining the next suggested point
+    next_point = optimizer.suggest(utility)
+    # discretising the design variable
+    next_point = discretise_design(next_point)
+    # evaluating the set of inputs
+    output = CFD_function(next_point)
+    print("Current objective function: ", np.round(output, 3))
+    # adding the point and its output to the GP
+    optimizer.register(params=next_point, target=output)
