@@ -5,3 +5,4 @@ paper/
 data/helical_coil_data.xlsx
 .pre-commit-config.yaml
 .flake8
+*__pycache__

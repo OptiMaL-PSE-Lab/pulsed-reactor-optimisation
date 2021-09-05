@@ -67,6 +67,7 @@ dependencies:
   - pip:
     - absl-py==0.13.0
     - backports-entry-points-selectable==1.1.0
+    - bayesian-optimization==1.2.0
     - cfgv==3.3.1
     - distlib==0.3.2
     - filelock==3.0.12
@@ -75,6 +76,7 @@ dependencies:
     - iniconfig==1.1.1
     - jax==0.2.20
     - jaxlib==0.1.71
+    - joblib==1.0.1
     - nodeenv==1.6.0
     - opt-einsum==3.3.0
     - packaging==21.0
@@ -84,6 +86,8 @@ dependencies:
     - py==1.10.0
     - pytest==6.2.5
     - pyyaml==5.4.1
+    - scikit-learn==0.24.2
     - scipy==1.7.1
+    - threadpoolctl==2.2.0
     - virtualenv==20.7.2
 prefix: /opt/miniconda3/envs/pulsed-reactor-optimisation_env
