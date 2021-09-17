@@ -57,4 +57,7 @@ def variable_suggestion():
     return
 
 
-variable_suggestion()
+try:
+    variable_suggestion()
+except ValueError:
+    print("ERROR: Please enter the latest CFD output into csv file")
