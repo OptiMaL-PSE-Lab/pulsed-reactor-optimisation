@@ -31,12 +31,12 @@ def variable_suggestion():
     optimizer = BayesianOptimization(
         f=CFD_function,
         pbounds={
-            "Design": (1, 6),
-            "Dt (mm)": (5, 7.5),
-            "Rc (mm)": (12.5, 32.5),
-            "P (mm)": (7.5, 12.5),
-            "V (mL)": (16, 18),
-            "Ren": (10, 50),
+            "Design": (1, 1),
+            "Dt (mm)": (5, 5),
+            "Rc (mm)": (12.5, 12.5),
+            "P (mm)": (10, 10),
+            "V (mL)": (16.48, 16.48),
+            "Ren": (5, 60),
             "f (Hz)": (0, 10),
             "xo (mm)": (0, 10),
         },
