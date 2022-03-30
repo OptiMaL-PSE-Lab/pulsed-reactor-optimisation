@@ -1,0 +1,153 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.5;
+
+deltaT          0.000001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.01;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           5.0;
+
+
+
+functions 
+{
+  #includeFunc  scalarTransport
+  scalar1
+  {
+    type scalarTransport;
+    libs ("libsolverFunctionObjects.so");
+  }
+  
+  vorticity1
+ {
+    // Mandatory entries (unmodifiable)
+    type        vorticity;
+    libs        ("fieldFunctionObjects.so");
+
+    // Optional (inherited) entries
+    field           U;
+    result          vorticityField;
+    region          region0;
+    enabled         true;
+    log             true;
+    timeStart       0.00;
+    timeEnd         0.15;
+    executeControl  adjustableRunTime;
+    executeInterval 0.01;
+    writeControl    adjustableRunTime;
+    writeInterval   0.01;
+  }
+  
+      massfraction
+   {
+       type  patchAverage; //patchIntegrate; //patchAverage;
+       functionObjectLibs
+        (
+           "libsimpleFunctionObjects.so"
+        );
+       verbose true;
+	   fields (s);
+       patches
+	   (
+           auto2
+        );
+       factor 1.0;
+       outputControl timeStep;
+       outputInterval 1;
+    }
+
+   surfaceFieldValue1
+   {
+      // Mandatory entries (unmodifiable)
+      type            surfaceFieldValue;
+      libs            (fieldFunctionObjects);
+
+      // Mandatory entries (runtime modifiable)
+      fields          (s);
+      operation       areaAverage;
+      regionType      patch;
+      name            auto2;
+
+      // Optional (inherited) entries
+      writeFields     false;
+      region          region0;
+      enabled         true;
+      log             true;
+      executeControl  timeStep;
+      executeInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
+	
+	velocity1
+   {
+       type  patchAverage; //patchIntegrate; //patchAverage;
+       functionObjectLibs
+        (
+           "libsimpleFunctionObjects.so"
+        );
+       verbose true;
+	   fields (U);
+       patches
+	   (
+           auto1
+		   auto2
+        );
+       factor 1.0;
+       outputControl timeStep;
+       outputInterval 1;
+    }
+}  
+
+libs (
+"libOpenFOAM.so"
+"libsimpleSwakFunctionObjects.so"
+"libswakFunctionObjects.so"
+"libgroovyBC.so"
+);
+
+
+
+// ************************************************************************* //
