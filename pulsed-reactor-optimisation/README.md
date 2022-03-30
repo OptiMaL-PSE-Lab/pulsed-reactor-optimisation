@@ -34,5 +34,5 @@ Running ```pulsed-reactor-optimisation/main.py``` will perform the Bayesian opti
 $ python pulsed-reactor-optimisation/main.py
 ```
 
-Author - Tom Savage, 05/09/2020
+Author - Tom Savage, 05/09/2021
 
