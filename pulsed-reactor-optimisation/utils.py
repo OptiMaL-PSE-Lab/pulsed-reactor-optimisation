@@ -4,7 +4,9 @@ import numpy as np
 
 def read_data():
     # reading csv file
-    dataframe = pd.read_csv("data/helical_coil_data_clean.csv")
+    dataframe = pd.read_csv(
+        "data/helical_coil_data_clean.csv"
+    )
     designs = dataframe["Design"].values
     # removing 'R' from design values
     designs = [int(i.split("R")[-1]) for i in designs]
