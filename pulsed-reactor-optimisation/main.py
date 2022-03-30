@@ -5,9 +5,7 @@ from utils import read_data, discretise_design, CFD_function
 
 def variable_suggestion():
     data = read_data()  # reading data from csv
-    generated_data = pd.read_csv(
-        "data/helical_coil_data_generated.csv"
-    )
+    generated_data = pd.read_csv("data/helical_coil_data_generated.csv")
     var_list = [
         "Design",
         "Dt (mm)",
@@ -54,9 +52,7 @@ def variable_suggestion():
     print(next_point)
     df = pd.DataFrame(next_point, index=[0])
     generated_data = generated_data.append(df)
-    generated_data.to_csv(
-        "data/helical_coil_data_generated.csv", index=False
-    )
+    generated_data.to_csv("data/helical_coil_data_generated.csv", index=False)
     return
 
 
