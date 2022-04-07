@@ -8,7 +8,6 @@ from PyFoam.Execution.AnalyzedRunner import AnalyzedRunner
 from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 import numpy as np
 from scipy.signal import find_peaks
-
 from numpy import linspace
 
 amp1 = linspace(0.002, 0.006, 3)
@@ -28,25 +27,25 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 solver = "pimpleFoam"
 
 for a in amp1:
-    os.mkdir("pimple-amp%.3f" % a)
-    os.mkdir("pimple-amp%.3f/0" % a)
-    os.mkdir("pimple-amp%.3f/constant" % a)
-    os.mkdir("pimple-amp%.3f/system" % a)
+    os.mkdir("cfd-code/pimple-amp%.3f" % a)
+    os.mkdir("cfd-code/pimple-amp%.3f/0" % a)
+    os.mkdir("cfd-code/pimple-amp%.3f/constant" % a)
+    os.mkdir("cfd-code/pimple-amp%.3f/system" % a)
 
-    from_directory = "pimple/0"
-    to_directory = "pimple-amp%.3f/0" % a
+    from_directory = "cfd-code/pimple/0"
+    to_directory = "cfd-code/pimple-amp%.3f/0" % a
     copy_tree(from_directory, to_directory)
 
-    from_directory = "pimple/constant"
-    to_directory = "pimple-amp%.3f/constant" % a
+    from_directory = "cfd-code/pimple/constant"
+    to_directory = "cfd-code/pimple-amp%.3f/constant" % a
     copy_tree(from_directory, to_directory)
 
-    from_directory = "pimple/system"
-    to_directory = "pimple-amp%.3f/system" % a
+    from_directory = "cfd-code/pimple/system"
+    to_directory = "cfd-code/pimple-amp%.3f/system" % a
 
     copy_tree(from_directory, to_directory)
 
-    Newcase = "pimple-amp%.3f" % a
+    Newcase = "cfd-code/pimple-amp%.3f" % a
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
     velBC["boundaryField"]["auto1"]["variables"][1] = '"amp= %.3f;"' % a
@@ -57,6 +56,7 @@ for a in amp1:
         argv=[solver, "-case", Newcase],
         logname="Solution",
     )
+    print
     run.start()
 
     times = np.array(run.getAnalyzer("concentration").lines.getTimes())
