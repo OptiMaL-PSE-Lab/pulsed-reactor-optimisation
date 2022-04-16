@@ -1,16 +1,39 @@
+import numpy as np 
+from scipy.special import factorial
+from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
+from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
+import matplotlib.pyplot as plt 
 import os
 from os import path
 from distutils.dir_util import copy_tree
-from re import I
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
-from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 from PyFoam.Execution.AnalyzedRunner import AnalyzedRunner
-from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
-import numpy as np
 from scipy.signal import find_peaks
 from scipy.optimize import minimize
-from scipy.special import factorial
-import matplotlib.pyplot as plt
+from bayes_opt.logger import JSONLogger
+import shutil
+from datetime import datetime,timezone
+
+
+
+class newJSONLogger(JSONLogger) :
+      def __init__(self, path):
+            self._path=None
+            super(JSONLogger, self).__init__()
+            self._path = path if path[-5:] == ".json" else path + ".json"
+	    
+def calc_etheta(N,theta):
+	z = factorial(N-1)
+	xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
+	etheta_calc = xy / z
+	return etheta_calc
+
+def loss(N,theta,etheta):
+	for i in range(len(theta)):
+		etheta_calc = calc_etheta(N,theta[i])
+		error_sq = (etheta_calc - etheta[i])**2
+	return error_sq
+
 
 class CompactAnalyzer(BoundingLogAnalyzer):
     def __init__(self):
@@ -23,48 +46,52 @@ class CompactAnalyzer(BoundingLogAnalyzer):
         )
 
 
-solver = "pimpleFoam"
 
-for a in [0.003]:
+def eval_cfd(a):
 
-    os.mkdir("pimple-amp%.3f" % a)
-    os.mkdir("pimple-amp%.3f/0" % a)
-    os.mkdir("pimple-amp%.3f/constant" % a)
-    os.mkdir("pimple-amp%.3f/system" % a)
+    # creating solution folder
+    os.mkdir("pimple-amp%.6f" % a)
+    os.mkdir("pimple-amp%.6f/0" % a)
+    os.mkdir("pimple-amp%.6f/constant" % a)
+    os.mkdir("pimple-amp%.6f/system" % a)
 
+    # copying initial conditions
     from_directory = "pimple/0"
-    to_directory = "pimple-amp%.3f/0" % a
+    to_directory = "pimple-amp%.6f/0" % a
     copy_tree(from_directory, to_directory)
 
+    # copying constants
     from_directory = "pimple/constant"
-    to_directory = "pimple-amp%.3f/constant" % a
+    to_directory = "pimple-amp%.6f/constant" % a
     copy_tree(from_directory, to_directory)
 
+    # copying cfd system to solution
     from_directory = "pimple/system"
-    to_directory = "pimple-amp%.3f/system" % a
+    to_directory = "pimple-amp%.6f/system" % a
 
     copy_tree(from_directory, to_directory)
 
-    Newcase = "pimple-amp%.3f" % a
+    Newcase = "pimple-amp%.6f" % a
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
-    velBC["boundaryField"]["auto1"]["variables"][1] = '"amp= %.3f;"' % a
+    velBC["boundaryField"]["auto1"]["variables"][1] = '"amp= %.6f;"' % a
     velBC.writeFile()
 
     run = AnalyzedRunner(
         CompactAnalyzer(),
-        argv=[solver, "-case", Newcase],
+        argv=["pimpleFoam", "-case", Newcase],
         logname="Solution",
     )
-
+    
+    # running CFD 
     run.start()
 
+    
+    # post processing concentrations
     times = np.array(run.getAnalyzer("concentration").lines.getTimes())
     values = np.array(
         run.getAnalyzer("concentration").lines.getValues("averageConcentration_0")
     )
-
-    # times and values are numpy arrays, you can do whatever you want here
 
     time = np.array(times) # list of times
     value = np.array(values) # list of concentrations 
@@ -83,18 +110,7 @@ for a in [0.003]:
     etheta = tau * et
     theta = times / tau
 
-    def calc_etheta(N,theta):
-        z = factorial(N-1)
-        xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
-        etheta_calc = xy / z
-        return etheta_calc
-
-    def loss(N,theta,etheta):
-        for i in range(len(theta)):
-            etheta_calc = calc_etheta(N,theta[i])
-            error_sq = (etheta_calc - etheta[i])**2
-        return error_sq
-
+    # fitting value of N 
     N = minimize(loss,x0=35,bounds=((0.1,1000),),args=(theta,etheta)).x
 
     plt.figure()
@@ -105,4 +121,10 @@ for a in [0.003]:
     plt.plot(theta,etheta_calc,c='k',label='Dimensionless')
     plt.grid()
     plt.legend()
-    plt.savefig(str(a)+'.png')
+    now_utc = datetime.now(timezone.utc)
+    plt.savefig(str(now_utc)+'.pdf')
+
+
+    shutil.rmtree("pimple-amp%.6f" % a)
+    return np.random.uniform()
+#     return N
