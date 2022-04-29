@@ -8,13 +8,14 @@ from os import path
 from distutils.dir_util import copy_tree
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Execution.AnalyzedRunner import AnalyzedRunner
+from PyFoam.Execution.UtilityRunner import UtilityRunner
 from scipy.signal import find_peaks
 from scipy.optimize import minimize
 from bayes_opt.logger import JSONLogger
 import shutil
 from datetime import datetime,timezone
 
-
+np=8
 
 class newJSONLogger(JSONLogger) :
       def __init__(self, path):
@@ -41,7 +42,7 @@ class CompactAnalyzer(BoundingLogAnalyzer):
         self.addAnalyzer(
             "concentration",
             GeneralSimpleLineAnalyzer(
-                r"averageConcentration", r"^[ ]*areaAverage\(auto2\) of s = (.+)$"
+                r"averageConcentration", r"^[ ]*areaAverage\(outlet\) of s = (.+)$"
             ),
         )
 
@@ -50,36 +51,45 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 def eval_cfd(a):
 
     # creating solution folder
-    os.mkdir("pimple-amp%.6f" % a)
-    os.mkdir("pimple-amp%.6f/0" % a)
-    os.mkdir("pimple-amp%.6f/constant" % a)
-    os.mkdir("pimple-amp%.6f/system" % a)
+    os.mkdir("single-coil-amp%.6f" % a)
+    os.mkdir("single-coil-amp%.6f/0" % a)
+    os.mkdir("single-coil-amp%.6f/constant" % a)
+    os.mkdir("single-coil-amp%.6f/system" % a)
 
     # copying initial conditions
-    from_directory = "pimple/0"
-    to_directory = "pimple-amp%.6f/0" % a
+    from_directory = "single-coil/0"
+    to_directory = "single-coil-amp%.6f/0" % a
     copy_tree(from_directory, to_directory)
 
     # copying constants
-    from_directory = "pimple/constant"
-    to_directory = "pimple-amp%.6f/constant" % a
+    from_directory = "single-coil/constant"
+    to_directory = "single-coil-amp%.6f/constant" % a
     copy_tree(from_directory, to_directory)
 
     # copying cfd system to solution
-    from_directory = "pimple/system"
-    to_directory = "pimple-amp%.6f/system" % a
+    from_directory = "single-coil/system"
+    to_directory = "single-coil-amp%.6f/system" % a
 
     copy_tree(from_directory, to_directory)
 
-    Newcase = "pimple-amp%.6f" % a
+    Newcase = "single-coil-amp%.6f" % a
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
     velBC["boundaryField"]["auto1"]["variables"][1] = '"amp= %.6f;"' % a
     velBC.writeFile()
 
+    decomposer= UtilityRunner(
+    argv=["decomposePar", "-case",Newcase],
+    logname="decomposePar",
+    )
+    decomposer.start()
+
+    np_substring= "mpiexec" #if HPC
+    #np_substring= "mpirun -np {np}" if not HPC
+    run_command = f"{np_substring} pimpleFoam -parallel"
     run = AnalyzedRunner(
         CompactAnalyzer(),
-        argv=["pimpleFoam", "-case", Newcase],
+        argv=[run_command, "-case", Newcase],
         logname="Solution",
     )
     
@@ -125,6 +135,6 @@ def eval_cfd(a):
     plt.savefig(str(now_utc)+'.pdf')
 
 
-    shutil.rmtree("pimple-amp%.6f" % a)
+    shutil.rmtree("single-coil-amp%.6f" % a)
     return np.random.uniform()
 #     return N
