@@ -75,7 +75,7 @@ def eval_cfd(a):
     Newcase = "single-coil-amp%.6f" % a
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
-    velBC["boundaryField"]["auto1"]["variables"][1] = '"amp= %.6f;"' % a
+    velBC["boundaryField"]['inlet']["variables"][1] = '"amp= %.6f;"' % a
     velBC.writeFile()
 
     decomposer= UtilityRunner(
