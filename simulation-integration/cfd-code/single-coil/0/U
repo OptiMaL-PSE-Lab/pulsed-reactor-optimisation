@@ -26,9 +26,10 @@ boundaryField
 		type				groovyBC;
 		variables (
 			"freq=5;"
-			"amp=0.002;"
+			"amp=0.0020;"
+            "vel=0.010;"
 		);
-		valueExpression		"vector (0.01+(2*pi*freq*amp*sin(2*pi*freq*time())),0,0)";
+		valueExpression		"vector (vel+(2*pi*freq*amp*sin(2*pi*freq*time())),0,0)";
         value uniform      (0.01 0 0);
 
     }
