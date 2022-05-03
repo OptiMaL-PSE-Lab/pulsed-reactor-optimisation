@@ -25,7 +25,7 @@ boundaryField
     {
 		type				groovyBC;
 		variables (
-			"freq=5;"
+			"freq=5.00;"
 			"amp=0.0020;"
             "vel=0.010;"
 		);

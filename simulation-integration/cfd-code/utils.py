@@ -12,10 +12,15 @@ from PyFoam.Execution.UtilityRunner import UtilityRunner
 from scipy.signal import find_peaks
 from scipy.optimize import minimize
 from bayes_opt.logger import JSONLogger
+from PyFoam.Basics.DataStructures import Vector
 import shutil
 from datetime import datetime,timezone
+import math
 
 np=8
+f= 5.00    #temporary
+re= 50.00  #temporary
+
 
 class newJSONLogger(JSONLogger) :
       def __init__(self, path):
@@ -48,7 +53,7 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 
 
 
-def eval_cfd(a):
+def eval_cfd(a,f,re):
 
     # creating solution folder
     os.mkdir("single-coil-amp%.6f" % a)
@@ -74,8 +79,13 @@ def eval_cfd(a):
 
     Newcase = "single-coil-amp%.6f" % a
 
+    vel= (re*9.9*10**-4)/(990*0.005)
+
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
-    velBC["boundaryField"]['inlet']["variables"][1] = '"amp= %.6f;"' % a
+    velBC["boundaryField"]['inlet']["variables"][1] = '"amp= %.4f;"' % a
+    velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.2f;"' % f
+    velBC["boundaryField"]["inlet"]["variables"][2] = '"vel= %.3f;"' % vel
+    velBC["boundaryField"]["inlet"]["value"].setUniform(Vector(vel,0,0))
     velBC.writeFile()
 
     decomposer= UtilityRunner(
