@@ -54,7 +54,8 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 
 
 def eval_cfd(a,f,re):
-
+    a = a * 1000 
+    penalty = max(0,(a+f)- 10 )
     # creating solution folder
     os.mkdir("single-coil-amp%.6f" % a)
     os.mkdir("single-coil-amp%.6f/0" % a)
@@ -82,9 +83,9 @@ def eval_cfd(a,f,re):
     vel= (re*9.9*10**-4)/(990*0.005)
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
-    velBC["boundaryField"]['inlet']["variables"][1] = '"amp= %.4f;"' % a
-    velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.2f;"' % f
-    velBC["boundaryField"]["inlet"]["variables"][2] = '"vel= %.3f;"' % vel
+    velBC["boundaryField"]['inlet']["variables"][1] = '"amp= %.5f;"' % a
+    velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.5f;"' % f
+    velBC["boundaryField"]["inlet"]["variables"][2] = '"vel= %.5f;"' % vel
     velBC["boundaryField"]["inlet"]["value"].setUniform(Vector(vel,0,0))
     velBC.writeFile()
 
@@ -146,5 +147,7 @@ def eval_cfd(a,f,re):
 
 
     shutil.rmtree("single-coil-amp%.6f" % a)
-    return np.random.uniform()
-#     return N
+
+
+
+    return N

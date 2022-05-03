@@ -21,7 +21,9 @@ utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)
 optimizer = BayesianOptimization(
         f=eval_cfd,
         pbounds={
-            "a": (0.002, 0.006)
+            "a": (0.001, 0.008),
+            "f": (2,8),
+            "re": (10,50)
         },
         verbose=2,
         random_state=1,
