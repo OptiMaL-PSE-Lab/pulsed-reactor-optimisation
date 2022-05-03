@@ -32,19 +32,10 @@ optimizer = BayesianOptimization(
 # assign logger to optimizer
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 
-# if logs exist then initialise from that
-try:
-    load_logs(optimizer, logs=["./logs.json"])
-    optimizer.maximize(
-        init_points=0,
-        n_iter=1000,
-    )
-# otherwise just begin 
-except:
-    optimizer.maximize(
-        init_points=2,
-        n_iter=1000,
-    )
+optimizer.maximize(
+    init_points=0,
+    n_iter=1000,
+)
 
 
 
