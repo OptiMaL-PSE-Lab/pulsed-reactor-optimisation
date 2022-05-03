@@ -147,4 +147,4 @@ def eval_cfd(a,f,re):
 
 
     return np.random.uniform()
-    return N
+   # return N
