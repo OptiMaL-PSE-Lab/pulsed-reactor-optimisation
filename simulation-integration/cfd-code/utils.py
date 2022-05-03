@@ -51,8 +51,6 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 
 
 def eval_cfd(a,f,re):
-    # a = a * 1000 
-    # penalty = max(0,(a+f)- 10 )
     # # creating solution folder
     # os.mkdir("single-coil-amp%.6f" % a)
     # os.mkdir("single-coil-amp%.6f/0" % a)
@@ -146,5 +144,5 @@ def eval_cfd(a,f,re):
     # shutil.rmtree("single-coil-amp%.6f" % a)
 
 
-    return np.random.uniform()
+    return a + f + re
    # return N
