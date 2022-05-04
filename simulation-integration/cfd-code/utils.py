@@ -1,8 +1,8 @@
-import numpy as np 
+import numpy as np
 from scipy.special import factorial
 from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import os
 from os import path
 from distutils.dir_util import copy_tree
@@ -14,28 +14,30 @@ from scipy.optimize import minimize
 from bayes_opt.logger import JSONLogger
 from PyFoam.Basics.DataStructures import Vector
 import shutil
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 import math
-import numpy as np 
+import numpy as np
 
 
-class newJSONLogger(JSONLogger) :
-      def __init__(self, path):
-            self._path=None
-            super(JSONLogger, self).__init__()
-            self._path = path if path[-5:] == ".json" else path + ".json"
-	    
-def calc_etheta(N,theta):
-	z = factorial(N-1)
-	xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
-	etheta_calc = xy / z
-	return etheta_calc
+class newJSONLogger(JSONLogger):
+    def __init__(self, path):
+        self._path = None
+        super(JSONLogger, self).__init__()
+        self._path = path if path[-5:] == ".json" else path + ".json"
 
-def loss(N,theta,etheta):
-	for i in range(len(theta)):
-		etheta_calc = calc_etheta(N,theta[i])
-		error_sq = (etheta_calc - etheta[i])**2
-	return error_sq
+
+def calc_etheta(N, theta):
+    z = factorial(N - 1)
+    xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
+    etheta_calc = xy / z
+    return etheta_calc
+
+
+def loss(N, theta, etheta):
+    for i in range(len(theta)):
+        etheta_calc = calc_etheta(N, theta[i])
+        error_sq = (etheta_calc - etheta[i]) ** 2
+    return error_sq
 
 
 class CompactAnalyzer(BoundingLogAnalyzer):
@@ -49,8 +51,7 @@ class CompactAnalyzer(BoundingLogAnalyzer):
         )
 
 
-
-def eval_cfd(a,f,re):
+def eval_cfd(a, f, re):
     # # creating solution folder
     # os.mkdir("single-coil-amp%.6f" % a)
     # os.mkdir("single-coil-amp%.6f/0" % a)
@@ -98,11 +99,10 @@ def eval_cfd(a,f,re):
     #     argv=[run_command, "-case", Newcase],
     #     logname="Solution",
     # )
-    
-    # # running CFD 
+
+    # # running CFD
     # run.start()
 
-    
     # # post processing concentrations
     # times = np.array(run.getAnalyzer("concentration").lines.getTimes())
     # values = np.array(
@@ -110,10 +110,10 @@ def eval_cfd(a,f,re):
     # )
 
     # time = np.array(times) # list of times
-    # value = np.array(values) # list of concentrations 
+    # value = np.array(values) # list of concentrations
 
-    # # obtaining a smooth curve by taking peaks  
-    # peaks, _ = find_peaks(value, prominence=0.001) 
+    # # obtaining a smooth curve by taking peaks
+    # peaks, _ = find_peaks(value, prominence=0.001)
     # times = time[peaks]
     # values = value[peaks]
 
@@ -126,12 +126,12 @@ def eval_cfd(a,f,re):
     # etheta = tau * et
     # theta = times / tau
 
-    # # fitting value of N 
+    # # fitting value of N
     # N = minimize(loss,x0=35,bounds=((0.1,1000),),args=(theta,etheta)).x
 
     # plt.figure()
     # plt.plot(theta,etheta,c='k',linestyle='dashed',label='CFD')
-    # etheta_calc = [] 
+    # etheta_calc = []
     # for t in theta:
     #     etheta_calc.append(calc_etheta(N,t))
     # plt.plot(theta,etheta_calc,c='k',label='Dimensionless')
@@ -140,9 +140,9 @@ def eval_cfd(a,f,re):
     # now_utc = datetime.now(timezone.utc)
     # plt.savefig(str(now_utc)+'.pdf')
 
-
     # shutil.rmtree("single-coil-amp%.6f" % a)
 
-
     return a + f + re
-   # return N
+
+
+# return N
