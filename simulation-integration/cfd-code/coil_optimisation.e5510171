@@ -1,0 +1,53 @@
+Loading anaconda3/personal
+  Loading requirement: fix_unwritable_tmp fix_setxattr
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+ResolvePackageNotFound: 
+  - libffi==3.4.2=h0d85af4_5
+  - zlib==1.2.11=h6c3fc93_1014
+  - importlib-metadata==4.11.3=py37hf985489_1
+  - cffi==1.15.0=py37h446072c_0
+  - ca-certificates==2021.10.8=h033912b_0
+  - ncurses==6.3=h96cf925_1
+  - pyyaml==6.0=py37h69ee0a8_4
+  - setuptools==62.1.0=py37hf985489_0
+  - tk==8.6.12=h5dbffcc_0
+  - python==3.7.12=hf3644f1_100_cpython
+  - pre-commit==2.18.1=py37hf985489_1
+  - yaml==0.2.5=h0d85af4_2
+  - libzlib==1.2.11=h6c3fc93_1014
+  - xz==5.2.5=haf1e3a3_1
+  - openssl==3.0.3=hfe4f2af_0
+  - sqlite==3.38.3=hd9f0692_0
+  - ukkonen==1.0.1=py37h18621fa_2
+  - libcxx==13.0.1=hc203e6f_0
+  - readline==8.1=h05e3726_0
+  - virtualenv==20.14.1=py37hf985489_0
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+Traceback (most recent call last):
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/cfd-code/main.py", line 2, in <module>
+    from utils import eval_cfd, newJSONLogger
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/cfd-code/utils.py", line 5, in <module>
+    import matplotlib.pyplot as plt
+ModuleNotFoundError: No module named 'matplotlib'
