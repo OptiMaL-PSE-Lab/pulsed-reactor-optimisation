@@ -1,20 +1,7 @@
 from bayes_opt import BayesianOptimization, UtilityFunction
-from utils import *
-from bayes_opt.logger import JSONLogger
+from utils import eval_cfd, newJSONLogger
 from bayes_opt.event import Events
-from bayes_opt.util import load_logs
 import json
-
-
-# starting logger for bayes opt that doesn't reset
-
-
-class newJSONLogger(JSONLogger):
-    def __init__(self, path):
-        self._path = None
-        super(JSONLogger, self).__init__()
-        self._path = path if path[-5:] == ".json" else path + ".json"
-
 
 logger = newJSONLogger(path="./logs.json")
 
@@ -27,7 +14,6 @@ def pcon(x):
 
 
 pcon_dict = {"type": "ineq", "fun": pcon}
-
 
 # setting up the optimisation problem
 optimizer = BayesianOptimization(
@@ -46,13 +32,12 @@ try:
         for line in f:
             logs.append(json.loads(line))
 
-    for l in logs:
-        optimizer.register(params=l["params"], target=l["target"])
-except:
+    for log in logs:
+        optimizer.register(params=log["params"], target=log["target"])
+except FileNotFoundError:
     pass
 # assign logger to optimizer
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
-
 
 while True:
     # for i in range(1):
