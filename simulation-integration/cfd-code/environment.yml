@@ -4,41 +4,41 @@ channels:
   - omnia
   - defaults
 dependencies:
-  - ca-certificates=2021.10.8=h033912b_0
-  - cffi=1.15.0=py37h446072c_0
-  - cfgv=3.3.1=pyhd8ed1ab_0
-  - distlib=0.3.4=pyhd8ed1ab_0
-  - filelock=3.6.0=pyhd8ed1ab_0
-  - identify=2.5.0=pyhd8ed1ab_0
-  - importlib-metadata=4.11.3=py37hf985489_1
-  - importlib_metadata=4.11.3=hd8ed1ab_1
-  - libcxx=13.0.1=hc203e6f_0
-  - libffi=3.4.2=h0d85af4_5
-  - libzlib=1.2.11=h6c3fc93_1014
-  - ncurses=6.3=h96cf925_1
-  - nodeenv=1.6.0=pyhd8ed1ab_0
-  - openssl=3.0.3=hfe4f2af_0
-  - pip=22.0.4=pyhd8ed1ab_0
-  - platformdirs=2.5.1=pyhd8ed1ab_0
-  - pre-commit=2.18.1=py37hf985489_1
-  - pycparser=2.21=pyhd8ed1ab_0
-  - python=3.7.12=hf3644f1_100_cpython
-  - python_abi=3.7=2_cp37m
-  - pyyaml=6.0=py37h69ee0a8_4
-  - readline=8.1=h05e3726_0
-  - setuptools=62.1.0=py37hf985489_0
-  - six=1.16.0=pyh6c4a22f_0
-  - sqlite=3.38.3=hd9f0692_0
-  - tk=8.6.12=h5dbffcc_0
-  - toml=0.10.2=pyhd8ed1ab_0
-  - typing_extensions=4.2.0=pyha770c72_1
-  - ukkonen=1.0.1=py37h18621fa_2
-  - virtualenv=20.14.1=py37hf985489_0
-  - wheel=0.37.1=pyhd8ed1ab_0
-  - xz=5.2.5=haf1e3a3_1
-  - yaml=0.2.5=h0d85af4_2
-  - zipp=3.8.0=pyhd8ed1ab_0
-  - zlib=1.2.11=h6c3fc93_1014
+  - ca-certificates=2021.10.8
+  - cffi=1.15.0
+  - cfgv=3.3.1
+  - distlib=0.3.4
+  - filelock=3.6.0
+  - identify=2.5.0
+  - importlib-metadata=4.11.3
+  - importlib_metadata=4.11.3
+  - libcxx=13.0.1
+  - libffi=3.4.2
+  - libzlib=1.2.11
+  - ncurses=6.3
+  - nodeenv=1.6.0
+  - openssl=3.0.3
+  - pip=22.0.4
+  - platformdirs=2.5.1
+  - pre-commit=2.18.1
+  - pycparser=2.21
+  - python=3.7.12
+  - python_abi=3.7
+  - pyyaml=6.0
+  - readline=8.1
+  - setuptools=62.1.0
+  - six=1.16.0
+  - sqlite=3.38.3
+  - tk=8.6.12
+  - toml=0.10.2
+  - typing_extensions=4.2.0
+  - ukkonen=1.0.1
+  - virtualenv=20.14.1
+  - wheel=0.37.1
+  - xz=5.2.5
+  - yaml=0.2.5
+  - zipp=3.8.0
+  - zlib=1.2.11
   - pip:
     - git+https://github.com/trsav/bayes_opt_with_constraints@master
     - matplotlib
