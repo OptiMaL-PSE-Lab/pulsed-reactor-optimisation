@@ -4,6 +4,7 @@ from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 import matplotlib.pyplot as plt
 import os
+import pickle
 from os import path
 from distutils.dir_util import copy_tree
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
@@ -109,6 +110,19 @@ def eval_cfd(a, f, re):
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
+    
+    with open('time.pickle', 'wb') as handle:
+        pickle.dump(time, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('value.pickle', 'wb') as handle:
+        pickle.dump(value, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    plt.figure()
+    plt.plot(time,value,c='k')
+    plt.grid()
+    plt.xlabel('time')
+    plt.ylabel('concentration')
+    plt.savefig('preprocessed_plot.pdf')
 
     # obtaining a smooth curve by taking peaks
     peaks, _ = find_peaks(value, prominence=0.001)
