@@ -49,6 +49,13 @@ adjustTimeStep  yes;
 
 maxCo           5.0;
 
+libs (
+"libOpenFOAM.so"
+"libsimpleSwakFunctionObjects.so"
+"libswakFunctionObjects.so"
+"libgroovyBC.so"
+);
+
 
 
 functions 
@@ -125,12 +132,7 @@ functions
     }
 }  
 
-libs (
-"libOpenFOAM.so"
-"libsimpleSwakFunctionObjects.so"
-"libswakFunctionObjects.so"
-"libgroovyBC.so"
-);
+
 
 
 

@@ -1,7 +1,10 @@
 #!/bin/bash
 #PBS -N coil_optimisation
-#PBS -lselect=1:ncpus=8:mem=8gb
-#PBS -lwalltime=01:00:00
+#PBS -j oe 
+#PBS -o coil_optimisation.out
+#PBS -e coil_optimisation.err
+#PBS -lselect=1:ncpus=16:mem=98gb
+#PBS -lwalltime=72:00:00
 
 module load anaconda3/personal
 module load openfoam/1906
@@ -9,4 +12,5 @@ module load intel-suite
 
 cd $PBS_O_WORKDIR
 conda env create -f environment.yml 
+source activate cfd_optimisation_env
 python3 main.py
