@@ -103,10 +103,9 @@ def eval_cfd(a, f, re):
     run.start()
 
     # post processing concentrations
-    times = np.array(run.getAnalyzer("concentration").lines.getTimes())
-    values = np.array(
-        run.getAnalyzer("concentration").lines.getValues("averageConcentration_0")
-    )
+    times = run.getAnalyzer("concentration").lines.getTimes()
+    values = run.getAnalyzer("concentration").lines.getValues("averageConcentration_0")
+    
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
@@ -118,7 +117,7 @@ def eval_cfd(a, f, re):
         pickle.dump(value, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     plt.figure()
-    plt.plot(time,value,c='k')
+    plt.plot(time,value,c='g')
     plt.grid()
     plt.xlabel('time')
     plt.ylabel('concentration')
@@ -126,17 +125,17 @@ def eval_cfd(a, f, re):
 
     # obtaining a smooth curve by taking peaks
     peaks, _ = find_peaks(value, prominence=0.001)
-    times = time[peaks]
-    values = value[peaks]
+    times_peaks = time[peaks]
+    values_peaks = value[peaks]
 
     # difference between time values
-    dt = np.diff(times)[0]
+    dt = np.diff(times_peaks)[0]
 
     # getting lists of interest (theta, e_theta)
-    et = values / (sum(values * dt))
-    tau = (sum(times * values * dt)) / sum(values * dt)
+    et = values_peaks / (sum(values_peaks * dt))
+    tau = (sum(times_peaks * values_peaks * dt)) / sum(values_peaks * dt)
     etheta = tau * et
-    theta = times / tau
+    theta = times_peaks / tau
 
     # fitting value of N
     N = minimize(loss, x0=35, bounds=((0.1, 1000),), args=(theta, etheta)).x
