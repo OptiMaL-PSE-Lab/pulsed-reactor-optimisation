@@ -116,7 +116,7 @@ functions
    {
       // Mandatory entries (unmodifiable)
       type            surfaceFieldValue;
-      libs            (fieldFunctionObjects);
+      libs            ("fieldFunctionObjects.so");
 
       // Mandatory entries (runtime modifiable)
       fields          (s);
