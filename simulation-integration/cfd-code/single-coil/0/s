@@ -24,6 +24,7 @@ boundaryField
     {
         type            groovyBC;
 		valueExpression "time()<0.15 ? 1 : 0";
+        fractionExpression "(phi > 0) ? 0 : 1";
         value           uniform 0;
     }
 
