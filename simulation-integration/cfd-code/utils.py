@@ -111,12 +111,6 @@ def eval_cfd(a, f, re):
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
     
-    with open('time.pickle', 'wb') as handle:
-        pickle.dump(time, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with open('value.pickle', 'wb') as handle:
-        pickle.dump(value, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
     plt.figure()
     plt.plot(time,value,c='k')
     plt.grid()
