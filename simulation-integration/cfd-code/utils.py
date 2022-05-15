@@ -52,28 +52,28 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 
 def eval_cfd(a, f, re):
     # creating solution folder
-    os.mkdir("single-coil-amp%.6f" % a)
-    os.mkdir("single-coil-amp%.6f/0" % a)
-    os.mkdir("single-coil-amp%.6f/constant" % a)
-    os.mkdir("single-coil-amp%.6f/system" % a)
+    os.mkdir("output/single-coil-amp%.6f" % a)
+    os.mkdir("output/single-coil-amp%.6f/0" % a)
+    os.mkdir("output/single-coil-amp%.6f/constant" % a)
+    os.mkdir("output/single-coil-amp%.6f/system" % a)
 
     # copying initial conditions
     from_directory = "single-coil/0"
-    to_directory = "single-coil-amp%.6f/0" % a
+    to_directory = "output/single-coil-amp%.6f/0" % a
     copy_tree(from_directory, to_directory)
 
     # copying constants
     from_directory = "single-coil/constant"
-    to_directory = "single-coil-amp%.6f/constant" % a
+    to_directory = "output/single-coil-amp%.6f/constant" % a
     copy_tree(from_directory, to_directory)
 
     # copying cfd system to solution
     from_directory = "single-coil/system"
-    to_directory = "single-coil-amp%.6f/system" % a
+    to_directory = "output/single-coil-amp%.6f/system" % a
 
     copy_tree(from_directory, to_directory)
 
-    Newcase = "single-coil-amp%.6f" % a
+    Newcase = "output/single-coil-amp%.6f" % a
 
     vel = (re * 9.9 * 10**-4) / (990 * 0.005)
 
@@ -109,13 +109,16 @@ def eval_cfd(a, f, re):
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
+    with open('output/results.pickle', 'wb') as handle:
+        pickle.dump({'t':time,'c':value}, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     
     plt.figure()
-    plt.plot(time,value,c='g')
+    plt.plot(time,value,c='k',lw=1)
     plt.grid()
     plt.xlabel('time')
     plt.ylabel('concentration')
-    plt.savefig('preprocessed_plot.pdf')
+    plt.savefig('output/preprocessed_plot.pdf')
 
     # obtaining a smooth curve by taking peaks
     peaks, _ = find_peaks(value, prominence=0.001)
@@ -143,8 +146,8 @@ def eval_cfd(a, f, re):
     plt.grid()
     plt.legend()
     now_utc = datetime.now(timezone.utc)
-    plt.savefig(str(now_utc) + ".pdf")
+    plt.savefig("output/dimensionless_conversion.pdf")
 
-    shutil.rmtree("single-coil-amp%.6f" % a)
+    shutil.rmtree("output/single-coil-amp%.6f" % a)
 
     return N
