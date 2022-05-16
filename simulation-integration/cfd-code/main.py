@@ -43,4 +43,4 @@ while True:
     # for i in range(1):
     next_point = optimizer.suggest(utility)
     target = eval_cfd(**next_point)
-    optimizer.register(params=next_point, target=target)
+    optimizer.register(params=next_point, target=target[0])
