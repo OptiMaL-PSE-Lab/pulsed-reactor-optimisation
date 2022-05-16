@@ -15,7 +15,6 @@ from scipy.optimize import minimize
 from bayes_opt.logger import JSONLogger
 from PyFoam.Basics.DataStructures import Vector
 import shutil
-from datetime import datetime, timezone
 
 
 class newJSONLogger(JSONLogger):
@@ -75,7 +74,7 @@ def eval_cfd(a, f, re):
 
     Newcase = "output/single-coil-amp%.6f" % a
 
-    vel = (re * 9.9 * 10**-4) / (990 * 0.005)
+    vel = (re * 9.9 * 10 ** -4) / (990 * 0.005)
 
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
     velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
@@ -105,25 +104,24 @@ def eval_cfd(a, f, re):
     # post processing concentrations
     times = run.getAnalyzer("concentration").lines.getTimes()
     values = run.getAnalyzer("concentration").lines.getValues("averageConcentration_0")
-    
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
-    with open('output/results.pickle', 'wb') as handle:
-        pickle.dump({'t':time,'c':value}, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    
-    plt.figure()
-    plt.plot(time,value,c='k',lw=1)
-    plt.grid()
-    plt.xlabel('time')
-    plt.ylabel('concentration')
-    plt.savefig('output/preprocessed_plot.pdf')
+    with open("output/results.pickle", "wb") as handle:
+        pickle.dump({"t": time, "c": value}, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # obtaining a smooth curve by taking peaks
-    peaks, _ = find_peaks(value, prominence=0.001)
+    peaks, _ = find_peaks(value, prominence=0.00001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
+
+    plt.figure()
+    plt.plot(time, value, c="k", lw=1, alpha=0.1)
+    plt.plot(times_peaks, values_peaks, c="r", lw=1)
+    plt.grid()
+    plt.xlabel("time")
+    plt.ylabel("concentration")
+    plt.savefig("output/preprocessed_plot.pdf")
 
     # difference between time values
     dt = np.diff(times_peaks)[0]
@@ -135,7 +133,21 @@ def eval_cfd(a, f, re):
     theta = times_peaks / tau
 
     # fitting value of N
-    N = minimize(loss, x0=35, bounds=((0.1, 1000),), args=(theta, etheta)).x
+    x0_list = np.linspace(1, 100, 20)
+    best = np.Inf
+    for x0 in x0_list:
+        res = minimize(
+            loss,
+            x0=x0,
+            bounds=((0.1, 1000),),
+            args=(theta, etheta),
+            method="SLSQP",
+            tol=1e-12,
+        )
+        f = res.fun
+        if f < best:
+            best = f
+            N = res.x
 
     plt.figure()
     plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
@@ -145,7 +157,6 @@ def eval_cfd(a, f, re):
     plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
     plt.grid()
     plt.legend()
-    now_utc = datetime.now(timezone.utc)
     plt.savefig("output/dimensionless_conversion.pdf")
 
     shutil.rmtree("output/single-coil-amp%.6f" % a)
