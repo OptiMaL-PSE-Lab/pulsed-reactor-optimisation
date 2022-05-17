@@ -24,17 +24,22 @@ class newJSONLogger(JSONLogger):
         self._path = path if path[-5:] == ".json" else path + ".json"
 
 
-def calc_etheta(N, theta):
+def calc_etheta(N, theta,off):
+    theta = theta - off
     z = factorial(N - 1)
     xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
     etheta_calc = xy / z
     return etheta_calc
 
 
-def loss(N, theta, etheta):
+def loss(X, theta, etheta):
+    N,off = X
+    error_sq = 0 
     for i in range(len(theta)):
-        etheta_calc = calc_etheta(N, theta[i])
-        error_sq = (etheta_calc - etheta[i]) ** 2
+        if theta[i] > 2:
+            error_sq += 0 
+        else:
+            error_sq += (calc_etheta(N, theta[i],off) - etheta[i]) ** 2
     return error_sq
 
 
@@ -76,6 +81,11 @@ def eval_cfd(a, f, re):
 
     vel = (re * 9.9 * 10 ** -4) / (990 * 0.005)
 
+    print('\n a: ',a,'\n')
+    print('f: ',f,'\n')
+    print('Re: ',re,'\n')
+    print('vel: ',vel,'\n')
+
     velBC = ParsedParameterFile(path.join(Newcase, "0", "U"))
     velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
     velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.5f;"' % f
@@ -107,11 +117,19 @@ def eval_cfd(a, f, re):
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
+
+
     with open("output/results.pickle", "wb") as handle:
         pickle.dump({"t": time, "c": value}, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    # with open("output/results.pickle", "rb") as handle:
+    #     res = pickle.load(handle)
+    
+    # time = res['t']
+    # value = res['c']
+
     # obtaining a smooth curve by taking peaks
-    peaks, _ = find_peaks(value, prominence=0.00001)
+    peaks, _ = find_peaks(value, prominence=0.000001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
 
@@ -133,32 +151,25 @@ def eval_cfd(a, f, re):
     theta = times_peaks / tau
 
     # fitting value of N
-    x0_list = np.linspace(1, 100, 20)
+    x0_list = np.random.uniform([0.2,-0.3],[100,0.3],(10000,2))
     best = np.Inf
     for x0 in x0_list:
-        res = minimize(
-            loss,
-            x0=x0,
-            bounds=((0.1, 1000),),
-            args=(theta, etheta),
-            method="SLSQP",
-            tol=1e-12,
-        )
-        f = res.fun
-        if f < best:
-            best = f
-            N = res.x
+        l = loss(x0,theta,etheta)
+        if l < best:
+            best = l
+            X = x0
+
+    N,off = X 
 
     plt.figure()
     plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
     etheta_calc = []
     for t in theta:
-        etheta_calc.append(calc_etheta(N, t))
+        etheta_calc.append(calc_etheta(N, t,off))
     plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
     plt.grid()
     plt.legend()
     plt.savefig("output/dimensionless_conversion.pdf")
 
-    shutil.rmtree("output/single-coil-amp%.6f" % a)
 
     return N
