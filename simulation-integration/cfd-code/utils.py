@@ -24,22 +24,22 @@ class newJSONLogger(JSONLogger):
         self._path = path if path[-5:] == ".json" else path + ".json"
 
 
-def calc_etheta(N, theta,off):
+def calc_etheta(N, theta,off,up):
     theta = theta - off
     z = factorial(N - 1)
     xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
     etheta_calc = xy / z
-    return etheta_calc
+    return etheta_calc * up
 
 
 def loss(X, theta, etheta):
-    N,off = X
+    N,off,up = X
     error_sq = 0 
     for i in range(len(theta)):
         if theta[i] > 2:
             error_sq += 0 
         else:
-            error_sq += (calc_etheta(N, theta[i],off) - etheta[i]) ** 2
+            error_sq += (calc_etheta(N, theta[i],off,up) - etheta[i]) ** 2
     return error_sq
 
 
@@ -151,7 +151,9 @@ def eval_cfd(a, f, re):
     theta = times_peaks / tau
 
     # fitting value of N
-    x0_list = np.random.uniform([0.2,-0.3],[100,0.3],(10000,2))
+    s = 10000
+    x0_list = np.array([np.logspace(np.log(1),np.log(50), s),np.random.uniform(-1,0, s),np.random.uniform(0,1, s)]).T
+
     best = np.Inf
     for x0 in x0_list:
         l = loss(x0,theta,etheta)
@@ -159,13 +161,13 @@ def eval_cfd(a, f, re):
             best = l
             X = x0
 
-    N,off = X 
+    N,off,up = X 
 
     plt.figure()
     plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
     etheta_calc = []
     for t in theta:
-        etheta_calc.append(calc_etheta(N, t,off))
+        etheta_calc.append(calc_etheta(N, t,off,up))
     plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
     plt.grid()
     plt.legend()
