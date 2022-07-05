@@ -1,0 +1,3 @@
+[submodule "general/classy_examples"]
+	path = general/classy_examples
+	url = https://github.com/damogranlabs/classy_examples
