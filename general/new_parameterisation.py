@@ -7,6 +7,8 @@ from classy_examples.classy_blocks.classes.block import Block
 from classy_examples.classy_blocks.classes.mesh import Mesh
 
 
+
+
 def rotate_z(x,y,z,r_z):
 	x = np.array(x)
 	y = np.array(y)
@@ -77,25 +79,39 @@ ax = fig.add_subplot(projection='3d')
 i = 0 
 x,y,z = create_ellipse(x_plot[i],y_plot[i],r_plot[i],t_plot[i],z_plot[i])
 ax.plot3D(x,y,z,c='k')
-mesh = Mesh()
-coord_list = np.concatenate((np.array([x]),np.array([y]),np.array([z])),axis=0).T
-coord_list = [list(coord_list[i,:]) for i in range(len(coord_list))]
 
-# TEST HERE
+
 i += 1 
 x_next,y_next,z_next = create_ellipse(x_plot[i],y_plot[i],r_plot[i],t_plot[i],z_plot[i])
 ax.plot3D(x_next,y_next,z_next,c='k')
-coord_list_next = np.concatenate((np.array([x_next]),np.array([y_next]),np.array([z_next])),axis=0).T
-coord_list_next = [list(coord_list_next[i,:]) for i in range(len(coord_list_next))]
 
-block_points = coord_list + coord_list_next
+
+for i in range(1,len(x_plot)):
+	x_next,y_next,z_next = create_ellipse(x_plot[i],y_plot[i],r_plot[i],t_plot[i],z_plot[i])
+	ax.plot3D(x_next,y_next,z_next,c='k')
+
+plt.show()
+
+mesh = Mesh()
+
+block_points = [
+[0, 0, 0],
+[1, 0, 0],
+[1, 1, 0],
+[0, 1, 0],
+
+[0, 0, 1],
+[1, 0, 1],
+[1, 1, 1],
+[0, 1, 1],
+]
 
 block_edges = [
-	Edge(0, 1, [0.5, -0.25, 0]), # arc edges
-	Edge(4, 5, [0.5, -0.1, 1]),
+Edge(0, 1, [0.5, -0.25, 0]), # arc edges
+Edge(4, 5, [0.5, -0.1, 1]),
 
-	Edge(2, 3, [[0.7, 1.3, 0], [0.3, 1.3, 0]]), # spline edges
-	Edge(6, 7, [[0.7, 1.1, 1], [0.3, 1.1, 1]])
+Edge(2, 3, [[0.7, 1.3, 0], [0.3, 1.3, 0]]), # spline edges
+Edge(6, 7, [[0.7, 1.1, 1], [0.3, 1.1, 1]])
 ]
 
 # the most low-level way of creating a block is from 'raw' points
@@ -109,44 +125,21 @@ block.chop(2, start_size=0.1, c2c_expansion=1)
 
 mesh.add_block(block)
 
+# another block!
+block_points = block_points[4:] + [
+[0, 0, 1.7],
+[1, 0, 1.8],
+[1, 1, 1.9],
+[0, 1, 2],
+]
+block = Block.create_from_points(block_points)
+block.set_patch(['left', 'right', 'front', 'back'], 'walls')
+block.set_patch('top', 'outlet')
 
-# for i in range(1,len(x_plot)):
+block.chop(2, length_ratio=0.5, start_size=0.02, c2c_expansion=1.2, invert=False)
+block.chop(2, length_ratio=0.5, start_size=0.02, c2c_expansion=1.2, invert=True)
 
-# 	x_next,y_next,z_next = create_ellipse(x_plot[i],y_plot[i],r_plot[i],t_plot[i],z_plot[i])
-# 	ax.plot3D(x_next,y_next,z_next,c='k')
-# 	list = np.concatenate((x_next,y_next,z_next),axis=1)
-
-# 	block_points = [
-# 		[0, 0, 0],
-# 		[1, 0, 0],
-# 		[1, 1, 0],
-# 		[0, 1, 0],
-
-# 		[0, 0, 1],
-# 		[1, 0, 1],
-# 		[1, 1, 1],
-# 		[0, 1, 1],
-# 	]
-
-# 	block_edges = [
-# 		Edge(0, 1, [0.5, -0.25, 0]), # arc edges
-# 		Edge(4, 5, [0.5, -0.1, 1]),
-
-# 		Edge(2, 3, [[0.7, 1.3, 0], [0.3, 1.3, 0]]), # spline edges
-# 		Edge(6, 7, [[0.7, 1.1, 1], [0.3, 1.1, 1]])
-# 	]
-
-# 	# the most low-level way of creating a block is from 'raw' points
-# 	block = Block.create_from_points(block_points, block_edges)
-# 	block.set_patch(['left', 'right', 'front', 'back'], 'walls')
-# 	block.set_patch('bottom', 'inlet')
-
-# 	block.chop(0, start_size=0.02, c2c_expansion=1.1)
-# 	block.chop(1, start_size=0.01, c2c_expansion=1.2)
-# 	block.chop(2, start_size=0.1, c2c_expansion=1)
-
-# 	mesh.add_block(block)
-# plt.show()
+mesh.add_block(block)
 
 
 
