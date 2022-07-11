@@ -1,3 +1,9 @@
 [submodule "general/classy_examples"]
 	path = general/classy_examples
 	url = https://github.com/damogranlabs/classy_examples
+[submodule "mesh_generation/classy_blocks"]
+	path = mesh_generation/classy_blocks
+	url = https://github.com/damogranlabs/classy_blocks
+[submodule "mesh_generation/classy_examples"]
+	path = mesh_generation/classy_examples
+	url = https://github.com/damogranlabs/classy_examples
