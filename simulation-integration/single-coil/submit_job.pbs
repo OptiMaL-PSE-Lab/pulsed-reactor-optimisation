@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N coil_optimisation
+#PBS -lselect=1:ncpus=16:mem=64gb
+#PBS -o coil_optimisation_out_o
+#PBS -e coil_optimisation_out_e
+#PBS -l walltime=01:00:00
+
+module purge
+module load openfoam
+module load swak4foam
+module load intel-suite
+
+cd $PBS_O_WORKDIR
+decomposePar
+mpiexec pimpleFoam -parallel | tee log.pimpleDYMFoam

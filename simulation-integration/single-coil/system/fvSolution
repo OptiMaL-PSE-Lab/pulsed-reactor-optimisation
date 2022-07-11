@@ -1,0 +1,114 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver           GAMG;
+        smoother         DICGaussSeidel;
+        tolerance        1e-4;
+        relTol           0.01;
+
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-05;
+        relTol          0.1;
+    }
+
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
+	"s.*"
+	{
+		solver           smoothSolver;
+        smoother         symGaussSeidel;
+        tolerance        1e-08;
+        relTol           0;
+	}
+	
+
+}
+
+PIMPLE
+{
+    pRefCell  0;
+	pRefValue 0;
+    nNonOrthogonalCorrectors 2;
+	nOuterCorrectors         70;
+    nCorrectors         3;
+	
+	relaxationFactors
+	{
+      fields
+		{
+		  p       0.2;
+		  pFinal  1;  // Last outer loop
+		}
+
+      equations
+		{
+		  U      0.5;
+		  UFinal  1;// Last outer loop
+		}
+	  equations
+		{
+		  T      0.5;
+		  TFinal  1;// Last outer loop
+		}
+	}
+	residualControl
+	{
+	  p
+		{
+          
+          relTol  0;
+          // If this inital tolerance is reached, leave
+          tolerance 1e-3;
+		}
+
+	  U
+		{
+		  relTol  0;
+          // If this inital tolerance is reached, leave
+          tolerance 1e-4;
+          
+		}
+	  s
+		{
+		  relTol  0;
+          // If this inital tolerance is reached, leave
+          tolerance 1e-4;
+          
+		}
+	}
+}
+
+
+// ************************************************************************* //
