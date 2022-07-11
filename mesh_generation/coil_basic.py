@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 
 def rotate_z(x, y, z, r_z):
+	# rotation of cartesian coordinates around z axis by r_z radians
 	x = np.array(x)
 	y = np.array(y)
 	z = np.array(z)
@@ -18,6 +19,8 @@ def rotate_z(x, y, z, r_z):
 
 
 def create_circle(d):
+	# from a centre, radius, and z rotation,
+	#  create the points of a circle
 	c_x, c_y, t,r, c_z = d
 	alpha = np.linspace(0, 2 * np.pi, 100)
 	z = r * np.cos(alpha) + c_z
@@ -32,18 +35,22 @@ def create_circle(d):
 
 
 def interpolate(y, f, kind):
+	# interpolate between points y, by a factor of f
 	x = np.linspace(0, len(y), len(y))
 	x_new = np.linspace(0, len(y), len(y) * f)
 	f = interp1d(x, y, kind=kind)
 	y_new = f(x_new)
-	plt.figure()
-	plt.scatter(x, y)
-	plt.plot(x_new,y_new)
-	plt.show()
+
+	# # plot if you want to 
+	# plt.figure()
+	# plt.scatter(x, y)
+	# plt.plot(x_new,y_new)
+	# plt.show()
 	return y_new
 
 
 def parse_inputs(x0, x, f):
+	# transform initial conditions and differences to values
 	x = np.cumsum(np.append([x0], x))
 	x = interpolate(x, f, "quadratic")
 	return x
@@ -62,16 +69,20 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 		data[keys[i]]["0"] = initial_vals[i]
 
 	# for the basic coil these are calculated within the function
+
+	# x and y values around a circle 
 	data["x"]["diff"] = np.diff(
 		[(coil_rad * np.cos(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
 	)
 	data["y"]["diff"] = np.diff(
 		[(coil_rad * np.sin(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
 	)
-
-
+	
+	# rotations around z are defined by number of coils 
 	data["t"]["diff"] = np.diff(np.linspace(0, 2 * coils * np.pi, n))
+	# no change in radius for now 
 	data["r"]["diff"] = [0 for i in range(n)]
+	# height is linear
 	data["z"]["diff"] = [h / n for i in range(n)]
 
 	# calculating real values from differences and initial conditions
@@ -83,11 +94,10 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 	le = len(data[keys[0]]['vals'])
 	mesh = Mesh()
 	for p in range(le-1):
-		
+
+		# obtaining two circles 	
 		x1, y1, z1 = create_circle([data[keys[i]]["vals"][p] for i in range(len(keys))])
 		x2, y2, z2 = create_circle([data[keys[i]]["vals"][p+1] for i in range(len(keys))])
-
-
 
 		l = np.linspace(0, len(x1), 5)[:4].astype(int)
 
@@ -101,6 +111,9 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 		b = [0, 1, 2, 3, 0]
 
 		for k in range(4):
+
+			# O-Topology for what is effectively 
+			# a slanted cylinder
 			i = b[k]
 			j = b[k + 1]
 
@@ -122,6 +135,7 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 			else:
 				a = int(l[i] + (l[j] - l[i]) / 2)
 
+			# add circular curves at top of cylindrical quadrant 
 			block_edges = [
 				Edge(0, 1, [x1[a], y1[a], z1[a]]),  # arc edges
 				Edge(4, 5, [x2[a], y2[a], z2[a]]),
@@ -133,6 +147,7 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 
 			block.set_patch(["front"], "walls")
 
+			# partition block
 			block.chop(0, count=10)
 			block.chop(1, count=10)
 			block.chop(2, count=1)
@@ -144,6 +159,7 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 
 			mesh.add_block(block)
 
+		# add centre rectangular block 
 		block_points = [
 			list(([x1[l[k]], y1[l[k]], z1[l[k]]] + centre1) / 2) for k in [0, 1, 2, 3]
 		] + [list(([x2[l[k]], y2[l[k]], z2[l[k]]] + centre2) / 2) for k in [0, 1, 2, 3]]
@@ -165,18 +181,24 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 		block.chop(2, count=1)
 
 		mesh.add_block(block)
-
+	 # copy template folder
 	try:
 		shutil.copytree("base", path)
 	except:
 		print("file already exists...")
+
+	# run script to create mesh
 	mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-	os.system("output_mesh/Allrun.mesh")
+	os.system(path+"/Allrun.mesh")
 
-
+# coil radius 
 coil_rad = 2
+# tube radius 
 tube_rad = 0.5
+# number of coils
 coils = 2
+# coil height 
 h = 6
 
-create_mesh(coil_rad, tube_rad, coils, h, path="output_mesh")
+# create coil
+create_mesh(coil_rad, tube_rad, coils, h, path="coil_basic")
