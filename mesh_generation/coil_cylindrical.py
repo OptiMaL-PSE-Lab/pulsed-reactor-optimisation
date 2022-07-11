@@ -238,7 +238,7 @@ def create_mesh(data, path):
 
 	# write mesh and run mesh generation script
 	mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-	os.system("output_mesh/Allrun.mesh")
+	os.system(path+"/Allrun.mesh")
 
 coils = 4 # number of coils 
 coil_rad_max = 10 # max coil radius
@@ -255,4 +255,4 @@ data["z"] = np.linspace(0,h,n)
 data['tube_rad'] = 1.5
 
 # create mesh from cylindrical coordinates
-create_mesh(data, path="output_mesh")
+create_mesh(data, path="coil_cylindrical")
