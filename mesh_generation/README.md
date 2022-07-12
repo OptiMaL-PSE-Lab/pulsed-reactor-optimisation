@@ -21,18 +21,8 @@ This folder contains Python tools to create a number of different OpenFOAM meshe
 
 ```coil_basic.py``` contains a function that given a coil radius, pipe radius, number of coils, and overall coil height, will return a blockMesh folder containing the mesh. An O-grid topology is used to create the coil sections. 
 
-
-```coil_cylindrical.py``` contains a function that given cylindrical coordinates will return a blockMesh folder containing the mesh for a general helix around those coordinates. This function interpolates between cylindrical coordinates by a given factor to produce the complete curve. The rotation of each circle defining the cross section of this curve is defined by ensuring the circle is orthogonal to the vector between the centre of the previous circle and the current circle. ```circle_test.py``` provides an example of this calculation.
-
-
-<a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/pre_render_cylindrical.png" alt="pre_render" title="pre_render" align="left" height="250" />
-</a>
-
-<a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/coil_cylinder_render.png" alt="pre_render" title="pre_render" align="right" height="250" />
-</a> 
-
+```coil_cylindrical.py``` contains a function that given cylindrical coordinates, and tube radius values will return a blockMesh folder containing the mesh for a general helix.
+This function interpolates between given values by a given factor to produce the complete set.
 
 A preview of the mesh named ```pre_render.png```is plotted using Matplotlib as the mesh is being constructed for debugging purposes.
 

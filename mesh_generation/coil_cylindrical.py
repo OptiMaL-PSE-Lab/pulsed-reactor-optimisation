@@ -1,9 +1,9 @@
 from re import A, I
 import numpy as np
 from scipy.interpolate import interp1d
-from classy_examples.classy_blocks.classes.primitives import Edge
-from classy_examples.classy_blocks.classes.block import Block
-from classy_examples.classy_blocks.classes.mesh import Mesh
+from classy_blocks.classes.primitives import Edge
+from classy_blocks.classes.block import Block
+from classy_blocks.classes.mesh import Mesh
 import shutil
 import os
 import matplotlib.pyplot as plt
@@ -63,22 +63,22 @@ def angle_between(v1, v2):
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 
-def create_circle(d1, d2, rad):
+def create_circle(d1, d2):
     # takes 2 cylindrical coordinates
     # and rotates the location of the second to be orthogonal
     # to the vector between the centre of the two circles
 
     # circle_test.py provides an example
-    r1, t1, z1 = d1
-    r2, t2, z2 = d2
+    r1, t1, z1,rad1 = d1
+    r2, t2, z2,rad2 = d2
     c_x1, c_y1, c_z1 = cylindrical_convert(r1, t1, z1)
     c_x2, c_y2, c_z2 = cylindrical_convert(r2, t2, z2)
     alpha = np.linspace(0, 2 * np.pi, 100)
-    y1 = rad * np.cos(alpha) + c_y1
-    x1 = rad * np.sin(alpha) + c_x1
+    y1 = rad1 * np.cos(alpha) + c_y1
+    x1 = rad1 * np.sin(alpha) + c_x1
     z1 = [c_z1 for i in range(len(x1))]
-    y2 = rad * np.cos(alpha) + c_y2
-    x2 = rad * np.sin(alpha) + c_x2
+    y2 = rad2 * np.cos(alpha) + c_y2
+    x2 = rad2 * np.sin(alpha) + c_x2
     z2 = [c_z2 for i in range(len(x2))]
     c1 = np.mean([x1, y1, z1], axis=1)
     c2 = np.mean([x2, y2, z2], axis=1)
@@ -122,10 +122,8 @@ def create_mesh(data, path):
     # factor to interpolate between control points
     interpolation_factor = data['factor']  # interpolate 10 times the points between
 
-    keys = ["rho", "theta", "z"]
-    tube_rad = data["tube_rad"]
+    keys = ["rho", "theta", "z",'tube_rad']
 
- 
 
     # do interpolation between points
     vals = {}
@@ -144,16 +142,14 @@ def create_mesh(data, path):
         # get proceeding circle (as x,y,z samples)
         x2, y2, z2 = create_circle(
         [data[keys[i]][p-1] for i in range(len(keys))],
-        [data[keys[i]][p] for i in range(len(keys))],
-        tube_rad,
+        [data[keys[i]][p] for i in range(len(keys))]
         )
         # get next circle (as x,y,z samples)
 
 
         x1, y1, z1 = create_circle(
         [data[keys[i]][p] for i in range(len(keys))],
-        [data[keys[i]][p+1] for i in range(len(keys))],
-        tube_rad,
+        [data[keys[i]][p+1] for i in range(len(keys))]
         )
         # plot for reference
         ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
@@ -281,7 +277,7 @@ data["rho"] = [
 ]
 data["theta"] = np.linspace(0, N, n)
 data["z"] = [0,10,15,20,20,25,30,40]
-data["tube_rad"] = 0.75
+data["tube_rad"] = [1,0.75,0.5,0.25,0.25,0.5,0.75,1]
 data['factor'] = f
 
 # create mesh from cylindrical coordinates
