@@ -8,10 +8,10 @@
 Build  : _269d0ffd5c-20210619 OPENFOAM=2012 patch=210618
 Arch   : "LSB;label=32;scalar=64"
 Exec   : setsToZones -noFlipMap -constant
-Date   : Jul 11 2022
-Time   : 19:04:19
+Date   : Jul 12 2022
+Time   : 13:15:49
 Host   : f485359ed3ce
-PID    : 16182
+PID    : 16529
 I/O    : uncollated
 Case   : /root/pulsed-reactor-optimisation/mesh_generation/coil_cylindrical
 nProcs : 1
@@ -25,10 +25,9 @@ Create time
 Create polyMesh for time = constant
 
 Searched : "constant/polyMesh/sets"
-Found    : 2(nonOrthoFaces nonAlignedEdges)
+Found    : 1(nonAlignedEdges)
 
 Adding set nonAlignedEdges as a pointZone.
-Adding set nonOrthoFaces as a faceZone.
 Writing mesh.
 End
 
