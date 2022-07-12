@@ -19,10 +19,10 @@ This folder contains Python tools to create a number of different OpenFOAM meshe
 </a>
 
 
-- ```coil_basic.py``` contains a function that given a coil radius, pipe radius, number of coils, and overall coil height, will return a blockMesh folder containing the mesh. An O-grid topology is used to create the coil sections. 
+```coil_basic.py``` contains a function that given a coil radius, pipe radius, number of coils, and overall coil height, will return a blockMesh folder containing the mesh. An O-grid topology is used to create the coil sections. 
 
 
-- ```coil_cylindrical.py``` contains a function that given cylindrical coordinates will return a blockMesh folder containing the mesh for a general helix around those coordinates. This function interpolates between cylindrical coordinates by a given factor to produce the complete curve. The rotation of each circle defining the cross section of this curve is defined by ensuring the circle is orthogonal to the vector between the centre of the previous circle and the current circle. ```circle_test.py``` provides an example of this calculation.
+```coil_cylindrical.py``` contains a function that given cylindrical coordinates will return a blockMesh folder containing the mesh for a general helix around those coordinates. This function interpolates between cylindrical coordinates by a given factor to produce the complete curve. The rotation of each circle defining the cross section of this curve is defined by ensuring the circle is orthogonal to the vector between the centre of the previous circle and the current circle. ```circle_test.py``` provides an example of this calculation.
 
 
 <a>
@@ -44,7 +44,19 @@ A preview of the mesh named ```pre_render.png```is plotted using Matplotlib as t
 
 ## Notes & Requirements
 
-- ```input```, ```output```, and ```walls``` patches are defined for OpenFOAM.
-- [classy_blocks](https://github.com/damogranlabs/classy_blocks) installed (added as a submodule) within **this** folder.
+```input```, ```output```, and ```walls``` patches are defined for OpenFOAM.
 
+[classy_blocks](https://github.com/damogranlabs/classy_blocks) should be installed (added as a submodule) within **this** folder. This can be achieved by: 
 
+- Deleting the existing (empty) folder
+```
+rm -r classy_blocks
+```
+- Removing the git link
+```
+git rm -r classy_blocks
+```
+- Adding classy_blocks as a submodule
+```
+git submodule add https://github.com/damogranlabs/classy_blocks
+```
