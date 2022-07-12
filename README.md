@@ -11,19 +11,19 @@
 This repository contains a number of projects concerned with the optimisation of operating conditions, and geometry of coiled tube reactors. 
 
 <a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/pre_render_cylindrical.png" alt="pre_render" title="pre_render" align="left" height="200" />
+<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/c225d8022cdf18229178eb9790b5dd4ace349656/mesh_generation/output_images/pre_render_cylindrical.png" alt="pre_render" title="pre_render" align="left" height="200" />
 </a>
 
 
 
-- ```pulsed-reactor-optimisation``` aims to optimise the geometric parameters and operating conditions of a pulsed flow helical tube reactor via CFD. More information can be found within the project's README. Importantly the optimisation and CFD is decoupled and must be done by a human.
+```pulsed-reactor-optimisation``` aims to optimise the geometric parameters and operating conditions of a pulsed flow helical tube reactor via CFD. More information can be found within the project's README. Importantly the optimisation and CFD is decoupled and must be done by a human.
 
 <a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/coil_cylinder_render.png" alt="pre_render" title="pre_render" align="right" height="200" />
+<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/c225d8022cdf18229178eb9790b5dd4ace349656/mesh_generation/output_images/coil_cylinder_render.png" alt="pre_render" title="pre_render" align="right" height="200" />
 </a>
 
-- ```mesh_generation``` contains tools for parametrically creating meshes of coiled tubes, general helices, and other reactors of interest.
+```mesh_generation``` contains tools for parametrically creating meshes of coiled tubes, general helices, and other reactors of interest.
 
-- ```simulation-integration``` provides an example of how OpenFOAM and Python can be linked using PyFOAM for the purposes of optimisation. With a case study regarding the optimisation of coiled tube reactor operating conditions. The CFD and optimisation are completely coupled here, allowing for automated evaluation on a high performance cluster. 
+```simulation-integration``` provides an example of how OpenFOAM and Python can be linked using PyFOAM for the purposes of optimisation. With a case study regarding the optimisation of coiled tube reactor operating conditions. The CFD and optimisation are completely coupled here, allowing for automated evaluation on a high performance cluster. 
 
 
