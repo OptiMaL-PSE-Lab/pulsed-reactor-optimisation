@@ -8,5 +8,5 @@
 
 This repository contains code both simulate and optimise a CFD model of a pulsed-flow helical-tube reactor. At the moment a single variable, amplitude, is optimised over. This will eventually become geometric attributes as well. 
 
-Author - Tom Savage, 30/03/2022
+
 
