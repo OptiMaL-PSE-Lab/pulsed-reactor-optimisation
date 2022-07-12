@@ -11,7 +11,7 @@
 This repository contains a number of projects concerned with the optimisation of operating conditions, and geometry of coiled tube reactors. 
 
 <a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/pre_render_basic.png" alt="pre_render" title="pre_render" align="left" height="200" />
+<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/pre_render_cylindrical.png" alt="pre_render" title="pre_render" align="left" height="200" />
 </a>
 
 
@@ -19,7 +19,7 @@ This repository contains a number of projects concerned with the optimisation of
 - ```pulsed-reactor-optimisation``` aims to optimise the geometric parameters and operating conditions of a pulsed flow helical tube reactor via CFD. More information can be found within the project's README. Importantly the optimisation and CFD is decoupled and must be done by a human.
 
 <a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/coil_basic_render.png" alt="pre_render" title="pre_render" align="right" height="200" />
+<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/96d12e1a3f5d7a5a943b59d68e402826464d77f8/mesh_generation/output_images/coil_cylinder_render.png" alt="pre_render" title="pre_render" align="right" height="200" />
 </a>
 
 - ```mesh_generation``` contains tools for parametrically creating meshes of coiled tubes, general helices, and other reactors of interest.
