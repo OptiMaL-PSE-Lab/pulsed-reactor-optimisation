@@ -15,20 +15,26 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-2
+3
 (
+    inlet
+    {
+        type            patch;
+        nFaces          100;
+        startFace       980;
+    }
     walls
     {
         type            patch;
-        nFaces          12600;
-        startFace       465700;
+        nFaces          40;
+        startFace       1080;
     }
     defaultFaces
     {
         type            empty;
         inGroups        1(empty);
-        nFaces          1000;
-        startFace       478300;
+        nFaces          900;
+        startFace       1120;
     }
 )
 

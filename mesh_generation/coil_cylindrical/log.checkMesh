@@ -8,10 +8,10 @@
 Build  : _269d0ffd5c-20210619 OPENFOAM=2012 patch=210618
 Arch   : "LSB;label=32;scalar=64"
 Exec   : checkMesh -constant
-Date   : Jul 11 2022
-Time   : 19:04:18
+Date   : Jul 12 2022
+Time   : 13:15:49
 Host   : f485359ed3ce
-PID    : 16167
+PID    : 16528
 I/O    : uncollated
 Case   : /root/pulsed-reactor-optimisation/mesh_generation/coil_cylindrical
 nProcs : 1
@@ -27,18 +27,19 @@ Create mesh for time = constant
 Time = constant
 
 Mesh stats
-    points:           164636
-    faces:            479300
-    internal faces:   465700
-    cells:            157500
+    points:           1042
+    internal points:  0
+    faces:            2020
+    internal faces:   980
+    cells:            500
     faces per cell:   6
-    boundary patches: 2
+    boundary patches: 3
     point zones:      0
     face zones:       0
     cell zones:       0
 
 Overall number of cells of each type:
-    hexahedra:     157500
+    hexahedra:     500
     prisms:        0
     wedges:        0
     pyramids:      0
@@ -57,8 +58,9 @@ Checking topology...
 
 Checking patch topology for multiply connected surfaces...
     Patch               Faces    Points   Surface topology                  
-    walls               12600    12640    ok (non-closed singly connected)  
-    defaultFaces        1000     1042     ok (non-closed singly connected)  
+    inlet               100      121      ok (non-closed singly connected)  
+    walls               40       80       ok (non-closed singly connected)  
+    defaultFaces        900      961      ok (non-closed singly connected)  
 
 Checking faceZone topology for multiply connected surfaces...
     No faceZones found.
@@ -67,22 +69,20 @@ Checking basic cellZone addressing...
     No cellZones found.
 
 Checking geometry...
-    Overall domain bounding box (-10.8725 -11.3189 -0.785201) (11.4817 11.3471 40.8121)
+    Overall domain bounding box (-1.5126 -1.48005 -5) (1.48128 1.52986 1.30717)
     Mesh has 0 geometric (non-empty/wedge) directions (0 0 0)
     Mesh has 0 solution (non-empty) directions (0 0 0)
- ***Number of edges not aligned with or perpendicular to non-empty directions: 486435
-  <<Writing 164636 points on non-aligned edges to set nonAlignedEdges
-    Boundary openness (3.54981e-17 -1.18785e-17 -6.68484e-18) OK.
-    Max cell openness = 3.85348e-16 OK.
+ ***Number of edges not aligned with or perpendicular to non-empty directions: 2561
+  <<Writing 1042 points on non-aligned edges to set nonAlignedEdges
+    Boundary openness (4.29486e-17 -4.88692e-17 1.6683e-17) OK.
+    Max cell openness = 5.27607e-16 OK.
     Max aspect ratio = -1 OK.
-    Minimum face area = 0.00346905. Maximum face area = 0.219293.  Face area magnitudes OK.
-    Min volume = 0.000298166. Max volume = 0.0199068.  Total volume = 1240.45.  Cell volumes OK.
-    Mesh non-orthogonality Max: 84.2531 average: 10.4622
-   *Number of severely non-orthogonal (> 70 degrees) faces: 415.
+    Minimum face area = 0.0068771. Maximum face area = 1.49206.  Face area magnitudes OK.
+    Min volume = 0.0275625. Max volume = 0.121214.  Total volume = 31.8904.  Cell volumes OK.
+    Mesh non-orthogonality Max: 39.6208 average: 17.3138
     Non-orthogonality check OK.
-  <<Writing 415 non-orthogonal faces to set nonOrthoFaces
     Face pyramids OK.
-    Max skewness = 1.06289 OK.
+    Max skewness = 2.79721 OK.
     Coupled point location match (average 0) OK.
 
 Failed 1 mesh checks.
