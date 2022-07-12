@@ -277,7 +277,7 @@ data["rho"] = [
 ]
 data["theta"] = np.linspace(0, N, n)
 data["z"] = [0,10,15,20,20,25,30,40]
-data["tube_rad"] = [1,0.75,0.5,0.25,0.25,0.5,0.75,1]
+data["tube_rad"] = [1,2,0.5,0.5,2,1.5,0.75,1]
 data['factor'] = f
 
 # create mesh from cylindrical coordinates
