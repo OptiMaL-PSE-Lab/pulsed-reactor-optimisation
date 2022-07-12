@@ -93,6 +93,8 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 
     le = len(data[keys[0]]["vals"])
     mesh = Mesh()
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
     for p in range(le - 1):
 
         # obtaining two circles
@@ -100,6 +102,14 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
         x2, y2, z2 = create_circle(
             [data[keys[i]]["vals"][p + 1] for i in range(len(keys))]
         )
+
+        ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
+        ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
+        for i in np.linspace(0,len(x1)-1,10):
+                i = int(i)
+                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.25)
+
+
 
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
 
@@ -184,6 +194,10 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 
         mesh.add_block(block)
         # copy template folder
+    ax.set_box_aspect(
+        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+    )
+    plt.savefig("output_images/pre_render_basic.png", dpi=1000)
     try:
         shutil.copytree("base", path)
     except:
@@ -195,13 +209,13 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
 
 
 # coil radius
-coil_rad = 2
+coil_rad = 10
 # tube radius
-tube_rad = 0.5
+tube_rad = 1
 # number of coils
-coils = 2
+coils = 4
 # coil height
-h = 6
+h = 20
 
 # create coil
 create_mesh(coil_rad, tube_rad, coils, h, path="coil_basic")

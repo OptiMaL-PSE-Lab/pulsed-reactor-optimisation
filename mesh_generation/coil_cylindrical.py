@@ -143,7 +143,7 @@ def create_mesh(data, path):
     for p in range(1,le-1):
         # get proceeding circle (as x,y,z samples)
         x2, y2, z2 = create_circle(
-        [data[keys[i]][p - 1] for i in range(len(keys))],
+        [data[keys[i]][p-1] for i in range(len(keys))],
         [data[keys[i]][p] for i in range(len(keys))],
         tube_rad,
         )
@@ -152,7 +152,7 @@ def create_mesh(data, path):
 
         x1, y1, z1 = create_circle(
         [data[keys[i]][p] for i in range(len(keys))],
-        [data[keys[i]][p + 1] for i in range(len(keys))],
+        [data[keys[i]][p+1] for i in range(len(keys))],
         tube_rad,
         )
         # plot for reference
@@ -217,10 +217,10 @@ def create_mesh(data, path):
             block.chop(2, count=1)
 
             # if at the start or end then state this
-            if p == 0:
-                block.set_patch("bottom", "inlet")
-            if p == le - 2:
-                block.set_patch("top", "outlet")
+            if p == 1:
+                block.set_patch("top", "inlet")
+            if p == le-2:
+                block.set_patch("bottom", "outlet")
 
             mesh.add_block(block)
 
@@ -237,9 +237,9 @@ def create_mesh(data, path):
         ]
         block = Block.create_from_points(block_points, block_edges)
         if p == 1:
-            block.set_patch("bottom", "inlet")
-        if p == le - 3:
-            block.set_patch("top", "outlet")
+            block.set_patch("top", "inlet")
+        if p == le-2:
+            block.set_patch("bottom", "outlet")
 
         block.chop(0, count=10)
         block.chop(1, count=10)
@@ -252,7 +252,7 @@ def create_mesh(data, path):
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
 
-    plt.savefig("pre_render.png", dpi=1000)
+    plt.savefig("output_images/pre_render_cylindrical.png", dpi=1000)
 
     # copy existing base mesh folder
     try:
@@ -280,7 +280,7 @@ data["rho"] = [
     for x in np.linspace(0, 2 * coils * np.pi, n)
 ]
 data["theta"] = np.linspace(0, N, n)
-data["z"] = [0,8,14,20,20,26,32,40]
+data["z"] = [0,10,15,20,20,25,30,40]
 data["tube_rad"] = 0.75
 data['factor'] = f
 
