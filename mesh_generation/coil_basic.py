@@ -78,7 +78,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
     # height is linear
     data["z"] = np.linspace(0,h,n)
 
-    port_len = tube_rad*5
+    port_len = tube_rad*10
     start_dx =  data['x'][0] + port_len * np.sin(0) 
     start_dy =  data['y'][0] - port_len * np.cos(0) 
     end_dx = data['x'][-1] - port_len * np.sin(2 * coils * np.pi)
