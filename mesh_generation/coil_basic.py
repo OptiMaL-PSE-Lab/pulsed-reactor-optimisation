@@ -49,9 +49,8 @@ def interpolate(y, f, kind):
     return y_new
 
 
-def parse_inputs(x0, x, f):
+def parse_inputs( x, f):
     # transform initial conditions and differences to values
-    x = np.cumsum(np.append([x0], x))
     x = interpolate(x, f, "quadratic")
     return x
 
@@ -66,46 +65,47 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
     n = int(coils * 8)  # 8 interpolation points per rotation
     interpolation_factor = 10  # interpolate 4 times the points between
     keys = ["x", "y", "t", "r", "z"]
-    initial_vals = [0, 0, 0, tube_rad, 0]  # initial values for keys
 
     data = {}
-    for i in range(len(keys)):
-        data[keys[i]] = {}
-        data[keys[i]]["0"] = initial_vals[i]
-
-    # for the basic coil these are calculated within the function
 
     # x and y values around a circle
-    data["x"]["diff"] = np.diff(
-        [(coil_rad * np.cos(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
-    )
-    data["y"]["diff"] = np.diff(
-        [(coil_rad * np.sin(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
-    )
-
+    data["x"] = [(coil_rad * np.cos(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
+    data["y"] = [(coil_rad * np.sin(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
     # rotations around z are defined by number of coils
-    data["t"]["diff"] = np.diff(np.linspace(0, 2 * coils * np.pi, n))
+    data["t"] = np.linspace(0, 2 * coils * np.pi, n)
     # no change in radius for now
-    data["r"]["diff"] = [0 for i in range(n)]
+    data["r"] = [tube_rad for i in range(n)]
     # height is linear
-    data["z"]["diff"] = [h / n for i in range(n)]
+    data["z"] = np.linspace(0,h,n)
+
+    port_len = tube_rad*5
+    start_dx =  data['x'][0] + port_len * np.sin(0) 
+    start_dy =  data['y'][0] - port_len * np.cos(0) 
+    end_dx = data['x'][-1] - port_len * np.sin(2 * coils * np.pi)
+    end_dy = data['y'][-1] + port_len * np.cos(2 * coils * np.pi)
+
+    data['x'] = np.append(np.append([start_dx],data['x']),[end_dx]) 
+    data['y'] = np.append(np.append([start_dy],data['y']),[end_dy]) 
+    data['t'] = np.append(np.append([data['t'][0]],data['t']),[data['t'][-1]])
+    data['z'] = np.append(np.append([data['z'][0]],data['z']),[data['z'][-1]])
+    data['r'] = np.append(np.append([data['r'][0]],data['r']),[data['r'][-1]])
+
 
     # calculating real values from differences and initial conditions
     for k in keys:
-        data[k]["vals"] = parse_inputs(
-            data[k]["0"], data[k]["diff"], interpolation_factor
-        )
+        data[k] = parse_inputs(data[k], interpolation_factor)
 
-    le = len(data[keys[0]]["vals"])
+
+    le = len(data[keys[0]])
     mesh = Mesh()
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
     for p in range(le - 1):
 
         # obtaining two circles
-        x1, y1, z1 = create_circle([data[keys[i]]["vals"][p] for i in range(len(keys))])
+        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))])
         x2, y2, z2 = create_circle(
-            [data[keys[i]]["vals"][p + 1] for i in range(len(keys))]
+            [data[keys[i]][p + 1] for i in range(len(keys))]
         )
 
         ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
@@ -165,14 +165,15 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
             block.set_patch(["front"], "walls")
 
             # partition block
-            block.chop(0, count=10)
-            block.chop(1, count=10)
-            block.chop(2, count=1)
-
             if p == 0:
                 block.set_patch("bottom", "inlet")
             if p == le - 2:
                 block.set_patch("top", "outlet")
+
+
+            block.chop(0, count=10)
+            block.chop(1, count=10)
+            block.chop(2, count=1)
 
             mesh.add_block(block)
 
@@ -188,10 +189,12 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
             Edge(6, 7, None),
         ]
         block = Block.create_from_points(block_points, block_edges)
+        # partition block
         if p == 0:
             block.set_patch("bottom", "inlet")
         if p == le - 2:
             block.set_patch("top", "outlet")
+
 
         block.chop(0, count=10)
         block.chop(1, count=10)
@@ -202,7 +205,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
-    plt.show()
+    ax.set_title('Pitch: '+str(np.round(pitch,2))+' Coil Radius: '+str(np.round(coil_rad,2)))
     plt.savefig("output_images/"+path+".png", dpi=1000)
     try:
         shutil.copytree("base", path)
@@ -219,6 +222,5 @@ length = 50
 
 
 coil_rad = 3
-pitch = 4
-# create coil
+pitch = 1.5
 create_mesh(coil_rad, tube_rad, pitch, length, path="coil_basic")
