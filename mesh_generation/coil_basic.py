@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.interpolate import interp1d
-from classy_examples.classy_blocks.classes.primitives import Edge
-from classy_examples.classy_blocks.classes.block import Block
-from classy_examples.classy_blocks.classes.mesh import Mesh
+from classy_blocks.classes.primitives import Edge
+from classy_blocks.classes.block import Block
+from classy_blocks.classes.mesh import Mesh
 import shutil
 import os
 import matplotlib.pyplot as plt
@@ -56,9 +56,14 @@ def parse_inputs(x0, x, f):
     return x
 
 
-def create_mesh(coil_rad, tube_rad, coils, h, path):
+def create_mesh(coil_rad, tube_rad, pitch, length, path):
 
-    n = coils * 8  # 8 interpolation points per rotation
+
+    
+    coils = length/(2*np.pi*coil_rad)
+
+    h = pitch * coils 
+    n = int(coils * 8)  # 8 interpolation points per rotation
     interpolation_factor = 10  # interpolate 4 times the points between
     keys = ["x", "y", "t", "r", "z"]
     initial_vals = [0, 0, 0, tube_rad, 0]  # initial values for keys
@@ -197,7 +202,8 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
-    plt.savefig("output_images/pre_render_basic.png", dpi=1000)
+    plt.show()
+    plt.savefig("output_images/"+path+".png", dpi=1000)
     try:
         shutil.copytree("base", path)
     except:
@@ -208,14 +214,11 @@ def create_mesh(coil_rad, tube_rad, coils, h, path):
     os.system(path + "/Allrun.mesh")
 
 
-# coil radius
-coil_rad = 10
-# tube radius
-tube_rad = 1
-# number of coils
-coils = 4
-# coil height
-h = 20
+tube_rad = 0.5
+length = 50
 
+
+coil_rad = 3
+pitch = 4
 # create coil
-create_mesh(coil_rad, tube_rad, coils, h, path="coil_basic")
+create_mesh(coil_rad, tube_rad, pitch, length, path="coil_basic")
