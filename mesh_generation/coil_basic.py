@@ -18,11 +18,14 @@ def rotate_z(x, y, z, r_z):
     return x_new, y_new, z
 
 
-def create_circle(d):
+def create_circle(d,flip):
     # from a centre, radius, and z rotation,
     #  create the points of a circle
     c_x, c_y, t, r, c_z = d
-    alpha = np.linspace(0, 2 * np.pi, 100)
+    if flip is False:
+        alpha = np.linspace(0, 2 * np.pi, 100)
+    else:
+        alpha = np.linspace(np.pi,(np.pi*2)+np.pi,100)
     z = r * np.cos(alpha) + c_z
     x = r * np.sin(alpha) + c_x
     y = [c_y for i in range(len(z))]
@@ -59,7 +62,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     data["r"] = [tube_rad for i in range(n)]
     # height is linear
     data["z"] = list(np.linspace(0,h*il,n))
-
+    orig_len = len(data['t'])
     if inversion_loc is not None:
         il = inversion_loc
         n = int(coils * points * (1-il))
@@ -106,22 +109,27 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     mesh = Mesh()
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
-    for p in range(le - 1):
+    for p in range(le-1):
 
         # obtaining two circles
+        if p < orig_len-1:
+            flip = False
+        else:
+            flip = True
 
-        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))])
+
+
+        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip)
         x2, y2, z2 = create_circle(
-            [data[keys[i]][p + 1] for i in range(len(keys))]
-        )
+            [data[keys[i]][p + 1] for i in range(len(keys))],flip)
+
 
 
         ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
         ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
-        for i in np.linspace(0,len(x1)-1,10):
+        for i in np.linspace(0,len(x1)-1,5):
                 i = int(i)
                 ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.25)
-
 
 
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
@@ -214,7 +222,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
     ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
-    #plt.show()
+    plt.show()
     plt.savefig("output_images/"+path+".png", dpi=400)
     try:
         shutil.copytree("base", path)
@@ -230,5 +238,5 @@ tube_rad = 0.5
 length = 60
 coil_rad = 3
 pitch = 3
-inversion_loc = 0.5
+inversion_loc = 0.7
 create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path="coil_basic")
