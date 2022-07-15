@@ -34,55 +34,63 @@ def create_circle(d):
     return x, y, z
 
 
-def interpolate(y, f, kind):
-    # interpolate between points y, by a factor of f
-    x = np.linspace(0, len(y), len(y))
-    x_new = np.linspace(0, len(y), len(y) * f)
-    f = interp1d(x, y, kind=kind)
-    y_new = f(x_new)
-
-    # # plot if you want to
-    # plt.figure()
-    # plt.scatter(x, y)
-    # plt.plot(x_new,y_new)
-    # plt.show()
-    return y_new
+def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
 
-def parse_inputs( x, f):
-    # transform initial conditions and differences to values
-    x = interpolate(x, f, "quadratic")
-    return x
-
-
-def create_mesh(coil_rad, tube_rad, pitch, length, path):
-
-
-    
     coils = length/(2*np.pi*coil_rad)
-
     h = pitch * coils 
-    n = int(coils * 8)  # 8 interpolation points per rotation
-    interpolation_factor = 10  # interpolate 4 times the points between
     keys = ["x", "y", "t", "r", "z"]
-
     data = {}
 
+    points = 50
+    if inversion_loc is None:
+        il = 1
+        n = int(coils * points)  # 8 interpolation points per rotation
+    else:
+        il = inversion_loc
+        n = int(coils * points * il)  # 8 interpolation points per rotation
+    coil_vals = np.linspace(0, 2 * coils * np.pi*il, n)
     # x and y values around a circle
-    data["x"] = [(coil_rad * np.cos(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
-    data["y"] = [(coil_rad * np.sin(x_y)) for x_y in np.linspace(0, 2 * coils * np.pi, n)]
+    data["x"] = [(coil_rad * np.cos(x_y)) for x_y in coil_vals]
+    data["y"] = [(coil_rad * np.sin(x_y)) for x_y in coil_vals]
     # rotations around z are defined by number of coils
-    data["t"] = np.linspace(0, 2 * coils * np.pi, n)
+    data["t"] = list(coil_vals)
     # no change in radius for now
     data["r"] = [tube_rad for i in range(n)]
     # height is linear
-    data["z"] = np.linspace(0,h,n)
+    data["z"] = list(np.linspace(0,h*il,n))
+
+    if inversion_loc is not None:
+        il = inversion_loc
+        n = int(coils * points * (1-il))
+        new_tv = 2*coils*np.pi*il + np.pi
+        new_end = 2*coils*np.pi + np.pi
+        dt = new_end-new_tv
+        coil_vals = np.linspace(new_end-dt, new_tv-dt , n)
+
+        dx = data['x'][-1]*2
+        dy = data['y'][-1]*2
+        
+        new_x = ([(coil_rad * (np.cos(x))) for x in coil_vals] + dx)[1:]
+        new_y = ([(coil_rad * (np.sin(x))) for x in coil_vals] + dy)[1:]
+        new_t = list(coil_vals)[1:]
+        new_r = [tube_rad for i in range(n)][1:]
+        new_z = list(np.linspace(h*il,h,n))[1:]
+        for i in range(len(new_x)):
+            data["x"].append(new_x[i])
+            data["y"].append(new_y[i])
+            # rotations around z are defined by number of coils
+            data["t"].append(new_t[i])
+            # no change in radius for now
+            data["r"].append(new_r[i])
+            # height is linear
+            data["z"].append(new_z[i])
 
     port_len = tube_rad*10
-    start_dx =  data['x'][0] + port_len * np.sin(0) 
-    start_dy =  data['y'][0] - port_len * np.cos(0) 
-    end_dx = data['x'][-1] - port_len * np.sin(2 * coils * np.pi)
-    end_dy = data['y'][-1] + port_len * np.cos(2 * coils * np.pi)
+    start_dx =  data['x'][0] #+ port_len 
+    start_dy =  data['y'][0] - port_len 
+    end_dx = data['x'][-1] + port_len * np.sin(new_tv-dt) #+ dx
+    end_dy = data['y'][-1] - port_len * np.cos(new_tv-dt) #+ dy
 
     data['x'] = np.append(np.append([start_dx],data['x']),[end_dx]) 
     data['y'] = np.append(np.append([start_dy],data['y']),[end_dy]) 
@@ -92,8 +100,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
 
 
     # calculating real values from differences and initial conditions
-    for k in keys:
-        data[k] = parse_inputs(data[k], interpolation_factor)
 
 
     le = len(data[keys[0]])
@@ -103,10 +109,12 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
     for p in range(le - 1):
 
         # obtaining two circles
+
         x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))])
         x2, y2, z2 = create_circle(
             [data[keys[i]][p + 1] for i in range(len(keys))]
         )
+
 
         ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
         ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
@@ -205,8 +213,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
-    ax.set_title('Pitch: '+str(np.round(pitch,2))+' Coil Radius: '+str(np.round(coil_rad,2)))
-    plt.savefig("output_images/"+path+".png", dpi=1000)
+    ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
+    #plt.show()
+    plt.savefig("output_images/"+path+".png", dpi=400)
     try:
         shutil.copytree("base", path)
     except:
@@ -218,9 +227,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, path):
 
 
 tube_rad = 0.5
-length = 50
-
-
+length = 60
 coil_rad = 3
-pitch = 1.5
-create_mesh(coil_rad, tube_rad, pitch, length, path="coil_basic")
+pitch = 3
+inversion_loc = 0.5
+create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path="coil_basic")
