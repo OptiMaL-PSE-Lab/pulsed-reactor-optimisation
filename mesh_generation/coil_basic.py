@@ -6,6 +6,7 @@ from classy_blocks.classes.mesh import Mesh
 import shutil
 import os
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 def rotate_z(x, y, z, r_z):
@@ -17,6 +18,26 @@ def rotate_z(x, y, z, r_z):
     y_new = x * np.sin(r_z) + y * np.cos(r_z)
     return x_new, y_new, z
 
+def rotate_x(x0, y0, z0, r_x):
+    # rotation of points around x axis by r_x radians
+    y = np.array(y0) - np.mean(y0)
+    z = np.array(z0) - np.mean(z0)
+    y_new = y * np.cos(r_x) - z * np.sin(r_x)
+    z_new = y * np.sin(r_x) - z * np.cos(r_x)
+    y_new += np.mean(y0)
+    z_new += np.mean(z0)
+    return x0, y_new, z_new
+
+
+def rotate_y(x0, y0, z0, r_y):
+    # rotation of points around y axis by r_y radians
+    x = np.array(x0) - np.mean(x0)
+    z = np.array(z0) - np.mean(z0)
+    z_new = z * np.cos(r_y) - x * np.sin(r_y)
+    x_new = z * np.sin(r_y) - x * np.cos(r_y)
+    x_new += np.mean(x0)
+    z_new += np.mean(z0)
+    return x_new, y0, z_new
 
 def create_circle(d,flip):
     # from a centre, radius, and z rotation,
@@ -25,7 +46,7 @@ def create_circle(d,flip):
     if flip is False:
         alpha = np.linspace(0, 2 * np.pi, 100)
     else:
-        alpha = np.linspace(np.pi,(np.pi*2)+np.pi,100)
+        alpha = np.linspace(2*np.pi,0,100)
     z = r * np.cos(alpha) + c_z
     x = r * np.sin(alpha) + c_x
     y = [c_y for i in range(len(z))]
@@ -39,19 +60,19 @@ def create_circle(d,flip):
 
 def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
-
     coils = length/(2*np.pi*coil_rad)
     h = pitch * coils 
     keys = ["x", "y", "t", "r", "z"]
     data = {}
-
     points = 50
+
     if inversion_loc is None:
         il = 1
         n = int(coils * points)  # 8 interpolation points per rotation
     else:
         il = inversion_loc
         n = int(coils * points * il)  # 8 interpolation points per rotation
+
     coil_vals = np.linspace(0, 2 * coils * np.pi*il, n)
     # x and y values around a circle
     data["x"] = [(coil_rad * np.cos(x_y)) for x_y in coil_vals]
@@ -63,7 +84,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     # height is linear
     data["z"] = list(np.linspace(0,h*il,n))
     orig_len = len(data['t'])
+
     if inversion_loc is not None:
+
         il = inversion_loc
         n = int(coils * points * (1-il))
         new_tv = 2*coils*np.pi*il + np.pi
@@ -90,10 +113,17 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
             data["z"].append(new_z[i])
 
     port_len = tube_rad*10
-    start_dx =  data['x'][0] #+ port_len 
+    start_dx =  data['x'][0] 
     start_dy =  data['y'][0] - port_len 
-    end_dx = data['x'][-1] + port_len * np.sin(new_tv-dt) #+ dx
-    end_dy = data['y'][-1] - port_len * np.cos(new_tv-dt) #+ dy
+    if inversion_loc is not None:
+        end_theta = new_tv-dt
+        end_dx = data['x'][-1] + port_len * np.sin(end_theta)
+        end_dy = data['y'][-1] - port_len * np.cos(end_theta) 
+    else:
+        end_theta = 2*np.pi*coils
+        end_dx = data['x'][-1] - port_len * np.sin(end_theta)
+        end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
+
 
     data['x'] = np.append(np.append([start_dx],data['x']),[end_dx]) 
     data['y'] = np.append(np.append([start_dy],data['y']),[end_dy]) 
@@ -112,24 +142,32 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     for p in range(le-1):
 
         # obtaining two circles
-        if p < orig_len-1:
-            flip = False
+        if p < orig_len:
+            flip_1 = False
+            flip_2 = False
+        elif p == orig_len:
+            flip_1 = False
+            flip_2 = True
         else:
-            flip = True
+            flip_1 = True
+            flip_2 = True
 
+        if p == le - 2 and inversion_loc is None:
+            flip_1 = False
+            flip_2 = False
 
-
-        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip)
+        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
         x2, y2, z2 = create_circle(
-            [data[keys[i]][p + 1] for i in range(len(keys))],flip)
+            [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
 
 
+        ax.plot3D(x2, y2, z2, color='k', alpha=0.75, lw=0.5)
+        ax.plot3D(x1, y1, z1, color='k', alpha=0.75, lw=0.5)
 
-        ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
-        ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
-        for i in np.linspace(0,len(x1)-1,5):
+        
+        for i in np.linspace(0,len(x1)-1,20):
                 i = int(i)
-                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.25)
+                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=1)
 
 
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
@@ -236,7 +274,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
 tube_rad = 0.5
 length = 60
+
 coil_rad = 3
 pitch = 3
-inversion_loc = 0.7
+inversion_loc = 0.5
+
 create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path="coil_basic")
