@@ -8,10 +8,10 @@
 Build  : _269d0ffd5c-20210619 OPENFOAM=2012 patch=210618
 Arch   : "LSB;label=32;scalar=64"
 Exec   : checkMesh -constant
-Date   : Jul 13 2022
-Time   : 18:32:19
+Date   : Jul 16 2022
+Time   : 10:02:07
 Host   : f485359ed3ce
-PID    : 66056
+PID    : 61347
 I/O    : uncollated
 Case   : /root/pulsed-reactor-optimisation/mesh_generation/coil_basic
 nProcs : 1
@@ -27,10 +27,10 @@ Create mesh for time = constant
 Time = constant
 
 Mesh stats
-    points:           119830
-    faces:            348580
-    internal faces:   338420
-    cells:            114500
+    points:           82839
+    faces:            240660
+    internal faces:   233340
+    cells:            79000
     faces per cell:   6
     boundary patches: 3
     point zones:      0
@@ -38,7 +38,7 @@ Mesh stats
     cell zones:       0
 
 Overall number of cells of each type:
-    hexahedra:     114500
+    hexahedra:     79000
     prisms:        0
     wedges:        0
     pyramids:      0
@@ -57,8 +57,8 @@ Checking topology...
 Checking patch topology for multiply connected surfaces...
     Patch               Faces    Points   Surface topology                  
     inlet               500      521      ok (non-closed singly connected)  
+    walls               6320     6360     ok (non-closed singly connected)  
     outlet              500      521      ok (non-closed singly connected)  
-    walls               9160     9200     ok (non-closed singly connected)  
 
 Checking faceZone topology for multiply connected surfaces...
     No faceZones found.
@@ -67,18 +67,18 @@ Checking basic cellZone addressing...
     No cellZones found.
 
 Checking geometry...
-    Overall domain bounding box (-3.49466 -5.73742 -0.528838) (3.60691 3.49965 4.50796)
+    Overall domain bounding box (-3.76261 -5 -0.499748) (4.31968 9.44304 10.0493)
     Mesh has 3 geometric (non-empty/wedge) directions (1 1 1)
     Mesh has 3 solution (non-empty) directions (1 1 1)
-    Boundary openness (1.35343e-17 -2.55841e-17 -1.02473e-18) OK.
-    Max cell openness = 6.11023e-16 OK.
-    Max aspect ratio = 27.7537 OK.
-    Minimum face area = 0.000764122. Maximum face area = 0.0502434.  Face area magnitudes OK.
-    Min volume = 0.000139676. Max volume = 0.00156754.  Total volume = 46.7569.  Cell volumes OK.
-    Mesh non-orthogonality Max: 32.9632 average: 7.95851
+    Boundary openness (1.66838e-18 -4.69812e-20 4.2285e-18) OK.
+    Max cell openness = 1.93443e-15 OK.
+    Max aspect ratio = 326.447 OK.
+    Minimum face area = 0.000764122. Maximum face area = 0.39625.  Face area magnitudes OK.
+    Min volume = 0.000267009. Max volume = 0.0124898.  Total volume = 54.6232.  Cell volumes OK.
+    Mesh non-orthogonality Max: 32.7143 average: 10.0821
     Non-orthogonality check OK.
     Face pyramids OK.
-    Max skewness = 0.983397 OK.
+    Max skewness = 0.986093 OK.
     Coupled point location match (average 0) OK.
 
 Mesh OK.

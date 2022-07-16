@@ -21,19 +21,19 @@ FoamFile
     {
         type            patch;
         nFaces          500;
-        startFace       338420;
+        startFace       233340;
+    }
+    walls
+    {
+        type            patch;
+        nFaces          6320;
+        startFace       233840;
     }
     outlet
     {
         type            patch;
         nFaces          500;
-        startFace       338920;
-    }
-    walls
-    {
-        type            patch;
-        nFaces          9160;
-        startFace       339420;
+        startFace       240160;
     }
 )
 

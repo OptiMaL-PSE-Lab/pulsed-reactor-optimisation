@@ -8,10 +8,10 @@
 Build  : _269d0ffd5c-20210619 OPENFOAM=2012 patch=210618
 Arch   : "LSB;label=32;scalar=64"
 Exec   : setsToZones -noFlipMap -constant
-Date   : Jul 13 2022
-Time   : 18:32:20
+Date   : Jul 16 2022
+Time   : 10:02:07
 Host   : f485359ed3ce
-PID    : 66064
+PID    : 61368
 I/O    : uncollated
 Case   : /root/pulsed-reactor-optimisation/mesh_generation/coil_basic
 nProcs : 1
