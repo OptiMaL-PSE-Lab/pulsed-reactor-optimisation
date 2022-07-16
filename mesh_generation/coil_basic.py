@@ -1,12 +1,10 @@
 import numpy as np
-from scipy.interpolate import interp1d
 from classy_blocks.classes.primitives import Edge
 from classy_blocks.classes.block import Block
 from classy_blocks.classes.mesh import Mesh
 import shutil
 import os
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 
 def rotate_z(x, y, z, r_z):
@@ -137,7 +135,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     le = len(data[keys[0]])
     mesh = Mesh()
-    fig = plt.figure()
+    fig = plt.figure(figsize=(4,4))
     ax = fig.add_subplot(projection="3d")
     for p in range(le-1):
 
@@ -260,7 +258,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
     ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
-    plt.show()
+    #plt.show()
     plt.savefig("output_images/"+path+".png", dpi=400)
     try:
         shutil.copytree("base", path)
@@ -279,4 +277,5 @@ coil_rad = 3
 pitch = 3
 inversion_loc = 0.5
 
-create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path="coil_basic")
+
+create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path='coil_basic')
