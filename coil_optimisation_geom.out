@@ -1,0 +1,228 @@
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+sh: simulation-integration/output/d2349fcc-2008-44eb-bfd7-dfacd919dfad/Allrun.mesh: Permission denied
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         1 (peak)   1.28 (ave)
+
+============================================
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+sh: simulation-integration/output/0f3cc3d4-e291-4748-bda0-f6de053fef3c/Allrun.mesh: Permission denied
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.33 (ave)
+
+============================================
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+chmod: cannot access '*/All*': No such file or directory
+sh: simulation-integration/output/fe704231-c26f-483f-9939-7e27cafb4e97/Allrun.mesh: Permission denied
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         1 (peak)   1.66 (ave)
+
+============================================
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+Traceback (most recent call last):
+  File "simulation-integration/main_geom.py", line 2, in <module>
+    from utils import eval_cfd, newJSONLogger
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/utils.py", line 21, in <module>
+    from mesh_generation.coil_basic import create_mesh
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/../mesh_generation/coil_basic.py", line 287
+    os.system('mesh_generation/base/Allrun.mesh")
+                                                ^
+SyntaxError: EOL while scanning string literal
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.10 (ave)
+
+============================================
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+Cleaning case /rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output/66212ee3-a38f-45d2-bd63-a773315f629e
+Running blockMesh on /rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output/66212ee3-a38f-45d2-bd63-a773315f629e
+Running checkMesh on /rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output/66212ee3-a38f-45d2-bd63-a773315f629e
+Running setsToZones on /rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output/66212ee3-a38f-45d2-bd63-a773315f629e
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v1906                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : v1906 OPENFOAM=1906
+Arch   : "LSB;label=32;scalar=64"
+Exec   : checkMesh -constant
+Date   : Jul 18 2022
+Time   : 19:56:29
+Host   : cx2-1-1-0.cx2.hpc.ic.ac.uk
+PID    : 555028
+I/O    : uncollated
+Case   : /rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output/66212ee3-a38f-45d2-bd63-a773315f629e
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = constant
+
+
+
+--> FOAM FATAL ERROR: 
+Cannot find file "points" in directory "polyMesh" in times "constant" down to constant
+
+    From function virtual Foam::IOobject Foam::fileOperation::findInstance(const Foam::IOobject&, Foam::scalar, const Foam::word&) const
+    in file global/fileOperations/fileOperation/fileOperation.C at line 868.
+
+FOAM exiting
+
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.31 (ave)
+
+============================================
