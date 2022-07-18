@@ -1,0 +1,6 @@
+[submodule "classy_blocks"]
+	path = classy_blocks
+	url = git@github.com:damogranlabs/classy_blocks.git
+[submodule "classy_blocks1"]
+	path = classy_blocks1
+	url = https://github.com/damogranlabs/classy_blocks.git

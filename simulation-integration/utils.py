@@ -15,7 +15,7 @@ from scipy.optimize import minimize
 from bayes_opt.logger import JSONLogger
 from PyFoam.Basics.DataStructures import Vector
 import shutil
-
+from coil_basic import create_mesh
 
 class newJSONLogger(JSONLogger):
     def __init__(self, path):
@@ -55,30 +55,29 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 
 
 def eval_cfd(a, f, re):
-    # creating solution folder
-    os.mkdir("output/single-coil-amp%.6f" % a)
-    os.mkdir("output/single-coil-amp%.6f/0" % a)
-    os.mkdir("output/single-coil-amp%.6f/constant" % a)
-    os.mkdir("output/single-coil-amp%.6f/system" % a)
+    #TODO: geomteric parameters should be received as arguments, temporarily initialised 
+    tube_rad = 0.5
+    length = 60
+    coil_rad = 3
+    pitch = 3
+    inversion_loc = 0.5
 
-    # copying initial conditions
-    from_directory = "single-coil/0"
-    to_directory = "output/single-coil-amp%.6f/0" % a
-    copy_tree(from_directory, to_directory)
+    #creating solution folder and copying folders
+    filepath= "output/single-coil-a%.6f-coilrad%.3f" % (a,coil_rad)
+    hostpath= "output/single-coil"
+    os.mkdir(filepath)
+    shutil.copy((os.path.join(hostpath,"Allrun.mesh")),filepath)
+    sub_folders= ['0','constant','system']
+    for i in sub_folders:
+        subpath= os.path.join(filepath,i)
+        os.mkdir(subpath)
+        from_directory = os.path.join (hostpath,i)
+        to_directory = subpath
+        copy_tree(from_directory, to_directory)
 
-    # copying constants
-    from_directory = "single-coil/constant"
-    to_directory = "output/single-coil-amp%.6f/constant" % a
-    copy_tree(from_directory, to_directory)
-
-    # copying cfd system to solution
-    from_directory = "single-coil/system"
-    to_directory = "output/single-coil-amp%.6f/system" % a
-
-    copy_tree(from_directory, to_directory)
-
-    Newcase = "output/single-coil-amp%.6f" % a
-
+    Newcase= filepath
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=Newcase)
+    os.system(Newcase + "/Allrun.mesh")
     vel = (re * 9.9 * 10 ** -4) / (990 * 0.005)
 
     print('\n a: ',a,'\n')
