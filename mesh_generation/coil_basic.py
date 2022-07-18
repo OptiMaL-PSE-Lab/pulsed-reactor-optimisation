@@ -284,6 +284,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     filedata = filedata.replace('scale   1','scale   0.01')
     with open(os.path.join(path,"system", "blockMeshDict"),'w') as file:
          file.write(filedata)
-    os.system(path +"/Allrun.mesh")
+    os.system(path+"/Allrun.mesh")
     return 
 
