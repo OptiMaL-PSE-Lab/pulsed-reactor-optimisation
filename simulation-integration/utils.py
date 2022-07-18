@@ -17,16 +17,16 @@ from PyFoam.Execution.UtilityRunner import UtilityRunner
 from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
 
-try: 
+try:
     HPC = str(sys.argv[1])
-    if HPC == 'HPC':
+    if HPC == "HPC":
         HPC = True
-        
+
     else:
-        HPC = False 
+        HPC = False
 except:
     HPC = False
 
@@ -38,7 +38,7 @@ class newJSONLogger(JSONLogger):
         self._path = path if path[-5:] == ".json" else path + ".json"
 
 
-def calc_etheta(N, theta,off,up):
+def calc_etheta(N, theta, off, up):
     theta = theta - off
     z = factorial(N - 1)
     xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
@@ -47,13 +47,13 @@ def calc_etheta(N, theta,off,up):
 
 
 def loss(X, theta, etheta):
-    N,off,up = X
-    error_sq = 0 
+    N, off, up = X
+    error_sq = 0
     for i in range(len(theta)):
         if theta[i] > 2:
-            error_sq += 0 
+            error_sq += 0
         else:
-            error_sq += (calc_etheta(N, theta[i],off,up) - etheta[i]) ** 2
+            error_sq += (calc_etheta(N, theta[i], off, up) - etheta[i]) ** 2
     return error_sq
 
 
@@ -67,11 +67,12 @@ class CompactAnalyzer(BoundingLogAnalyzer):
             ),
         )
 
+
 def vel_calc(re):
-    return (re * 9.9 * 10 ** -4) / (990 * 0.005)
+    return (re * 9.9 * 10**-4) / (990 * 0.005)
 
 
-def calculate_N(value,time):
+def calculate_N(value, time):
     # obtaining a smooth curve by taking peaks
     peaks, _ = find_peaks(value, prominence=0.000001)
     times_peaks = time[peaks]
@@ -96,46 +97,54 @@ def calculate_N(value,time):
 
     # fitting value of N
     s = 10000
-    x0_list = np.array([np.logspace(np.log(1),np.log(50), s),np.random.uniform(-1,0, s),np.random.uniform(0,1, s)]).T
+    x0_list = np.array(
+        [
+            np.logspace(np.log(1), np.log(50), s),
+            np.random.uniform(-1, 0, s),
+            np.random.uniform(0, 1, s),
+        ]
+    ).T
 
     best = np.Inf
     for x0 in x0_list:
-        l = loss(x0,theta,etheta)
+        l = loss(x0, theta, etheta)
         if l < best:
             best = l
             X = x0
 
-    N,off,up = X 
+    N, off, up = X
 
     plt.figure()
     plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
     etheta_calc = []
     for t in theta:
-        etheta_calc.append(calc_etheta(N, t,off,up))
+        etheta_calc.append(calc_etheta(N, t, off, up))
     plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
     plt.grid()
     plt.legend()
     plt.savefig("simulation-integration/output/dimensionless_conversion.pdf")
-    return N 
+    return N
+
 
 def setup_folder(base_folder):
-    #creating solution folder and copying folders
-    filepath= "simulation-integration/output/"+str(uuid4())
-    hostpath= base_folder
+    # creating solution folder and copying folders
+    filepath = "simulation-integration/output/" + str(uuid4())
+    hostpath = base_folder
     os.mkdir(filepath)
-    shutil.copy((os.path.join(hostpath,"Allrun.mesh")),filepath)
-    sub_folders= ['0','constant','system']
+    shutil.copy((os.path.join(hostpath, "Allrun.mesh")), filepath)
+    sub_folders = ["0", "constant", "system"]
     for i in sub_folders:
-        subpath= os.path.join(filepath,i)
+        subpath = os.path.join(filepath, i)
         os.mkdir(subpath)
-        from_directory = os.path.join(hostpath,i)
+        from_directory = os.path.join(hostpath, i)
         to_directory = subpath
         copy_tree(from_directory, to_directory)
 
-    newcase= filepath
+    newcase = filepath
     return newcase
 
-def parse_conditions(case,a,f,vel):
+
+def parse_conditions(case, a, f, vel):
     velBC = ParsedParameterFile(path.join(case, "0", "U"))
     velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
     velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.5f;"' % f
@@ -147,16 +156,17 @@ def parse_conditions(case,a,f,vel):
         logname="decomposePar",
     )
     decomposer.start()
-    return 
+    return
+
 
 def run_cfd(case):
     if HPC is True:
-        print('TRUE')
+        print("TRUE")
         run_command = f"mpiexec pimpleFoam -parallel"
     else:
-        print('FALSE')
+        print("FALSE")
         run_command = f"pimpleFoam"
-    
+
     run = AnalyzedRunner(
         CompactAnalyzer(),
         argv=[run_command, "-case", case],
@@ -172,26 +182,26 @@ def run_cfd(case):
 
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
-    return time,value
+    return time, value
 
 
-def eval_cfd(a, f, re,coil_rad,pitch):
+def eval_cfd(a, f, re, coil_rad, pitch):
     tube_rad = 0.5
     length = 60
     inversion_loc = None
     newcase = setup_folder("mesh_generation/base")
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=newcase)
     vel = vel_calc(re)
-    parse_conditions(newcase,a,f,vel)
-    time,value = run_cfd(newcase)
-    N = calculate_N(value,time)
+    parse_conditions(newcase, a, f, vel)
+    time, value = run_cfd(newcase)
+    N = calculate_N(value, time)
     return N
 
 
 def eval_cfd_operating_conditions(a, f, re):
     newcase = setup_folder("mesh_generation/base")
     vel = vel = vel_calc(re)
-    parse_conditions(newcase,a,f,vel)
-    time,value = run_cfd(newcase)
-    N = calculate_N(value,time)
+    parse_conditions(newcase, a, f, vel)
+    time, value = run_cfd(newcase)
+    N = calculate_N(value, time)
     return N

@@ -18,7 +18,13 @@ pcon_dict = {"type": "ineq", "fun": pcon}
 # setting up the optimisation problem
 optimizer = BayesianOptimization(
     f=eval_cfd,
-    pbounds={"a": (0.001, 0.008), "f": (2, 8), "re": (10, 50),"coil_rad":(1,5),'pitch':(1.25,5)},
+    pbounds={
+        "a": (0.001, 0.008),
+        "f": (2, 8),
+        "re": (10, 50),
+        "coil_rad": (1, 5),
+        "pitch": (1.25, 5),
+    },
     pcons=pcon_dict,
     verbose=2,
     random_state=1,
