@@ -115,8 +115,15 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     port_len = tube_rad*10
     start_dx =  data['x'][0] 
     start_dy =  data['y'][0] - port_len 
-    end_dx = data['x'][-1] + port_len * np.sin(new_tv-dt)
-    end_dy = data['y'][-1] - port_len * np.cos(new_tv-dt) 
+    if inversion_loc is not None:
+        end_theta = new_tv-dt
+        end_dx = data['x'][-1] + port_len * np.sin(end_theta)
+        end_dy = data['y'][-1] - port_len * np.cos(end_theta) 
+    else:
+        end_theta = 2*np.pi*coils
+        end_dx = data['x'][-1] - port_len * np.sin(end_theta)
+        end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
+
 
     data['x'] = np.append(np.append([start_dx],data['x']),[end_dx]) 
     data['y'] = np.append(np.append([start_dy],data['y']),[end_dy]) 
@@ -265,7 +272,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
 tube_rad = 0.5
 length = 60
+
 coil_rad = 3
 pitch = 3
-inversion_loc = 0.7
+inversion_loc = None
+
 create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path="coil_basic")
