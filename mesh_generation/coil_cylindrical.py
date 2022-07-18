@@ -69,8 +69,8 @@ def create_circle(d1, d2):
     # to the vector between the centre of the two circles
 
     # circle_test.py provides an example
-    r1, t1, z1,rad1 = d1
-    r2, t2, z2,rad2 = d2
+    r1, t1, z1, rad1 = d1
+    r2, t2, z2, rad2 = d2
     c_x1, c_y1, c_z1 = cylindrical_convert(r1, t1, z1)
     c_x2, c_y2, c_z2 = cylindrical_convert(r2, t2, z2)
     alpha = np.linspace(0, 2 * np.pi, 100)
@@ -92,7 +92,6 @@ def create_circle(d1, d2):
     x2p, y2p, z2p = rotate_x(x2, y2, z2, (-a_z))
     x2p, y2p, z2p = rotate_z(x2p, y2p, z2p, a_x)
     return x2p + c1[0], y2p + c1[1], z2p + c1[2]
-
 
 
 def interpolate(y, f, kind):
@@ -120,10 +119,9 @@ def parse_inputs(NB, f):
 def create_mesh(data, path):
 
     # factor to interpolate between control points
-    interpolation_factor = data['factor']  # interpolate 10 times the points between
+    interpolation_factor = data["factor"]  # interpolate 10 times the points between
 
-    keys = ["rho", "theta", "z",'tube_rad']
-
+    keys = ["rho", "theta", "z", "tube_rad"]
 
     # do interpolation between points
     vals = {}
@@ -131,32 +129,36 @@ def create_mesh(data, path):
     for k in keys:
         vals[k] = parse_inputs(data[k], interpolation_factor)
 
-    
-
-    le = len(vals['z'])
+    le = len(vals["z"])
     data = vals
     mesh = Mesh()
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
-    for p in range(1,le-1):
+    for p in range(1, le - 1):
         # get proceeding circle (as x,y,z samples)
         x2, y2, z2 = create_circle(
-        [data[keys[i]][p-1] for i in range(len(keys))],
-        [data[keys[i]][p] for i in range(len(keys))]
+            [data[keys[i]][p - 1] for i in range(len(keys))],
+            [data[keys[i]][p] for i in range(len(keys))],
         )
         # get next circle (as x,y,z samples)
 
-
         x1, y1, z1 = create_circle(
-        [data[keys[i]][p] for i in range(len(keys))],
-        [data[keys[i]][p+1] for i in range(len(keys))]
+            [data[keys[i]][p] for i in range(len(keys))],
+            [data[keys[i]][p + 1] for i in range(len(keys))],
         )
         # plot for reference
         ax.plot3D(x2, y2, z2, c="k", alpha=0.75, lw=0.25)
         ax.plot3D(x1, y1, z1, c="r", alpha=0.75, lw=0.25)
-        for i in np.linspace(0,len(x1)-1,10):
-                i = int(i)
-                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.25)
+        for i in np.linspace(0, len(x1) - 1, 10):
+            i = int(i)
+            ax.plot3D(
+                [x1[i], x2[i]],
+                [y1[i], y2[i]],
+                [z1[i], z2[i]],
+                c="k",
+                alpha=0.5,
+                lw=0.25,
+            )
 
         # l defines the indices of 4 equally spaced points on circle
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
@@ -215,7 +217,7 @@ def create_mesh(data, path):
             # if at the start or end then state this
             if p == 1:
                 block.set_patch("top", "inlet")
-            if p == le-2:
+            if p == le - 2:
                 block.set_patch("bottom", "outlet")
 
             mesh.add_block(block)
@@ -234,7 +236,7 @@ def create_mesh(data, path):
         block = Block.create_from_points(block_points, block_edges)
         if p == 1:
             block.set_patch("top", "inlet")
-        if p == le-2:
+        if p == le - 2:
             block.set_patch("bottom", "outlet")
 
         block.chop(0, count=10)
@@ -276,9 +278,9 @@ data["rho"] = [
     for x in np.linspace(0, 2 * coils * np.pi, n)
 ]
 data["theta"] = np.linspace(0, N, n)
-data["z"] = [0,10,15,20,20,25,30,40]
-data["tube_rad"] = [1,2,0.5,0.5,2,1.5,0.75,1]
-data['factor'] = f
+data["z"] = [0, 10, 15, 20, 20, 25, 30, 40]
+data["tube_rad"] = [1, 2, 0.5, 0.5, 2, 1.5, 0.75, 1]
+data["factor"] = f
 
 # create mesh from cylindrical coordinates
 create_mesh(data, path="coil_cylindrical")
