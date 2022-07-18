@@ -267,7 +267,12 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     # run script to create mesh
     mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-    os.system(path + "/Allrun.mesh")
+    with open(os.path.join(path,"system", "blockMeshDict"),'r') as file:
+        filedata= file.read()
+    filedata= filedata.replace('scale   1','scale   0.01')
+    with open(os.path.join(path,"system", "blockMeshDict"),'w') as file:
+        file.write(filedata)
+    #os.system(path + "/Allrun.mesh")
 
 
 """ tube_rad = 0.5
