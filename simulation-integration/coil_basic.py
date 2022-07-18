@@ -1,11 +1,10 @@
 import numpy as np
-from classy_blocks.classes.primitives import Edge
-from classy_blocks.classes.block import Block
-from classy_blocks.classes.mesh import Mesh
+from classy_examples.classy_blocks.classes.primitives import Edge
+from classy_examples.classy_blocks.classes.block import Block
+from classy_examples.classy_blocks.classes.mesh import Mesh
 import shutil
 import os
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 
 def rotate_z(x, y, z, r_z):
@@ -215,7 +214,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block = Block.create_from_points(block_points, block_edges)
 
-            block.set_patch(["front"], "walls")
+            block.set_patch(["front"], "wall")
 
             # partition block
             if p == 0:
@@ -260,7 +259,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     )
     ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
     #plt.show()
-    plt.savefig("output_images/"+path+".png", dpi=400)
+    #plt.savefig("output_images/"+path+".png", dpi=400)
     try:
         shutil.copytree("base", path)
     except:
@@ -268,15 +267,19 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     # run script to create mesh
     mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-    os.system(path + "/Allrun.mesh")
+    with open(os.path.join(path,"system", "blockMeshDict"),'r') as file:
+        filedata= file.read()
+    filedata= filedata.replace('scale   1','scale   0.01')
+    with open(os.path.join(path,"system", "blockMeshDict"),'w') as file:
+        file.write(filedata)
+    #os.system(path + "/Allrun.mesh")
 
 
-tube_rad = 0.5
+""" tube_rad = 0.5
 length = 60
 
 coil_rad = 3
 pitch = 3
-inversion_loc = 0.5
+inversion_loc = 0.5 """
 
 
-create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path='coil_basic')

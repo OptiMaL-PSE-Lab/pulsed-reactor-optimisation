@@ -8,6 +8,3 @@ touch case.foam
 
 runApplication blockMesh
 runApplication checkMesh -constant
-runApplication setsToZones -noFlipMap -constant
-
-cat log.checkMesh
