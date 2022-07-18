@@ -3,6 +3,7 @@ from utils import eval_cfd_operating_conditions, newJSONLogger
 from bayes_opt.event import Events
 import json
 
+
 logger = newJSONLogger(path="/output/logs_oc.json")
 
 # defining utility function

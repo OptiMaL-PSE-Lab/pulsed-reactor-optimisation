@@ -3,7 +3,7 @@ slides/
 preprint/
 paper/
 data/helical_coil_data.xlsx
-simulation-integration/cfd-code/output/
+simulation-integration/output/
 .pre-commit-config.yaml
 .flake8
 *__pycache__
