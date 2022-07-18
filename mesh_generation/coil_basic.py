@@ -287,10 +287,3 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     os.system(path +"/Allrun.mesh")
     return 
 
-tube_rad = 0.5
-length = 60
-coil_rad = 3
-pitch = 3
-inversion_loc = 0.5
-
-create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path='coil_basic')
