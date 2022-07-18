@@ -1,7 +1,8 @@
 #!/bin/bash
-#PBS -N coil_optimisation
-#PBS -o output/coil_optimisation.out
-#PBS -e output/coil_optimisation.err
+#PBS -N coil_optimisation_geom
+#PBS -j oe
+#PBS -o coil_optimisation_geom.out
+#PBS -e coil_optimisation_geom.err
 #PBS -lselect=2:ncpus=8:mem=98gb
 #PBS -lwalltime=48:00:00
 

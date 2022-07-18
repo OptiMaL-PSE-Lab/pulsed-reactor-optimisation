@@ -1,0 +1,54 @@
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+Traceback (most recent call last):
+  File "simulation-integration/main_oc.py", line 1, in <module>
+    from bayes_opt_with_constraints.bayes_opt import BayesianOptimization, UtilityFunction
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/__init__.py", line 1, in <module>
+    from .bayesian_optimization import BayesianOptimization, Events
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/bayesian_optimization.py", line 4, in <module>
+    from .target_space import TargetSpace
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/target_space.py", line 2, in <module>
+    from .util import ensure_rng
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/util.py", line 3, in <module>
+    from scipy.stats import norm
+ModuleNotFoundError: No module named 'scipy'
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.18 (ave)
+
+============================================
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+Traceback (most recent call last):
+  File "simulation-integration/main_oc.py", line 1, in <module>
+    from bayes_opt_with_constraints.bayes_opt import BayesianOptimization, UtilityFunction
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/__init__.py", line 1, in <module>
+    from .bayesian_optimization import BayesianOptimization, Events
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/bayesian_optimization.py", line 4, in <module>
+    from .target_space import TargetSpace
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/target_space.py", line 2, in <module>
+    from .util import ensure_rng
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/bayes_opt_with_constraints/bayes_opt/util.py", line 3, in <module>
+    from scipy.stats import norm
+ModuleNotFoundError: No module named 'scipy'
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.10 (ave)
+
+============================================

@@ -41,7 +41,6 @@ dependencies:
   - zipp=3.8.0
   - zlib=1.2.11
   - pip:
-    - git+https://github.com/trsav/bayes_opt_with_constraints@master
     - matplotlib
     - black==22.3.0
     - click==8.1.3
