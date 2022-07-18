@@ -77,6 +77,7 @@ def eval_cfd(a, f, re):
 
     Newcase= filepath
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=Newcase)
+    os.system(Newcase + "/Allrun.mesh")
     vel = (re * 9.9 * 10 ** -4) / (990 * 0.005)
 
     print('\n a: ',a,'\n')
