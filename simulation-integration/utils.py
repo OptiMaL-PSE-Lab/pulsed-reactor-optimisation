@@ -9,7 +9,7 @@ from uuid import uuid4
 import pickle
 from distutils.dir_util import copy_tree
 from scipy.signal import find_peaks
-from bayes_opt.logger import JSONLogger
+from bayes_opt_with_constraints.bayes_opt.logger import JSONLogger
 from PyFoam.Basics.DataStructures import Vector
 from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 from PyFoam.Execution.AnalyzedRunner import AnalyzedRunner

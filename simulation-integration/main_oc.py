@@ -1,6 +1,6 @@
 from bayes_opt_with_constraints.bayes_opt import BayesianOptimization, UtilityFunction
 from utils import eval_cfd_operating_conditions, newJSONLogger
-from bayes_opt.event import Events
+from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 
 
