@@ -66,7 +66,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     h = pitch * coils 
     keys = ["x", "y", "t", "r", "z"]
     data = {}
-    points = length*2+1 # points determined by length
+    points = 161 # points determined by length
 
     if inversion_loc is None:
         il = 1
@@ -115,7 +115,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
             # height is linear
             data["z"].append(new_z[i])
 
-    port_len = tube_rad*10
+    port_len = tube_rad*5
     start_dx =  data['x'][0] 
     start_dy =  data['y'][0] - port_len 
     if inversion_loc is not None:
@@ -128,7 +128,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
     print('Adding start and end ports')
-    n_x = 10
+    n_x = 20
     
     data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
     data['y'] = np.append(np.append(np.linspace(start_dy,data['y'][0],n_x+1)[:-1],data['y']),np.linspace(data['y'][-1],end_dy,n_x+1)[1:]) 
@@ -287,11 +287,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     os.system('chmod +x '+path+'/Allrun.mesh')
     os.system(path +"/Allrun.mesh")
 
-    with open(os.path.join(path,"system", "blockMeshDict"),'r') as file:
-         filedata= file.read()
-    filedata = filedata.replace('scale   1','scale   0.01')
-    with open(os.path.join(path,"system", "blockMeshDict"),'w') as file:
-         file.write(filedata)
+
     return 
 
 
