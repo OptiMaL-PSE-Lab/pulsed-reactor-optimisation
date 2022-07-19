@@ -2,8 +2,9 @@ from bayes_opt_with_constraints.bayes_opt import BayesianOptimization, UtilityFu
 from utils import eval_cfd, newJSONLogger
 from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
+import os 
 
-logger = newJSONLogger(path="/output/logs_geom.json")
+logger = newJSONLogger(path="simulation-integration/output/logs_geom.json")
 
 # defining utility function
 utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)

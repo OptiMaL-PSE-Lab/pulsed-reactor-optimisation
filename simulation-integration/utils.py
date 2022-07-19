@@ -126,22 +126,6 @@ def calculate_N(value, time):
     return N
 
 
-def setup_folder(base_folder):
-    # creating solution folder and copying folders
-    filepath = "simulation-integration/output/" + str(uuid4())
-    hostpath = base_folder
-    os.mkdir(filepath)
-    shutil.copy((os.path.join(hostpath, "Allrun.mesh")), filepath)
-    sub_folders = ["0", "constant", "system"]
-    for i in sub_folders:
-        subpath = os.path.join(filepath, i)
-        os.mkdir(subpath)
-        from_directory = os.path.join(hostpath, i)
-        to_directory = subpath
-        copy_tree(from_directory, to_directory)
-
-    newcase = filepath
-    return newcase
 
 
 def parse_conditions(case, a, f, vel):
@@ -189,13 +173,15 @@ def eval_cfd(a, f, re, coil_rad, pitch):
     tube_rad = 0.5
     length = 60
     inversion_loc = None
-    newcase = setup_folder("mesh_generation/base")
+    identifier = str(uuid4())
+    print('Starting to mesh '+identifier)
+    newcase = "simulation-integration/output/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=newcase)
-    vel = vel_calc(re)
-    parse_conditions(newcase, a, f, vel)
-    time, value = run_cfd(newcase)
-    N = calculate_N(value, time)
-    return N
+    # vel = vel_calc(re)
+    # parse_conditions(newcase, a, f, vel)
+    # time, value = run_cfd(newcase)
+    # N = calculate_N(value, time)
+    return 3
 
 
 def eval_cfd_operating_conditions(a, f, re):
