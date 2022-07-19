@@ -78,13 +78,13 @@ def calculate_N(value, time):
     times_peaks = time[peaks]
     values_peaks = value[peaks]
 
-    plt.figure()
-    plt.plot(time, value, c="k", lw=1, alpha=0.1)
-    plt.plot(times_peaks, values_peaks, c="r", lw=1)
-    plt.grid()
-    plt.xlabel("time")
-    plt.ylabel("concentration")
-    plt.savefig("simulation-integration/output/preprocessed_plot.pdf")
+    # plt.figure()
+    # plt.plot(time, value, c="k", lw=1, alpha=0.1)
+    # plt.plot(times_peaks, values_peaks, c="r", lw=1)
+    # plt.grid()
+    # plt.xlabel("time")
+    # plt.ylabel("concentration")
+    # plt.savefig("simulation-integration/output/preprocessed_plot.pdf")
 
     # difference between time values
     dt = np.diff(times_peaks)[0]
@@ -114,15 +114,15 @@ def calculate_N(value, time):
 
     N, off, up = X
 
-    plt.figure()
-    plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
-    etheta_calc = []
-    for t in theta:
-        etheta_calc.append(calc_etheta(N, t, off, up))
-    plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
-    plt.grid()
-    plt.legend()
-    plt.savefig("simulation-integration/output/dimensionless_conversion.pdf")
+    # plt.figure()
+    # plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
+    # etheta_calc = []
+    # for t in theta:
+    #     etheta_calc.append(calc_etheta(N, t, off, up))
+    # plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
+    # plt.grid()
+    # plt.legend()
+    # plt.savefig("simulation-integration/output/dimensionless_conversion.pdf")
     return N
 
 
@@ -170,8 +170,8 @@ def run_cfd(case):
 
 
 def eval_cfd(a, f, re, coil_rad, pitch):
-    tube_rad = 0.5
-    length = 60
+    tube_rad = 0.01
+    length = 0.5
     inversion_loc = None
     identifier = str(uuid4())
     print('Starting to mesh '+identifier)
@@ -181,7 +181,7 @@ def eval_cfd(a, f, re, coil_rad, pitch):
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time)
-    return 3
+    return N
 
 
 def eval_cfd_operating_conditions(a, f, re):
