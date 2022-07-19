@@ -4,7 +4,8 @@ from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 
 
-logger = newJSONLogger(path="/output/logs_oc.json")
+
+logger = newJSONLogger(path="simulation-integration/output_oc/logs.json")
 
 # defining utility function
 utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)
@@ -29,7 +30,7 @@ optimizer = BayesianOptimization(
 # Opening JSON file
 try:
     logs = []
-    with open("simulation-integration/output/logs_oc.json") as f:
+    with open("simulation-integration/output_oc/logs.json") as f:
         for line in f:
             logs.append(json.loads(line))
 

@@ -175,18 +175,20 @@ def eval_cfd(a, f, re, coil_rad, pitch):
     inversion_loc = None
     identifier = str(uuid4())
     print('Starting to mesh '+identifier)
-    newcase = "simulation-integration/output/" + identifier
+    newcase = "simulation-integration/output_geom/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=newcase)
-    # vel = vel_calc(re)
-    # parse_conditions(newcase, a, f, vel)
-    # time, value = run_cfd(newcase)
-    # N = calculate_N(value, time)
+    vel = vel_calc(re)
+    parse_conditions(newcase, a, f, vel)
+    time, value = run_cfd(newcase)
+    N = calculate_N(value, time)
     return 3
 
 
 def eval_cfd_operating_conditions(a, f, re):
-    newcase = setup_folder("mesh_generation/base")
-    vel = vel = vel_calc(re)
+    identifier = str(uuid4())
+    print('Starting to mesh '+identifier)
+    newcase = "simulation-integration/output_oc/" + identifier
+    vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time)

@@ -3,7 +3,9 @@ slides/
 preprint/
 paper/
 data/helical_coil_data.xlsx
-simulation-integration/output/
+simulation-integration/output_old/
+simulation-integration/output_oc/
+simulation-integration/output_geom/
 .pre-commit-config.yaml
 .flake8
 *__pycache__
