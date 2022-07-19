@@ -1,0 +1,54 @@
+Loading openfoam/1906
+  Loading requirement: intel-suite/2019.4 mpi/intel-2019 qt/5.9.1 gcc/8.2.0
+
+CondaValueError: prefix already exists: /rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env
+
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+tput: No value for $TERM and no -T specified
+Starting to mesh 108e5f7b-904d-4dff-bb45-f4f75c893f7c
+Traceback (most recent call last):
+  File "simulation-integration/main_oc.py", line 46, in <module>
+    target = eval_cfd_operating_conditions(**next_point)
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/utils.py", line 192, in eval_cfd_operating_conditions
+    parse_conditions(newcase, a, f, vel)
+  File "/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/utils.py", line 132, in parse_conditions
+    velBC = ParsedParameterFile(path.join(case, "0", "U"))
+  File "/rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env/lib/python3.7/site-packages/PyFoam/RunDictionary/ParsedParameterFile.py", line 86, in __init__
+    self.readFile()
+  File "/rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env/lib/python3.7/site-packages/PyFoam/RunDictionary/FileBasis.py", line 105, in readFile
+    self.openFile()
+  File "/rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env/lib/python3.7/site-packages/PyFoam/RunDictionary/FileBasis.py", line 91, in openFile
+    self.fh=gzip.open(self.name+".gz",mode)
+  File "/rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env/lib/python3.7/gzip.py", line 58, in open
+    binary_file = GzipFile(filename, gz_mode, compresslevel)
+  File "/rds/general/user/trs20/home/anaconda3/envs/cfd_optimisation_env/lib/python3.7/gzip.py", line 168, in __init__
+    fileobj = self.myfileobj = builtins.open(filename, mode or 'rb')
+FileNotFoundError: [Errno 2] No such file or directory: '/rds/general/user/trs20/home/pulsed-reactor-optimisation/simulation-integration/output_oc/108e5f7b-904d-4dff-bb45-f4f75c893f7c/0/U.gz'
+
+============================================
+
+        Job resource usage summary 
+
+                 Memory (GB)    NCPUs
+ Requested  :       196            16
+ Used       :         0 (peak)   0.12 (ave)
+
+============================================
