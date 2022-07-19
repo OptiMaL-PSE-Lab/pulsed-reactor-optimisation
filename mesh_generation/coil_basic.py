@@ -6,9 +6,8 @@ from mesh_generation.classy_blocks.classes.primitives import Edge
 from mesh_generation.classy_blocks.classes.block import Block
 from mesh_generation.classy_blocks.classes.mesh import Mesh
 import shutil
-import os
+from tqdm import tqdm
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 
 def rotate_z(x, y, z, r_z):
@@ -62,22 +61,20 @@ def create_circle(d,flip):
 
 
 def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
-    try:
-        shutil.copytree("mesh_generation/base", path)
-    except:
-        print("file already exists...")
+    shutil.copytree("mesh_generation/base", path)
     coils = length/(2*np.pi*coil_rad)
     h = pitch * coils 
     keys = ["x", "y", "t", "r", "z"]
     data = {}
-    points = 50
+    points = length*2+1 # points determined by length
 
     if inversion_loc is None:
         il = 1
-        n = int(coils * points)  # 8 interpolation points per rotation
+        n = int(points) 
+        print('No inversion location specified')
     else:
         il = inversion_loc
-        n = int(coils * points * il)  # 8 interpolation points per rotation
+        n = int(points * il)  # 8 interpolation points per rotation
 
     coil_vals = np.linspace(0, 2 * coils * np.pi*il, n)
     # x and y values around a circle
@@ -94,7 +91,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     if inversion_loc is not None:
 
         il = inversion_loc
-        n = int(coils * points * (1-il))
+        n = int(points * (1-il))
         new_tv = 2*coils*np.pi*il + np.pi
         new_end = 2*coils*np.pi + np.pi
         dt = new_end-new_tv
@@ -130,7 +127,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         end_dx = data['x'][-1] - port_len * np.sin(end_theta)
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
-
+    print('Adding start and end ports')
     n_x = 10
     
     data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
@@ -152,23 +149,29 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     fig = plt.figure(figsize=(4,4))
     ax = fig.add_subplot(projection="3d")
     orig_len += n_x-1
-    for p in range(le-1):
+    print('Creating mesh of coil')
+    for p in tqdm(range(le-1)):
 
         # obtaining two circles
-        if p < orig_len:
+        if inversion_loc is not None:
+            if p < orig_len:
+                flip_1 = False
+                flip_2 = False
+            elif p == orig_len:
+                flip_1 = False
+                flip_2 = True
+
+            else:
+                flip_1 = True
+                flip_2 = True
+
+
+        if inversion_loc is None:
             flip_1 = False
             flip_2 = False
-        elif p == orig_len:
-            flip_1 = False
-            flip_2 = True
-        else:
-            flip_1 = True
-            flip_2 = True
+        
 
-        if p == le - 2 and inversion_loc is None:
-            flip_1 = False
-            flip_2 = False
-
+        
         x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
         x2, y2, z2 = create_circle(
             [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
@@ -278,12 +281,17 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     
     plt.savefig(path+"/pre-render.png", dpi=400)
     # run script to create mesh
+    print('Writing geometry')
     mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+    print('Running blockMesh')
+    os.system('chmod +x '+path+'/Allrun.mesh')
+    os.system(path +"/Allrun.mesh")
+
     with open(os.path.join(path,"system", "blockMeshDict"),'r') as file:
          filedata= file.read()
     filedata = filedata.replace('scale   1','scale   0.01')
     with open(os.path.join(path,"system", "blockMeshDict"),'w') as file:
          file.write(filedata)
-    os.system(path+"/Allrun.mesh")
     return 
+
 
