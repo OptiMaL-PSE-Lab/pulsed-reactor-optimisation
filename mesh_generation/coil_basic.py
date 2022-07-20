@@ -232,7 +232,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block = Block.create_from_points(block_points, block_edges)
 
-            block.set_patch(["front"], "walls")
+            block.set_patch(["front"], "wall")
 
             # partition block
             if p == 0:
