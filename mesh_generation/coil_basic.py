@@ -148,12 +148,12 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
     print('Adding start and end ports')
-    n_x = 20
+    n_x = 30
 
     data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
     data['y'] = np.append(np.append(np.linspace(start_dy,data['y'][0],n_x+1)[:-1],data['y']),np.linspace(data['y'][-1],end_dy,n_x+1)[1:]) 
     data['t'] = np.append(np.append([data['t'][0] for i in range(n_x)],data['t']),[data['t'][-1] for i in range(n_x)])
-    data['t_x'] = np.append(np.append(np.linspace(0,data['t_x'][0],n_x+1)[:-1],data['t_x']),np.linspace(data['t_x'][-1],0,n_x+1)[1:])
+    data['t_x'] = np.append(np.append(-np.geomspace(0.0001,abs(data['t_x'][0]),n_x+1)[:-1],data['t_x']),-np.geomspace(abs(data['t_x'][-1]),0.0001,n_x+1)[1:])
     data['z'] = np.append(np.append([data['z'][0] for i in range(n_x)],data['z']),[data['z'][-1] for i in range(n_x)])
     data['r'] = np.append(np.append([data['r'][0] for i in range(n_x)],data['r']),[data['r'][-1] for i in range(n_x)])
 
@@ -177,8 +177,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     d_z = interpolate(d_z,v,'quadratic')
     data['z'][-(n_x+m):-(n_x-m)] = d_z
 
-
-    # for p in tqdm(range(le-1)):
     for p in tqdm(range(1,le-2)):
 
         # obtaining two circles
