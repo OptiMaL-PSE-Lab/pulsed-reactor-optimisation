@@ -58,7 +58,7 @@ def create_circle(d,flip):
     x, y, z = rotate_z(x, y, z, t)
     x += c_x
     y += c_y
-    x, y, z = rotate_z(x, y, z, np.pi/2)
+    x, y, z = rotate_z(x, y, z, 3*np.pi/2)
     return x, y, z
 
 def cylindrical_convert(r, theta, z):
