@@ -8,6 +8,7 @@ from mesh_generation.classy_blocks.classes.mesh import Mesh
 import shutil
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
 
 
 def rotate_z(x, y, z, r_z):
@@ -43,7 +44,7 @@ def rotate_y(x0, y0, z0, r_y):
 def create_circle(d,flip):
     # from a centre, radius, and z rotation,
     #  create the points of a circle
-    c_x, c_y, t, r, c_z = d
+    c_x, c_y, t, t_x, r, c_z = d
     if flip is False:
         alpha = np.linspace(0, 2 * np.pi, 100)
     else:
@@ -53,21 +54,37 @@ def create_circle(d,flip):
     y = [c_y for i in range(len(z))]
     x -= c_x
     y -= c_y
+    x,y,z, = rotate_x(x,y,z,t_x)
     x, y, z = rotate_z(x, y, z, t)
     x += c_x
     y += c_y
-    #x, y, z = rotate_z(x, y, z, np.pi/2)
+    #x, y, z = rotate_y(x, y, z, np.pi/2)
     return x, y, z
 
+def cylindrical_convert(r, theta, z):
+    # conversion to cylindrical coordinates
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    z = z
+    return x, y, z
+
+def interpolate(y, v, kind):
+    # interpolates between a set of points by a factor of f
+
+    x = np.linspace(0, len(y), len(y))
+    x_new = np.linspace(0, len(y), v+1)
+    f = interp1d(x, y, kind=kind)
+    y_new = f(x_new)
+    return y_new[:-1]
 
 def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     shutil.copytree("mesh_generation/base", path)
     coils = length/(2*np.pi*coil_rad)
-    h = pitch * coils 
-    keys = ["x", "y", "t", "r", "z"]
+    h = coils * pitch 
+    keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
     points = 161 # points determined by length
-
+    t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
         n = int(points) 
@@ -82,6 +99,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     data["y"] = [(coil_rad * np.sin(x_y)) for x_y in coil_vals]
     # rotations around z are defined by number of coils
     data["t"] = list(coil_vals)
+    data['t_x'] = [t_x for i in range(n)]
     # no change in radius for now
     data["r"] = [tube_rad for i in range(n)]
     # height is linear
@@ -103,6 +121,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         new_x = ([(coil_rad * (np.cos(x))) for x in coil_vals] + dx)[1:]
         new_y = ([(coil_rad * (np.sin(x))) for x in coil_vals] + dy)[1:]
         new_t = list(coil_vals)[1:]
+        new_t_x = [t_x for i in range(n)]
         new_r = [tube_rad for i in range(n)][1:]
         new_z = list(np.linspace(h*il,h,n))[1:]
         for i in range(len(new_x)):
@@ -110,6 +129,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
             data["y"].append(new_y[i])
             # rotations around z are defined by number of coils
             data["t"].append(new_t[i])
+            data["t_x"].append(new_t_x[i])
             # no change in radius for now
             data["r"].append(new_r[i])
             # height is linear
@@ -129,17 +149,13 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     print('Adding start and end ports')
     n_x = 20
-    
+
     data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
     data['y'] = np.append(np.append(np.linspace(start_dy,data['y'][0],n_x+1)[:-1],data['y']),np.linspace(data['y'][-1],end_dy,n_x+1)[1:]) 
     data['t'] = np.append(np.append([data['t'][0] for i in range(n_x)],data['t']),[data['t'][-1] for i in range(n_x)])
+    data['t_x'] = np.append(np.append(np.linspace(0,data['t_x'][0],n_x+1)[:-1],data['t_x']),np.linspace(data['t_x'][-1],0,n_x+1)[1:])
     data['z'] = np.append(np.append([data['z'][0] for i in range(n_x)],data['z']),[data['z'][-1] for i in range(n_x)])
     data['r'] = np.append(np.append([data['r'][0] for i in range(n_x)],data['r']),[data['r'][-1] for i in range(n_x)])
-
-
-    # plt.figure()
-    # plt.scatter(data['x'],data['y'],alpha=0.3)#c=data['z'],alpha=0.5)
-    # plt.savefig(path+'/test.png')
 
     # calculating real values from differences and initial conditions
 
@@ -150,7 +166,20 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     ax = fig.add_subplot(projection="3d")
     orig_len += n_x-1
     print('Creating mesh of coil')
-    for p in tqdm(range(le-1)):
+
+    v = 8 
+    m = int(v/2)
+    d_z = [data['z'][n_x-m],(data['z'][n_x+m]+data['z'][n_x-m]*3)/4,data['z'][n_x+m]]
+    d_z = interpolate(d_z,v,'quadratic')
+    data['z'][n_x-m:n_x+m] = d_z
+
+    d_z = [data['z'][-(n_x+m)],(data['z'][-(n_x+m)]+data['z'][-(n_x-m)]*3)/4,data['z'][-(n_x-m)]]
+    d_z = interpolate(d_z,v,'quadratic')
+    data['z'][-(n_x+m):-(n_x-m)] = d_z
+
+
+    # for p in tqdm(range(le-1)):
+    for p in tqdm(range(1,le-2)):
 
         # obtaining two circles
         if inversion_loc is not None:
@@ -165,22 +194,24 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 flip_1 = True
                 flip_2 = True
 
-
         if inversion_loc is None:
             flip_1 = False
             flip_2 = False
-        
 
         
-        x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
-        x2, y2, z2 = create_circle(
-            [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
+        if p == 0 or p == le - 2:
+            x1, y1, z1 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
+            x2, y2, z2 = create_circle(
+                [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
+        else:
+            x2, y2, z2 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
+            x1, y1, z1 = create_circle(
+                [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
 
 
         ax.plot3D(x2, y2, z2, color='k', alpha=0.75, lw=0.5)
         ax.plot3D(x1, y1, z1, color='k', alpha=0.75, lw=0.5)
 
-        
         for i in np.linspace(0,len(x1)-1,20):
                 i = int(i)
                 ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=1)
@@ -235,10 +266,10 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
             block.set_patch(["front"], "wall")
 
             # partition block
-            if p == 0:
-                block.set_patch("bottom", "inlet")
-            if p == le - 2:
-                block.set_patch("top", "outlet")
+            if p == 1:
+                block.set_patch("top", "inlet")
+            if p == le - 3:
+                block.set_patch("bottom", "outlet")
 
 
             block.chop(0, count=10)
@@ -261,9 +292,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         block = Block.create_from_points(block_points, block_edges)
         # partition block
         if p == 0:
-            block.set_patch("bottom", "inlet")
+            block.set_patch("top", "inlet")
         if p == le - 2:
-            block.set_patch("top", "outlet")
+            block.set_patch("bottom", "outlet")
 
 
         block.chop(0, count=10)
@@ -293,4 +324,4 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     return 
 
-create_mesh(coil_rad=0.005, tube_rad=0.0025, pitch=0.018,length= 0.0785,inversion_loc= None, path='coil_basic')
+create_mesh(coil_rad=0.006, tube_rad=0.0025, pitch=0.01,length= 0.0785,inversion_loc= None, path='coil_basic')

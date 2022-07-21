@@ -3,7 +3,7 @@ from utils import eval_cfd, newJSONLogger
 from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 import os 
-
+import numpy as np 
 
 logger = newJSONLogger(path="simulation-integration/output_geom/logs.json")
 
@@ -24,8 +24,8 @@ optimizer = BayesianOptimization(
         "a": (0.001, 0.008),
         "f": (2, 8),
         "re": (10, 50),
-        "coil_rad": (0.0025, 0.0125),
-        "pitch": (0.006, 0.015),
+        "coil_rad": (0.003, 0.0125),
+        "pitch": (0.0075, 0.015),
     },
     pcons=pcon_dict,
     verbose=2,
