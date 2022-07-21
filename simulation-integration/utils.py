@@ -84,7 +84,7 @@ def calculate_N(value, time,path):
     plt.grid()
     plt.xlabel("time")
     plt.ylabel("concentration")
-    plt.savefig(path+"/preprocessed_plot.pdf")
+    plt.savefig(path+"/preprocessed_plot.png")
 
     # difference between time values
     dt = np.diff(times_peaks)[0]
@@ -122,7 +122,7 @@ def calculate_N(value, time,path):
     plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
     plt.grid()
     plt.legend()
-    plt.savefig(path+"/dimensionless_conversion.pdf")
+    plt.savefig(path+"/dimensionless_conversion.png")
     return N
 
 

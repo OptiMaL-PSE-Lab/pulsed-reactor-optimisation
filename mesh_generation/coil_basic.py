@@ -58,7 +58,7 @@ def create_circle(d,flip):
     x, y, z = rotate_z(x, y, z, t)
     x += c_x
     y += c_y
-    #x, y, z = rotate_y(x, y, z, np.pi/2)
+    x, y, z = rotate_z(x, y, z, np.pi/2)
     return x, y, z
 
 def cylindrical_convert(r, theta, z):
@@ -322,4 +322,3 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     return 
 
-create_mesh(coil_rad=0.006, tube_rad=0.0025, pitch=0.01,length= 0.0785,inversion_loc= None, path='coil_basic')
