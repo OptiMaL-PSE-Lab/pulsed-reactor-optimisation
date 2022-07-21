@@ -56,7 +56,7 @@ def create_circle(d,flip):
     x, y, z = rotate_z(x, y, z, t)
     x += c_x
     y += c_y
-    x, y, z = rotate_z(x, y, z, np.pi/2)
+    #x, y, z = rotate_z(x, y, z, np.pi/2)
     return x, y, z
 
 
@@ -275,6 +275,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
     #plt.show()
     
@@ -290,4 +293,4 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     return 
 
-
+create_mesh(coil_rad=0.005, tube_rad=0.0025, pitch=0.018,length= 0.0785,inversion_loc= None, path='coil_basic')
