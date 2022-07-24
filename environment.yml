@@ -40,6 +40,7 @@ dependencies:
   - yaml=0.2.5
   - zipp=3.8.0
   - zlib=1.2.11
+  - paraview 
   - pip:
     - matplotlib
     - tqdm
