@@ -46,9 +46,9 @@ def create_circle(d,flip):
     #  create the points of a circle
     c_x, c_y, t, t_x, r, c_z = d
     if flip is False:
-        alpha = np.linspace(0, 2 * np.pi, 100)
+        alpha = np.linspace(0, 2 * np.pi, 9)
     else:
-        alpha = np.linspace(2*np.pi,0,100)
+        alpha = np.linspace(2*np.pi,0,9)
     z = r * np.cos(alpha) + c_z
     x = r * np.sin(alpha) + c_x
     y = [c_y for i in range(len(z))]
@@ -83,7 +83,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 161 # points determined by length
+    points = 221 # points determined by length
     t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
@@ -92,7 +92,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     else:
         il = inversion_loc
         n = int(points * il)  # 8 interpolation points per rotation
-
     coil_vals = np.linspace(0, 2 * coils * np.pi*il, n)
     # x and y values around a circle
     data["x"] = [(coil_rad * np.cos(x_y)) for x_y in coil_vals]
@@ -121,7 +120,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         new_x = ([(coil_rad * (np.cos(x))) for x in coil_vals] + dx)[1:]
         new_y = ([(coil_rad * (np.sin(x))) for x in coil_vals] + dy)[1:]
         new_t = list(coil_vals)[1:]
-        new_t_x = [t_x for i in range(n)]
+        new_t_x = [-t_x for i in range(n)]
         new_r = [tube_rad for i in range(n)][1:]
         new_z = list(np.linspace(h*il,h,n))[1:]
         for i in range(len(new_x)):
@@ -148,12 +147,15 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
     print('Adding start and end ports')
-    n_x = 30
+    n_x = 20
 
     data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
     data['y'] = np.append(np.append(np.linspace(start_dy,data['y'][0],n_x+1)[:-1],data['y']),np.linspace(data['y'][-1],end_dy,n_x+1)[1:]) 
     data['t'] = np.append(np.append([data['t'][0] for i in range(n_x)],data['t']),[data['t'][-1] for i in range(n_x)])
-    data['t_x'] = np.append(np.append(-np.geomspace(0.0001,abs(data['t_x'][0]),n_x+1)[:-1],data['t_x']),-np.geomspace(abs(data['t_x'][-1]),0.0001,n_x+1)[1:])
+    if inversion_loc is not None:
+        data['t_x'] = np.append(np.append(-np.geomspace(0.0001,abs(data['t_x'][0]),n_x+1)[:-1],data['t_x']),np.geomspace(abs(data['t_x'][-1]),0.0001,n_x+1)[1:])
+    else:
+        data['t_x'] = np.append(np.append(-np.geomspace(0.0001,abs(data['t_x'][0]),n_x+1)[:-1],data['t_x']),-np.geomspace(abs(data['t_x'][-1]),0.0001,n_x+1)[1:])
     data['z'] = np.append(np.append([data['z'][0] for i in range(n_x)],data['z']),[data['z'][-1] for i in range(n_x)])
     data['r'] = np.append(np.append([data['r'][0] for i in range(n_x)],data['r']),[data['r'][-1] for i in range(n_x)])
 
@@ -272,7 +274,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block.chop(0, count=10)
             block.chop(1, count=10)
-            block.chop(2, count=1)
+            block.chop(2, count=2)
 
             mesh.add_block(block)
 
@@ -289,15 +291,15 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         ]
         block = Block.create_from_points(block_points, block_edges)
         # partition block
-        if p == 0:
+        if p == 1:
             block.set_patch("top", "inlet")
-        if p == le - 2:
+        if p == le - 3:
             block.set_patch("bottom", "outlet")
 
 
         block.chop(0, count=10)
         block.chop(1, count=10)
-        block.chop(2, count=1)
+        block.chop(2, count=2)
 
         mesh.add_block(block)
         # copy template folder
@@ -322,3 +324,4 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     return 
 
+create_mesh(2,0.5,1.5,40,0.3,'test')
