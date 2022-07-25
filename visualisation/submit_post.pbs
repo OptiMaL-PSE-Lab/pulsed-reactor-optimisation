@@ -9,7 +9,6 @@ module load anaconda3/personal
 cd $PBS_O_WORKDIR
 
 echo "creating image 01 : vortices1"
-cd pimple-test-1
 for d in */ 
 do 
 	cd $d
