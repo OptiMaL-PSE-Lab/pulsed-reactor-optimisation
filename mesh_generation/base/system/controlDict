@@ -130,6 +130,29 @@ functions
        outputControl timeStep;
        outputInterval 1;
     }
+
+   surfaceFieldValue1
+   {
+      // Mandatory entries (unmodifiable)
+      type            surfaceFieldValue;
+      libs            (fieldFunctionObjects);
+
+      // Mandatory entries (runtime modifiable)
+      fields          (s);
+      operation       areaAverage;
+      regionType      patch;
+      name            outlet;
+
+      // Optional (inherited) entries
+      writeFields     false;
+      region          region0;
+      enabled         true;
+      log             true;
+      executeControl  timeStep;
+      executeInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
 }  
 
 
