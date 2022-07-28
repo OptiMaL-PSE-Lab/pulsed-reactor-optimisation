@@ -46,9 +46,9 @@ def create_circle(d,flip):
     #  create the points of a circle
     c_x, c_y, t, t_x, r, c_z = d
     if flip is False:
-        alpha = np.linspace(0, 2 * np.pi, 9)
+        alpha = np.linspace(0, 2 * np.pi, 100)
     else:
-        alpha = np.linspace(2*np.pi,0,9)
+        alpha = np.linspace(2*np.pi,0,100)
     z = r * np.cos(alpha) + c_z
     x = r * np.sin(alpha) + c_x
     y = [c_y for i in range(len(z))]
@@ -77,8 +77,12 @@ def interpolate(y, v, kind):
     y_new = f(x_new)
     return y_new[:-1]
 
+
 def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
-    shutil.copytree("mesh_generation/base", path)
+    try:
+        shutil.copytree("mesh_generation/base", path)
+    except FileExistsError:
+        print('Folder already exists')
     coils = length/(2*np.pi*coil_rad)
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
@@ -216,49 +220,50 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 i = int(i)
                 ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=1)
 
+        div = 8
+        l = np.linspace(0, len(x1), div+1)[:div].astype(int)
+        l = np.append(l,0)
 
-        l = np.linspace(0, len(x1), 5)[:4].astype(int)
-
-        centre1 = np.mean(
+        c1 = np.mean(
             np.array([[x1[i], y1[i], z1[i]] for i in range(len(x1))]), axis=0
         )
-        centre2 = np.mean(
+        c2 = np.mean(
             np.array([[x2[i], y2[i], z2[i]] for i in range(len(x1))]), axis=0
         )
 
-        b = [0, 1, 2, 3, 0]
+        fa = 0.8
+        op1 = np.array([[x1[i],y1[i],z1[i]] for i in l])
+        ip1 = np.array([(fa*op1[i]+(1-fa)*c1) for i in range(len(l))])
 
-        for k in range(4):
+        op2 = np.array([[x2[i],y2[i],z2[i]] for i in l])
+        ip2 = np.array([(fa*op2[i]+(1-fa)*c2) for i in range(len(l))])
 
-            # O-Topology for what is effectively
-            # a slanted cylinder
-            i = b[k]
-            j = b[k + 1]
-
+        for i in range(len(l)-1):
+            
             block_points = [
-                [x1[l[i]], y1[l[i]], z1[l[i]]],
-                [x1[l[j]], y1[l[j]], z1[l[j]]],
-                list(([x1[l[j]], y1[l[j]], z1[l[j]]] + centre1) / 2),
-                list(([x1[l[i]], y1[l[i]], z1[l[i]]] + centre1) / 2),
+                op1[i],
+                op1[i+1],
+                ip1[i+1],
+                ip1[i],
             ] + [
-                [x2[l[i]], y2[l[i]], z2[l[i]]],
-                [x2[l[j]], y2[l[j]], z2[l[j]]],
-                list(([x2[l[j]], y2[l[j]], z2[l[j]]] + centre2) / 2),
-                list(([x2[l[i]], y2[l[i]], z2[l[i]]] + centre2) / 2),
+                op2[i],
+                op2[i+1],
+                ip2[i+1],
+                ip2[i],
             ]
 
-            if l[j] == 0:
-                v = l[j - 1] + (l[j - 1] - l[j - 2])
+            if i == len(l)-2:
+                v = l[i] + (l[i] - l[i-1])
                 a = int(l[i] + (v - l[i]) / 2)
             else:
-                a = int(l[i] + (l[j] - l[i]) / 2)
+                a = int(l[i] + (l[i+1] - l[i]) / 2)
 
             # add circular curves at top of cylindrical quadrant
             block_edges = [
                 Edge(0, 1, [x1[a], y1[a], z1[a]]),  # arc edges
                 Edge(4, 5, [x2[a], y2[a], z2[a]]),
-                Edge(2, 3, None),
-                Edge(6, 7, None),
+                Edge(2, 3, (fa*np.array([x1[a], y1[a], z1[a]])+(1-fa)*c1)),
+                Edge(6, 7, (fa*np.array([x2[a], y2[a], z2[a]])+(1-fa)*c2)),
             ]
 
             block = Block.create_from_points(block_points, block_edges)
@@ -272,36 +277,100 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=10)
-            block.chop(1, count=10)
+            block.chop(0, count=5)
+            block.chop(1, count=5)
             block.chop(2, count=2)
 
             mesh.add_block(block)
 
-        # add centre rectangular block
-        block_points = [
-            list(([x1[l[k]], y1[l[k]], z1[l[k]]] + centre1) / 2) for k in [0, 1, 2, 3]
-        ] + [list(([x2[l[k]], y2[l[k]], z2[l[k]]] + centre2) / 2) for k in [0, 1, 2, 3]]
+        fa_new = 0.6
+        op1 = ip1
+        ip1 = np.array([(fa_new*op1[i]+(1-fa_new)*c1) for i in range(len(l))])
 
-        block_edges = [
-            Edge(0, 1, None),  # arc edges
-            Edge(4, 5, None),
-            Edge(2, 3, None),  # spline edges
-            Edge(6, 7, None),
-        ]
-        block = Block.create_from_points(block_points, block_edges)
-        # partition block
-        if p == 1:
-            block.set_patch("top", "inlet")
-        if p == le - 3:
-            block.set_patch("bottom", "outlet")
+        op2 = ip2
+        ip2 = np.array([(fa_new*op2[i]+(1-fa_new)*c2) for i in range(len(l))])
+
+        for i in range(len(l)-1):
+            
+            block_points = [
+                op1[i],
+                op1[i+1],
+                ip1[i+1],
+                ip1[i],
+            ] + [
+                op2[i],
+                op2[i+1],
+                ip2[i+1],
+                ip2[i],
+            ]
+
+            if i == len(l)-2:
+                v = l[i] + (l[i] - l[i-1])
+                a = int(l[i] + (v - l[i]) / 2)
+            else:
+                a = int(l[i] + (l[i+1] - l[i]) / 2)
+
+            # add circular curves at top of cylindrical quadrant
+            block_edges = [
+                Edge(0, 1, (fa*np.array([x1[a], y1[a], z1[a]])+(1-fa)*c1)),  # arc edges
+                Edge(4, 5, (fa*np.array([x2[a], y2[a], z2[a]])+(1-fa)*c2)),
+                Edge(2, 3, None),
+                Edge(6, 7, None)
+            ]
+
+            block = Block.create_from_points(block_points, block_edges)
+
+            #block.set_patch(["front"], "wall")
+
+            # partition block
+            if p == 1:
+                block.set_patch("top", "inlet")
+            if p == le - 3:
+                block.set_patch("bottom", "outlet")
 
 
-        block.chop(0, count=10)
-        block.chop(1, count=10)
-        block.chop(2, count=2)
+            block.chop(0, count=5)
+            block.chop(1, count=5)
+            block.chop(2, count=2)
 
-        mesh.add_block(block)
+            mesh.add_block(block)
+
+        i = 1
+        for j in range(int(div/2)):
+                 
+            # add centre rectangular block
+            block_points = [
+                ip1[i-1],
+                ip1[i],
+                ip1[i+1],
+                c1
+            ] + [
+                ip2[i-1],
+                ip2[i],
+                ip2[i+1],
+                c2
+
+            ]
+            i += 2
+            block_edges = [
+                Edge(0, 1,None),  # arc edges
+                Edge(4, 5, None),
+                Edge(2, 3, None),  # spline edges
+                Edge(6, 7, None),
+            ]
+            block = Block.create_from_points(block_points, block_edges)
+            # partition block
+            if p == 1:
+                block.set_patch("top", "inlet")
+            if p == le - 3:
+                block.set_patch("bottom", "outlet")
+
+
+            block.chop(0, count=5)
+            block.chop(1, count=5)
+            block.chop(2, count=2)
+
+            mesh.add_block(block)
         # copy template folder
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
@@ -324,4 +393,4 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
     return 
 
-create_mesh(2,0.5,1.5,40,0.3,'test')
+
