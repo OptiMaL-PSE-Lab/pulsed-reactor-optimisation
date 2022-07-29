@@ -19,6 +19,7 @@ from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
+from mesh_generation.coil_validation import create_validation_mesh
 
 try:
     HPC = str(sys.argv[1])
@@ -182,6 +183,18 @@ def eval_cfd(a, f, re, coil_rad, pitch):
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
     return N
+
+def eval_cfd_validation(a, f, re, coil_rad, pitch,tube_rad,length):
+    inversion_loc = None
+    identifier = str(uuid4())
+    print('Starting to mesh '+identifier)
+    newcase = "simulation-integration/output_geom/" + identifier
+    create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=newcase)
+    vel = vel_calc(re)
+    parse_conditions(newcase, a, f, vel)
+    time, value = run_cfd(newcase)
+    N = calculate_N(value, time,newcase)
+    return N,time,value
 
 
 def eval_cfd_operating_conditions(a, f, re):
