@@ -87,7 +87,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 161 # points determined by length
+    points = 81 # points determined by length
     t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
@@ -279,7 +279,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block.chop(0, count=4)
             block.chop(1, count=4)
-            block.chop(2, count=1)
+            block.chop(2, count=2)
 
             mesh.add_block(block)
 
@@ -331,7 +331,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block.chop(0, count=4)
             block.chop(1, count=4)
-            block.chop(2, count=1)
+            block.chop(2, count=2)
 
             mesh.add_block(block)
 
@@ -368,7 +368,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
             block.chop(0, count=4)
             block.chop(1, count=4)
-            block.chop(2, count=1)
+            block.chop(2, count=2)
 
             mesh.add_block(block)
         # copy template folder
