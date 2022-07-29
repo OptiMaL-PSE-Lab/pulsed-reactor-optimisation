@@ -6,8 +6,10 @@ data/helical_coil_data.xlsx
 simulation-integration/output_old/
 simulation-integration/output_oc/
 simulation-integration/output_geom/
+simulation-integration/output_validation/
 .pre-commit-config.yaml
 .flake8
 *__pycache__
+debug.vtk
 .DS_Store
 job_outputs/
