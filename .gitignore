@@ -10,4 +10,4 @@ simulation-integration/output_geom/
 .flake8
 *__pycache__
 .DS_Store
-job_scripts/
+job_outputs/
