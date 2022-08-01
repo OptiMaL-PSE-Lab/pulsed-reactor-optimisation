@@ -75,7 +75,7 @@ def vel_calc(re):
 
 def calculate_N(value, time,path):
     # obtaining a smooth curve by taking peaks
-    peaks, _ = find_peaks(value, prominence=0.000001)
+    peaks, _ = find_peaks(value, prominence=0.01)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
 
@@ -97,7 +97,7 @@ def calculate_N(value, time,path):
     theta = times_peaks / tau
 
     # fitting value of N
-    s = 10000
+    s = 100000
     x0_list = np.array(
         [
             np.logspace(np.log(1), np.log(50), s),
