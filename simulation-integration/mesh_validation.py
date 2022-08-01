@@ -16,4 +16,18 @@ a = [N,time,value]
 with open('simulation-integration/output_validation/experiment_two.pickle', 'wb') as handle:
     pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+with open('simulation-integration/output_validation/experiment_one.pickle', 'rb') as handle:
+    n,time,value = pickle.load( handle)
+
+res = pd.DataFrame({'time':time,'concentration':value})
+
+res.to_csv('simulation-integration/output_validation/experiment_one.csv')
+
+with open('simulation-integration/output_validation/experiment_two.pickle', 'rb') as handle:
+    n,time,value = pickle.load( handle)
+
+res = pd.DataFrame({'time':time,'concentration':value})
+
+res.to_csv('simulation-integration/output_validation/experiment_two.csv')
+
 
