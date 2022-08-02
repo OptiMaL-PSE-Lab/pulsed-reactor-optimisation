@@ -78,7 +78,7 @@ def interpolate(y, v, kind):
     return y_new[:-1]
 
 
-def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
+def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid, path):
     try:
         shutil.copytree("mesh_generation/base", path)
     except FileExistsError:
@@ -87,7 +87,7 @@ def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, pat
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 81 # points determined by length
+    points = 30 * fid # points determined by length
     t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
@@ -277,8 +277,8 @@ def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, pat
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -329,8 +329,8 @@ def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, pat
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -366,8 +366,8 @@ def create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, pat
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
