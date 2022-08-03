@@ -19,7 +19,7 @@ from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
-from mesh_generation.coil_validation import create_validation_mesh
+
 
 try:
     HPC = str(sys.argv[1])
@@ -72,10 +72,8 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 def vel_calc(re):
     return (re * 9.9 * 10**-4) / (990 * 0.005)
 
-
-def calculate_N(value, time,path):
-    # obtaining a smooth curve by taking peaks
-    peaks, _ = find_peaks(value, prominence=0.01)
+def val_to_rtd(time,value,path):
+    peaks, _ = find_peaks(value, prominence=0.0001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
 
@@ -95,6 +93,12 @@ def calculate_N(value, time,path):
     tau = (sum(times_peaks * values_peaks * dt)) / sum(values_peaks * dt)
     etheta = tau * et
     theta = times_peaks / tau
+    return theta,etheta
+
+def calculate_N(value, time,path):
+    # obtaining a smooth curve by taking peaks
+    
+    theta,etheta = val_to_rtd(time,value,path)
 
     # fitting value of N
     s = 100000
@@ -170,14 +174,14 @@ def run_cfd(case):
     return time, value
 
 
-def eval_cfd(a, f, re, coil_rad, pitch):
+def eval_cfd(a, f, re, coil_rad, pitch,fid):
     tube_rad = 0.0025
     length = 0.0785
     inversion_loc = None
     identifier = str(uuid4())
     print('Starting to mesh '+identifier)
     newcase = "simulation-integration/output_geom/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path=newcase)
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation=False,path=newcase)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
@@ -189,12 +193,12 @@ def eval_cfd_validation(a, f, re, coil_rad, pitch,tube_rad,length,fid):
     identifier = str(uuid4())
     print('Starting to mesh '+identifier)
     newcase = "simulation-integration/output_validation/" + identifier
-    create_validation_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase)
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation=True,path=newcase)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
-    return N,time,value
+    return N,time,value,newcase
 
 
 def eval_cfd_operating_conditions(a, f, re):
