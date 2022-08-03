@@ -1,3 +1,4 @@
+from re import A
 import numpy as np
 import sys
 import os
@@ -78,7 +79,7 @@ def interpolate(y, v, kind):
     return y_new[:-1]
 
 
-def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
+def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation,path):
     try:
         shutil.copytree("mesh_generation/base", path)
     except FileExistsError:
@@ -87,7 +88,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 81 # points determined by length
+    points = 20 + fid * 20 # points determined by length
     t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
@@ -138,7 +139,11 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
             # height is linear
             data["z"].append(new_z[i])
 
-    port_len = tube_rad*5
+    if validation is True:
+        port_len = coil_rad+tube_rad
+    else:
+        port_len = 5*tube_rad
+        
     start_dx =  data['x'][0] 
     start_dy =  data['y'][0] - port_len 
     if inversion_loc is not None:
@@ -151,10 +156,35 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
     print('Adding start and end ports')
-    n_x = 20
+    n_x = int(5*fid)
 
-    data['x'] = np.append(np.append(np.linspace(start_dx,data['x'][0],n_x+1)[:-1],data['x']),np.linspace(data['x'][-1],end_dx,n_x+1)[1:]) 
-    data['y'] = np.append(np.append(np.linspace(start_dy,data['y'][0],n_x+1)[:-1],data['y']),np.linspace(data['y'][-1],end_dy,n_x+1)[1:]) 
+
+    inlet_x = np.linspace(start_dx,data['x'][0],n_x+1)[:-1]
+    inlet_y = np.linspace(start_dy,data['y'][0],n_x+1)[:-1]
+    outlet_x = np.linspace(data['x'][-1],end_dx,n_x+1)[1:]
+    outlet_y = np.linspace(data['y'][-1],end_dy,n_x+1)[1:]
+
+
+    mid = int(n_x/2)
+
+    hf_inlet_x = np.linspace(inlet_x[:mid][0],inlet_x[:mid][-1],n_x)
+    hf_inlet_y = np.linspace(inlet_y[:mid][0],inlet_y[:mid][-1],n_x)
+
+    inlet_x = np.append(hf_inlet_x,inlet_x[mid:])
+    inlet_y = np.append(hf_inlet_y,inlet_y[mid:]) 
+
+
+    hf_outlet_x = np.linspace(outlet_x[mid:][0],outlet_x[mid:][-1],n_x)
+    hf_outlet_y = np.linspace(outlet_y[mid:][0],outlet_y[mid:][-1],n_x)
+    outlet_x = np.append(outlet_x[:mid],hf_outlet_x)
+    outlet_y = np.append(outlet_y[:mid],hf_outlet_y) 
+   
+
+    n_x = len(inlet_x)
+    print(n_x)
+    
+    data['x'] = np.append(np.append(inlet_x,data['x']),outlet_x) 
+    data['y'] = np.append(np.append(inlet_y,data['y']),outlet_y)
     data['t'] = np.append(np.append([data['t'][0] for i in range(n_x)],data['t']),[data['t'][-1] for i in range(n_x)])
     if inversion_loc is not None:
         data['t_x'] = np.append(np.append(-np.geomspace(0.0001,abs(data['t_x'][0]),n_x+1)[:-1],data['t_x']),np.geomspace(abs(data['t_x'][-1]),0.0001,n_x+1)[1:])
@@ -173,15 +203,17 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
     orig_len += n_x-1
     print('Creating mesh of coil')
 
-    v = 8 
+    v = 6
     m = int(v/2)
-    d_z = [data['z'][n_x-m],(data['z'][n_x+m]+data['z'][n_x-m]*3)/4,data['z'][n_x+m]]
-    d_z = interpolate(d_z,v,'quadratic')
-    data['z'][n_x-m:n_x+m] = d_z
 
+    
     d_z = [data['z'][-(n_x+m)],(data['z'][-(n_x+m)]+data['z'][-(n_x-m)]*3)/4,data['z'][-(n_x-m)]]
     d_z = interpolate(d_z,v,'quadratic')
     data['z'][-(n_x+m):-(n_x-m)] = d_z
+
+    d_z = [data['z'][n_x-m],(data['z'][n_x+m]+data['z'][n_x-m]*3)/4,data['z'][n_x+m]]
+    d_z = interpolate(d_z,v,'quadratic')
+    data['z'][n_x-m:n_x+m] = d_z
 
     for p in tqdm(range(1,le-2)):
 
@@ -218,7 +250,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
         for i in np.linspace(0,len(x1)-1,20):
                 i = int(i)
-                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=1)
+                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.5)
 
         div = 8
         l = np.linspace(0, len(x1), div+1)[:div].astype(int)
@@ -277,8 +309,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -329,8 +361,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -366,8 +398,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=4)
-            block.chop(1, count=4)
+            block.chop(0, count=fid)
+            block.chop(1, count=fid)
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -392,5 +424,4 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, path):
 
 
     return 
-
 
