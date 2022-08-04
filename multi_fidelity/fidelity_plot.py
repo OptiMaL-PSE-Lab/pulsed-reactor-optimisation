@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 from tqdm import tqdm 
 
+
 MAR = np.zeros((10,5))
 MNOM = np.zeros((10,5))
 MNOA = np.zeros((10,5))
