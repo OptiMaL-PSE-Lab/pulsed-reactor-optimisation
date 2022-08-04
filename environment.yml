@@ -41,6 +41,7 @@ dependencies:
   - zipp=3.8.0
   - zlib=1.2.11
   - paraview 
+  - pandas
   - pip:
     - matplotlib
     - tqdm
