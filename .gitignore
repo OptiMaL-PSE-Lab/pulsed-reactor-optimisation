@@ -6,7 +6,6 @@ data/helical_coil_data.xlsx
 simulation-integration/output_old/
 simulation-integration/output_oc/
 simulation-integration/output_geom/
-multi_fidelity/
 peak_fixing/
 simulation-integration/output_validation/
 .pre-commit-config.yaml
