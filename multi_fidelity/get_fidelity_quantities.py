@@ -6,7 +6,8 @@ from uuid import uuid4
 import numpy as np 
 import pickle
 from tqdm import tqdm 
-
+from plot_fidelity_qualities import plot_fidelities
+import shutil
 
 MAR = np.zeros((10,5))
 MNOM = np.zeros((10,5))
@@ -33,7 +34,8 @@ for i in tqdm(range(len(axial_fidelities))):
                                 MNOA[i,j] = float(line.split(': ')[-1].split(' ')[0])
                         if 'Max skewness' in line:
                                 MS[i,j] = float(line.split('= ')[-1].split(' ')[0])
-
-
-with open('multi_fidelity/fidelity_qualities.pickle', 'wb') as handle:
-    pickle.dump([MAR,MNOM,MNOA,MS], handle, protocol=pickle.HIGHEST_PROTOCOL)
+                plot_fidelities([MAR,MNOM,MNOA,MS])
+                
+                with open('multi_fidelity/fidelity_qualities.pickle', 'wb') as handle:
+                        pickle.dump([MAR,MNOM,MNOA,MS], handle, protocol=pickle.HIGHEST_PROTOCOL)
+                shutil.rmtree(path)
