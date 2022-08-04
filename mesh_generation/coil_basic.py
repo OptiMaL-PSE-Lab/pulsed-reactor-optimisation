@@ -79,16 +79,21 @@ def interpolate(y, v, kind):
     return y_new[:-1]
 
 
-def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation,path):
+def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,validation,build):
     try:
         shutil.copytree("mesh_generation/base", path)
     except FileExistsError:
         print('Folder already exists')
+    fid[1] = int(fid[1]*4)+2
+    print('Radial Fidelity: ',fid[1])
+    max_fid_1 = 164
+    fid[0] = int(fid[0] * max_fid_1)+20
+    print('Axial Fidelity: ',fid[0])
     coils = length/(2*np.pi*coil_rad)
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 20 + fid * 20 # points determined by length
+    points = 20 + fid[0] # points determined by fidelity
     t_x = -np.arctan(h/length)
     if inversion_loc is None:
         il = 1
@@ -156,7 +161,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation
         end_dy = data['y'][-1] + port_len * np.cos(end_theta) 
 
     print('Adding start and end ports')
-    n_x = int(5*fid)
+    n_x = int(points / 6)
 
 
     inlet_x = np.linspace(start_dx,data['x'][0],n_x+1)[:-1]
@@ -309,8 +314,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid)
-            block.chop(1, count=fid)
+            block.chop(0, count=fid[1])
+            block.chop(1, count=fid[1])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -361,8 +366,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid)
-            block.chop(1, count=fid)
+            block.chop(0, count=fid[1])
+            block.chop(1, count=fid[1])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -398,8 +403,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid)
-            block.chop(1, count=fid)
+            block.chop(0, count=fid[1])
+            block.chop(1, count=fid[1])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -416,12 +421,11 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation
     
     plt.savefig(path+"/pre-render.png", dpi=400)
     # run script to create mesh
-    print('Writing geometry')
-    mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-    print('Running blockMesh')
-    os.system('chmod +x '+path+'/Allrun.mesh')
-    os.system(path +"/Allrun.mesh")
-
-
+    if build is not False:
+        print('Writing geometry')
+        mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+        print('Running blockMesh')
+        os.system('chmod +x '+path+'/Allrun.mesh')
+        os.system(path +"/Allrun.mesh")
     return 
 
