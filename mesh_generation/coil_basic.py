@@ -1,4 +1,5 @@
 from re import A
+from venv import create
 import numpy as np
 import sys
 import os
@@ -86,7 +87,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
         print('Folder already exists')
     fid[1] = int(fid[1]*4)+2
     print('Radial Fidelity: ',fid[1])
-    max_fid_1 = 164
+    max_fid_1 = 80
     fid[0] = int(fid[0] * max_fid_1)+20
     print('Axial Fidelity: ',fid[0])
     coils = length/(2*np.pi*coil_rad)
@@ -428,4 +429,5 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
         os.system('chmod +x '+path+'/Allrun.mesh')
         os.system(path +"/Allrun.mesh")
     return 
+
 
