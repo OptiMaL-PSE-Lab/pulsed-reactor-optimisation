@@ -8,13 +8,15 @@ import pickle
 from tqdm import tqdm 
 from plot_fidelity_qualities import plot_fidelities
 import shutil
+import time 
 
-MAR = np.zeros((10,5))
-MNOM = np.zeros((10,5))
-MNOA = np.zeros((10,5))
-MS = np.zeros((10,5))
+MAR = np.zeros((5,5))
+MNOM = np.zeros((5,5))
+MNOA = np.zeros((5,5))
+MS = np.zeros((5,5))
+T = np.zeros((5,5))
 
-axial_fidelities = [0,0.25,0.5,0.75,1]
+axial_fidelities = [1,0.75,0.5,0.25,0]
 radial_fidelities = [0,0.25,0.5,0.75,1]
 
 for i in tqdm(range(len(axial_fidelities))):
@@ -22,8 +24,10 @@ for i in tqdm(range(len(axial_fidelities))):
         for j in range(len(radial_fidelities)):
                 radial_fidelity = radial_fidelities[j]
                 path = 'multi_fidelity/'+str(uuid4())
-                create_mesh(0.012,0.0025,0.01,0.0753,None,[radial_fidelity,axial_fidelity],path,validation=True,build=True)
-
+                s = time.time()
+                create_mesh(0.012,0.0025,0.01,0.0753,None,[axial_fidelity,radial_fidelity],path,validation=True,build=True)
+                e = time.time()
+                T[i,j] = e-s
                 with open(path+'/log.checkMesh', 'rt') as f:
                         data = f.readlines()
                 for line in data:
@@ -34,8 +38,8 @@ for i in tqdm(range(len(axial_fidelities))):
                                 MNOA[i,j] = float(line.split(': ')[-1].split(' ')[0])
                         if 'Max skewness' in line:
                                 MS[i,j] = float(line.split('= ')[-1].split(' ')[0])
-                plot_fidelities([MAR,MNOM,MNOA,MS])
+                plot_fidelities([MAR,MNOM,MNOA,MS,T])
                 
                 with open('multi_fidelity/fidelity_qualities.pickle', 'wb') as handle:
-                        pickle.dump([MAR,MNOM,MNOA,MS], handle, protocol=pickle.HIGHEST_PROTOCOL)
+                        pickle.dump([MAR,MNOM,MNOA,MS,T], handle, protocol=pickle.HIGHEST_PROTOCOL)
                 shutil.rmtree(path)

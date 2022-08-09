@@ -429,8 +429,3 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
         os.system('chmod +x '+path+'/Allrun.mesh')
         os.system(path +"/Allrun.mesh")
     return 
-
-axial_fidelity = 0
-rf = [0,0.5,1]
-for radial_fidelity in rf:
-    create_mesh(0.012,0.0025,0.01,0.0753,None,[radial_fidelity,axial_fidelity],'multi_fidelity/radial_'+str(radial_fidelity),validation=True,build=True)
