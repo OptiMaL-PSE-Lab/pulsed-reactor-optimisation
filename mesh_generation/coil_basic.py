@@ -87,7 +87,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
         print('Folder already exists')
     fid[1] = int(fid[1]*4)+2
     print('Radial Fidelity: ',fid[1])
-    max_fid_1 = 80
+    max_fid_1 = 40
     fid[0] = int(fid[0] * max_fid_1)+20
     print('Axial Fidelity: ',fid[0])
     coils = length/(2*np.pi*coil_rad)
@@ -430,4 +430,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
         os.system(path +"/Allrun.mesh")
     return 
 
-
+axial_fidelity = 0
+rf = [0,0.5,1]
+for radial_fidelity in rf:
+    create_mesh(0.012,0.0025,0.01,0.0753,None,[radial_fidelity,axial_fidelity],'multi_fidelity/radial_'+str(radial_fidelity),validation=True,build=True)

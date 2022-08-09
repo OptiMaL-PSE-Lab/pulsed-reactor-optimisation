@@ -14,7 +14,7 @@ MNOM = np.zeros((10,5))
 MNOA = np.zeros((10,5))
 MS = np.zeros((10,5))
 
-axial_fidelities = np.linspace(0,1,10)
+axial_fidelities = [0,0.25,0.5,0.75,1]
 radial_fidelities = [0,0.25,0.5,0.75,1]
 
 for i in tqdm(range(len(axial_fidelities))):
@@ -22,7 +22,7 @@ for i in tqdm(range(len(axial_fidelities))):
         for j in range(len(radial_fidelities)):
                 radial_fidelity = radial_fidelities[j]
                 path = 'multi_fidelity/'+str(uuid4())
-                create_mesh(0.012,0.0025,0.01,0.0753,None,[axial_fidelity,radial_fidelity],path,validation=True,build=True)
+                create_mesh(0.012,0.0025,0.01,0.0753,None,[radial_fidelity,axial_fidelity],path,validation=True,build=True)
 
                 with open(path+'/log.checkMesh', 'rt') as f:
                         data = f.readlines()
