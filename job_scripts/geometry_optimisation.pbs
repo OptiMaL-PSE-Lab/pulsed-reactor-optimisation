@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -N coil_optimisation_oc
+#PBS -N geom
 #PBS -j oe
-#PBS -o job_outputs/coil_optimisation_oc.out
-#PBS -e job_outputs/coil_optimisation_oc.err
+#PBS -o job_outputs/geometry_optimisation.out
+#PBS -e job_outputs/geometry_optimisation.err
 #PBS -lselect=2:ncpus=8:mem=98gb
 #PBS -lwalltime=48:00:00
 
@@ -13,4 +13,4 @@ module load intel-suite
 cd $PBS_O_WORKDIR
 conda env create -f environment.yml 
 source activate cfd_optimisation_env
-python3 -B simulation-integration/main_oc.py HPC
+python3 -B simulation-integration/main_geom.py HPC
