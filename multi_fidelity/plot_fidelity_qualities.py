@@ -8,7 +8,7 @@ def plot_fidelities(M):
 	f2 = [0,0.25,0.5,0.75,1]
 	names = ['Max Aspect Ratio','Max Mesh Non-Orthogonality','Average Mesh Non-Orthogonality','Max Skewness','Time to create mesh (s)']
 	fig,axs = plt.subplots(1,1,figsize=(4,3))
-	i = 4 # TIME 
+	i = 3 # TIME 
 	plt.tight_layout()
 	plt.subplots_adjust(top=0.95,bottom=0.15,right=0.85,left=0.0)
 	Mp = M[i]

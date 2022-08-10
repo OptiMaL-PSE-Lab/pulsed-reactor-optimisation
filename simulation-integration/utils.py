@@ -193,7 +193,7 @@ def eval_cfd_validation(a, f, re, coil_rad, pitch,tube_rad,length,fid):
     identifier = str(uuid4())
     print('Starting to mesh '+identifier)
     newcase = "simulation-integration/output_validation/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,validation=True,path=newcase)
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=True,build=True)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
