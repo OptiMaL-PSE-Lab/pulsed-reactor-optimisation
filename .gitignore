@@ -7,7 +7,6 @@ simulation-integration/output_old/
 simulation-integration/output_oc/
 simulation-integration/output_geom/
 peak_fixing/
-simulation-integration/output_validation/
 .pre-commit-config.yaml
 .flake8
 *__pycache__
