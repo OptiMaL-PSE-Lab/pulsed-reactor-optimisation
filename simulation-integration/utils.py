@@ -50,11 +50,16 @@ def calc_etheta(N, theta, off, up):
 def loss(X, theta, etheta):
     N, off, up = X
     error_sq = 0
-    for i in range(len(theta)):
-        if theta[i] > 2:
-            error_sq += 0
-        else:
-            error_sq += (calc_etheta(N, theta[i], off, up) - etheta[i]) ** 2
+    et = []
+    for i in range(len(etheta)):
+        et.append(calc_etheta(N, theta[i], off, up))
+
+    # for i in range(len(theta)):
+    #     if theta[i] > 2:
+    #         error_sq += 0
+    #     else:
+    #         error_sq += (calc_etheta(N, theta[i], off, up) - etheta[i]) ** 2
+    error_sq += (max(etheta)-max(et))**2
     return error_sq
 
 
@@ -101,7 +106,7 @@ def calculate_N(value, time,path):
     theta,etheta = val_to_rtd(time,value,path)
 
     # fitting value of N
-    s = 100000
+    s = 10000
     x0_list = np.array(
         [
             np.logspace(np.log(1), np.log(50), s),
