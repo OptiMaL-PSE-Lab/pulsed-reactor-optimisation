@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -N coil_optimisation_validation
+#PBS -N validation
 #PBS -j oe
-#PBS -o job_outputs/coil_optimisation_validation.out
-#PBS -e job_outputs/coil_optimisation_validation.err
+#PBS -o job_outputs/validation.out
+#PBS -e job_outputs/validation.err
 #PBS -lselect=2:ncpus=8:mem=98gb
 #PBS -lwalltime=48:00:00
 

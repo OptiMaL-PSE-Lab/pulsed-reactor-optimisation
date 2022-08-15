@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -N geom
 #PBS -j oe
-#PBS -o job_outputs/geometry_optimisation.out
-#PBS -e job_outputs/geometry_optimisation.err
+#PBS -o job_outputs/geom.out
+#PBS -e job_outputs/geom.err
 #PBS -lselect=2:ncpus=8:mem=98gb
 #PBS -lwalltime=48:00:00
 
