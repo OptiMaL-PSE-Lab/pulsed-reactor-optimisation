@@ -3,10 +3,12 @@ slides/
 preprint/
 paper/
 data/helical_coil_data.xlsx
+outputs/
 simulation-integration/output_old/
 simulation-integration/output_oc/
 simulation-integration/output_geom/
 simulation-integration/output_validation/
+simulation-integration/mesh_validation.py
 peak_fixing/
 .pre-commit-config.yaml
 .flake8
