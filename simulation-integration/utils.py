@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime
 from scipy.special import factorial
 import matplotlib.pyplot as plt
 import os
@@ -106,12 +107,12 @@ def calculate_N(value, time,path):
     theta,etheta = val_to_rtd(time,value,path)
 
     # fitting value of N
-    s = 10000
+    s = 1000
     x0_list = np.array(
         [
             np.logspace(np.log(1), np.log(50), s),
-            np.random.uniform(-1, 0, s),
-            np.random.uniform(0, 1, s),
+            np.random.uniform(-0.001, 0.001, s),
+            np.random.uniform(1, 1.0001, s),
         ]
     ).T
 
@@ -177,42 +178,3 @@ def run_cfd(case):
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
     return time, value
-
-
-def eval_cfd(a, f, re, coil_rad, pitch):
-    tube_rad = 0.0025
-    length = 0.0785
-    fid = [0.5,0.5]
-    inversion_loc = None
-    identifier = str(uuid4())
-    print('Starting to mesh '+identifier)
-    newcase = "simulation-integration/output_geom/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
-    vel = vel_calc(re)
-    parse_conditions(newcase, a, f, vel)
-    time, value = run_cfd(newcase)
-    N = calculate_N(value, time,newcase)
-    return N
-
-def eval_cfd_validation(a, f, re, coil_rad, pitch,tube_rad,length,fid):
-    inversion_loc = None
-    identifier = str(uuid4())
-    print('Starting to mesh '+identifier)
-    newcase = "simulation-integration/output_validation/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=True,build=True)
-    vel = vel_calc(re)
-    parse_conditions(newcase, a, f, vel)
-    time, value = run_cfd(newcase)
-    N = calculate_N(value, time,newcase)
-    return N,time,value,newcase
-
-
-def eval_cfd_operating_conditions(a, f, re):
-    identifier = str(uuid4())
-    print('Starting to mesh '+identifier)
-    newcase = "simulation-integration/output_oc/" + identifier
-    vel = vel_calc(re)
-    parse_conditions(newcase, a, f, vel)
-    time, value = run_cfd(newcase)
-    N = calculate_N(value, time,newcase)
-    return N
