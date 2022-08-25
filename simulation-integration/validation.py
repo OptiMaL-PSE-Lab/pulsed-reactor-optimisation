@@ -14,13 +14,13 @@ from mesh_generation.coil_basic import create_mesh
 
 HPC = True 
 
-def eval_cfd_validation(a, f, re, coil_rad, pitch,inversion_loc,fid):
+def eval_cfd_validation(a, f, re, pitch, coil_rad,inversion_loc,fid):
     tube_rad = 0.0025
     length = 0.0753
-    identifier = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
+    identifier = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
     print('Starting to mesh '+identifier)
     newcase = "outputs/validation/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=True,build=True)
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
@@ -44,8 +44,8 @@ f1i = [0,0.25,0.5,0.75,1]
 f2i = [0,0.25,0.5,0.75,1]
 #color = iter(cm.coolwarm(np.linspace(0, 1, 5)))
 
-lb = np.array([0.001,2,10,0.003,0.0075,0])
-ub = np.array([0.008,8,50,0.0125,0.015,1])
+lb = np.array([0.001,2,10,0.0075,0.003,0])
+ub = np.array([0.008,8,50,0.015,0.0125,1])
 n_init = 5
 t_list = np.zeros((len(f1i),n_init))
 N_list = np.zeros((len(f1i),n_init))
@@ -53,7 +53,7 @@ points_list = []
 for i in range(len(f1i)):
 
     init_points = np.random.uniform(0,1,(len(lb),n_init))
-    init_points = np.array([[(init_points[i,j] + lb[i]) *(ub[i]-lb[i]) for i in range(len(lb))]for j in range(n_init)])
+    init_points = np.array([[(init_points[i,j]) * (ub[i]-lb[i]) + lb[i] for i in range(len(lb))]for j in range(n_init)])
 
     f1 = f1i[i]
     f2 = f2i[i]

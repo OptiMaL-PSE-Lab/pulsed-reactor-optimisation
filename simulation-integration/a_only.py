@@ -13,7 +13,7 @@ from utils import vel_calc,parse_conditions,run_cfd,calculate_N
 def eval_cfd_a(a):
     f = 5
     re = 50 
-    identifier = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
+    identifier = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
     print('Starting to copy mesh')
     newcase = "outputs/a_only/" + identifier
     os.mkdir(newcase)
