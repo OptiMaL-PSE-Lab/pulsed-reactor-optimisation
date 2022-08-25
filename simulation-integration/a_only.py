@@ -8,13 +8,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from distutils.dir_util import copy_tree
-
+from utils import vel_calc,parse_conditions,run_cfd,calculate_N
 
 def eval_cfd_a(a):
     f = 5
     re = 50 
     identifier = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
-    print('Starting to copy mmulation-integration/outputesh '+identifier)
+    print('Starting to copy mesh')
     newcase = "outputs/a_only/" + identifier
     os.mkdir(newcase)
     copy_tree("mesh_generation/experimental_mesh", newcase)   
@@ -28,8 +28,8 @@ def eval_cfd_a(a):
 logger = newJSONLogger(path="outputs/a_only/logs.json")
 
 # defining utility function
-utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)
 
+utility_f = UtilityFunction(kind="ucb", kappa=10, xi=0.0)
 # def eval_cfd_a(a):
 #     b = a * 1000
 #     return np.exp(-(b - 3)**2) + np.exp(-(b - 6)**2/10) + 1/ (b**2 + 1)
@@ -98,17 +98,22 @@ def plot_gp(optimizer, x,iteration):
 try:
     logs = []
     with open("outputs/a_only/logs.json") as f:
+        print(f)
         for line in f:
+            print(line)
             logs.append(json.loads(line))
-
+    print(logs)
     for log in logs:
         optimizer.register(params=log["params"], target=log["target"])
+        print(optimizer)
 except FileNotFoundError:
+    print('FILE NOT FOUND')
     pass
 
 # assign logger to optimizer
+x = np.linspace(0.001, 0.008, 1000).reshape(-1, 1)
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
-x = np.linspace(0.001, 0.008, 500).reshape(-1, 1)
+# plot_gp(optimizer,x,iteration)
 iteration = 0
 n_init = 5
 init_points = np.linspace(0.001,0.008,n_init).reshape(-1,1)
@@ -119,10 +124,14 @@ for p in init_points:
         p_dict[keys[i]] = p[i]
     target = eval_cfd_a(**p_dict)
     optimizer.register(params=p_dict, target=target)
+    iteration += 1
     plot_gp(optimizer,x,iteration)
 
+
 while True:
-    next_point = optimizer.suggest(utility)
+    utility_p = utility_f.utility(x, optimizer._gp, 0)
+    next_point = {}
+    next_point['a'] = x[np.argmax(utility_p)]
     target = eval_cfd_a(**next_point)
     iteration += 1 
     optimizer.register(params=next_point, target=target)

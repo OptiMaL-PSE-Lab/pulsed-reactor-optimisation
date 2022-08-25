@@ -21,7 +21,6 @@ from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
 
-
 try:
     HPC = str(sys.argv[1])
     if HPC == "HPC":
@@ -31,6 +30,8 @@ try:
         HPC = False
 except:
     HPC = False
+
+HPC = True 
 
 
 class newJSONLogger(JSONLogger):

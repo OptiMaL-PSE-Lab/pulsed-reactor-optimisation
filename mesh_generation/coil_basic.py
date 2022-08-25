@@ -96,6 +96,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     data = {}
     points = 20 + fid[0] # points determined by fidelity
     t_x = -np.arctan(h/length)
+    if inversion_loc < 0.02 or inversion_loc > 0.98:
+        inversion_loc = None
     if inversion_loc is None:
         il = 1
         n = int(points) 
@@ -416,7 +418,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    ax.set_title('Pitch: '+str(np.round(pitch,2))+', Coil Radius: '+str(np.round(coil_rad,2))+', Inversion %: '+str(np.round(il,2)*100))
     #plt.show()
     
     
