@@ -31,7 +31,6 @@ try:
 except:
     HPC = False
 
-HPC = True 
 
 
 class newJSONLogger(JSONLogger):
