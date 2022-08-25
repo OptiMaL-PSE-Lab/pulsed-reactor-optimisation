@@ -13,4 +13,4 @@ module load intel-suite
 cd $PBS_O_WORKDIR
 conda env create -f environment.yml 
 source activate cfd_optimisation_env
-python3 -B simulation-integration/main_geom.py HPC
+python3 -B simulation-integration/geom.py HPC
