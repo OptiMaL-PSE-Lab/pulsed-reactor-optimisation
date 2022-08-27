@@ -5,15 +5,17 @@ from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 import os 
 import numpy as np 
+from uuid import uuid4
 import sys
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
+import shutil 
 
 def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
     fid = [1,1]
     tube_rad = 0.0025
     length = 0.0753
-    identifier = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
+    identifier = identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to mesh '+identifier)
     newcase = "outputs/geom/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=True,build=True)
@@ -21,15 +23,13 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
-    return N,time,value,newcase
+    #shutil.rmtree(newcase)
+    return N
 
 logger = newJSONLogger(path="outputs/geom/logs.json")
 
 # defining utility function
 utility = UtilityFunction(kind="ucb", kappa=5, xi=0.0)
-
-
-
 
 # setting up the optimisation problem
 optimizer = BayesianOptimization(
@@ -46,7 +46,6 @@ optimizer = BayesianOptimization(
     verbose=2,
     random_state=1,
 )
-
 
 # Opening JSON file
 try:
@@ -66,9 +65,9 @@ optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 iteration = 0
 lb = np.array([0.001,2,10,0.003,0.0075,0])
 ub = np.array([0.008,8,50,0.0125,0.015,1])
-n_init = 15
+n_init = 8
 init_points = np.random.uniform(0,1,(len(lb),n_init))
-init_points = np.array([[(init_points[i,j] + lb[i]) *(ub[i]-lb[i]) for i in range(len(lb))]for j in range(n_init)])
+init_points = np.array([[(init_points[i,j]) *(ub[i]-lb[i])+lb[i] for i in range(len(lb))]for j in range(n_init)])
 
 keys = ['a','f','re','coil_rad','pitch','inversion_loc']
 for p in init_points:

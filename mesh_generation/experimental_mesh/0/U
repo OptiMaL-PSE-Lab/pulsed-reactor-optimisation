@@ -21,7 +21,7 @@ boundaryField
     variables
       (
         "freq= 5.00000;"
-        "amp= 0.00200;"
+        "amp= 0.00100;"
         "vel= 0.01000;"
         "yp=pts().y;"
         "minY=min(yp);"
