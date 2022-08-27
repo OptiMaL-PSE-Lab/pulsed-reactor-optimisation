@@ -18,6 +18,7 @@ def eval_cfd(a, f, re, pitch, coil_rad,inversion_loc,fid):
     tube_rad = 0.0025
     length = 0.0753
     identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    identifier = 'test'
     print('Starting to mesh '+identifier)
     newcase = "outputs/initial_mf_points/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)

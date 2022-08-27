@@ -206,8 +206,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
 
     le = len(data[keys[0]])
     mesh = Mesh()
-    fig = plt.figure(figsize=(4,4))
-    ax = fig.add_subplot(projection="3d")
+
+    fig,axs = plt.subplots(1,3,figsize=(10,4),subplot_kw=dict(projection="3d"))
+
     orig_len += n_x-1
     print('Creating mesh of coil')
 
@@ -253,12 +254,14 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
                 [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
 
 
-        ax.plot3D(x2, y2, z2, color='k', alpha=0.75, lw=0.5)
-        ax.plot3D(x1, y1, z1, color='k', alpha=0.75, lw=0.5)
-
-        for i in np.linspace(0,len(x1)-1,20):
-                i = int(i)
-                ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.5)
+        for ax in axs:
+            ax.plot3D(x2, y2, z2, color='k', alpha=0.75, lw=0.5)
+            ax.plot3D(x1, y1, z1, color='k', alpha=0.75, lw=0.5)
+            
+            for i in np.linspace(0,len(x1)-1,20):
+                    i = int(i)
+                    ax.plot3D([x1[i],x2[i]],[y1[i],y2[i]],[z1[i],z2[i]],c='k',alpha=0.5,lw=0.5)
+            
 
         div = 8
         l = np.linspace(0, len(x1), div+1)[:div].astype(int)
@@ -412,15 +415,31 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
 
             mesh.add_block(block)
         # copy template folder
-    ax.set_box_aspect(
-        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
-    )
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
+    
     #plt.show()
     
-    
+    for ax in axs:
+        
+        ax.set_xticks([],[])
+        ax.set_yticks([],[])
+        ax.set_zticks([],[])
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+    axs[0].set_xlabel('x')
+    axs[0].set_zlabel('z')
+
+    axs[1].set_ylabel('y')
+    axs[1].set_zlabel('z')
+
+    axs[2].set_ylabel('y')
+    axs[2].set_xlabel('x')
+
+    axs[0].view_init(0,270)
+    axs[1].view_init(0,180)
+    axs[2].view_init(270,0)
+
+    plt.subplots_adjust(left=0.01,right=0.99,wspace=0.05,top=0.99,bottom=0.01)
     plt.savefig(path+"/pre-render.png", dpi=400)
     # run script to create mesh
     if build is not False:
