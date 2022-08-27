@@ -3,7 +3,8 @@ from utils import  newJSONLogger
 from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 from datetime import datetime
-import os 
+import os
+import shutil  
 import numpy as np 
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -13,7 +14,7 @@ from utils import vel_calc,parse_conditions,run_cfd,calculate_N
 def eval_cfd_a(a):
     f = 5
     re = 50 
-    identifier = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+    identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to copy mesh')
     newcase = "outputs/a_only/" + identifier
     os.mkdir(newcase)
@@ -76,7 +77,7 @@ def plot_gp(optimizer, x,iteration):
     axis.set_ylim((None, None))
     axis.set_ylabel('N')
     
-    utility_function = UtilityFunction(kind="ucb", kappa=5, xi=0)
+    utility_function = UtilityFunction(kind="ucb", kappa=10, xi=0)
     utility = utility_function.utility(x, optimizer._gp, 0)
     acq.plot(x, utility, label='Utility Function', color='k')
     acq.scatter(x[np.argmax(utility)], np.max(utility), marker='+', s=80, c='k',lw=1,
@@ -88,9 +89,8 @@ def plot_gp(optimizer, x,iteration):
     
     axis.legend(frameon=False)
     acq.legend(frameon=False)
-    fig.savefig('outputs/a_only/bo_iteration_'+str(iteration)+'.png')
+    fig.savefig('outputs/a_only/'+str(iteration)+'.png')
     return 
-
 
 # setting up the optimisation problem
 
@@ -126,7 +126,6 @@ for p in init_points:
     optimizer.register(params=p_dict, target=target)
     iteration += 1
     plot_gp(optimizer,x,iteration)
-
 
 while True:
     utility_p = utility_f.utility(x, optimizer._gp, 0)

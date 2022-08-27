@@ -23,7 +23,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         45;
+endTime         10;
 
 deltaT          0.000001;
 
@@ -243,9 +243,11 @@ functions
 			{
 				basePoint (0 0 0.005);
 				normalVector (1 0 0);
-				//zone zone1;
+
+				
 			}
-			zone zone1;
+			
+         bounds (-0.002 0.008 0) (0.002 0.016 0.01);
 		}
 	}
 
@@ -284,12 +286,20 @@ functions
 			{
 				basePoint (0 0 0.005);
 				normalVector (1 0 0);
-				//zone zone1;
+				
 			}
-			zone zone1;
+			
+			bounds (-0.002 0.008 0) (0.002 0.016 0.01);
 		}
-	}	
+	}
+
+
 }  
+
+DebugSwitches
+{
+   sampledPlane 1;
+}
 
 
 

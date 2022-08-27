@@ -82,7 +82,7 @@ def interpolate(y, v, kind):
 
 def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,validation,build):
     try:
-        shutil.copytree("mesh_generation/base", path)
+        shutil.copytree("mesh_generation/mesh", path)
     except FileExistsError:
         print('Folder already exists')
     fid[1] = int(fid[1]*4)+2
@@ -96,7 +96,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     data = {}
     points = 20 + fid[0] # points determined by fidelity
     t_x = -np.arctan(h/length)
-    if inversion_loc < 0.02 or inversion_loc > 0.98:
+    if inversion_loc < 0.05 or inversion_loc > 0.95:
         inversion_loc = None
     if inversion_loc is None:
         il = 1
