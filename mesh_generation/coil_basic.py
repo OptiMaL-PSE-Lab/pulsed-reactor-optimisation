@@ -440,7 +440,7 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     axs[2].view_init(270,0)
 
     plt.subplots_adjust(left=0.01,right=0.99,wspace=0.05,top=0.99,bottom=0.01)
-    plt.savefig(path+"/pre-render.png", dpi=400)
+    plt.savefig(path+"/pre-render.png", dpi=200)
     # run script to create mesh
     if build is not False:
         print('Writing geometry')

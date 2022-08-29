@@ -18,7 +18,7 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
     identifier = identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to mesh '+identifier)
     newcase = "outputs/geom/" + identifier
-    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=True,build=True)
+    create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
@@ -29,7 +29,7 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
 logger = newJSONLogger(path="outputs/geom/logs.json")
 
 # defining utility function
-utility = UtilityFunction(kind="ucb", kappa=5, xi=0.0)
+utility = UtilityFunction(kind="ucb", kappa=2.5, xi=0.0)
 
 # setting up the optimisation problem
 optimizer = BayesianOptimization(
@@ -38,7 +38,7 @@ optimizer = BayesianOptimization(
         "a": (0.001, 0.008),
         "f": (2, 8),
         "re": (10, 50),
-        "coil_rad": (0.003, 0.0125),
+        "coil_rad": (0.005, 0.0125),
         "pitch": (0.0075, 0.015),
         "inversion_loc": (0,1)
     },
@@ -61,9 +61,8 @@ except FileNotFoundError:
 # assign logger to optimizer
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 
-
 iteration = 0
-lb = np.array([0.001,2,10,0.003,0.0075,0])
+lb = np.array([0.001,2,10,0.005,0.0075,0])
 ub = np.array([0.008,8,50,0.0125,0.015,1])
 n_init = 8
 init_points = np.random.uniform(0,1,(len(lb),n_init))
