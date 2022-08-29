@@ -130,13 +130,15 @@ for i in range(len(fidels)):
 
 X_train, Y_train = convert_xy_lists_to_arrays(x_data, y_data)
 
+
+
 z_data = [x_data[i]]
 for i in range(1,len(fidels)):
     new = np.concatenate((x_data[i-1],y_data[i-1]),axis=1)
     z_data.append(new)
+print(y_data)
 
-
-dgp = make_dgpMF_model(x_data, y_data, z_data)
+# dgp = make_dgpMF_model(x_data, y_data, z_data)
 
 
 print('Running Optimisation!')
