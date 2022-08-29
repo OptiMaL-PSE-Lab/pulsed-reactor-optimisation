@@ -126,11 +126,11 @@ def calculate_N(value, time,path):
     N, off, up = X
 
     plt.figure()
-    plt.plot(theta, etheta, c="k", linestyle="dashed", label="CFD")
+    plt.scatter(theta, etheta, c="k", alpha=0.4,label="CFD")
     etheta_calc = []
     for t in theta:
         etheta_calc.append(calc_etheta(N, t, off, up))
-    plt.plot(theta, etheta_calc, c="k", label="Dimensionless")
+    plt.plot(theta, etheta_calc, c="k",ls='dashed', label="Dimensionless")
     plt.grid()
     plt.legend()
     plt.savefig(path+"/dimensionless_conversion.png")
@@ -155,6 +155,8 @@ def parse_conditions(case, a, f, vel):
 
 
 def run_cfd(case):
+    print(case)
+    print(HPC)
     if HPC is True:
         print("TRUE")
         run_command = f"mpiexec pimpleFoam -parallel"
@@ -167,7 +169,7 @@ def run_cfd(case):
         argv=[run_command, "-case", case],
         logname="Solution",
     )
-
+    print(run)
     # running CFD
     run.start()
 

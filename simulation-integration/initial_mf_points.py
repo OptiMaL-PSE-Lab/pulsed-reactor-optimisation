@@ -18,12 +18,14 @@ def eval_cfd(a, f, re, pitch, coil_rad,inversion_loc,fid):
     tube_rad = 0.0025
     length = 0.0753
     identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    identifier = 'test'
     print('Starting to mesh '+identifier)
     newcase = "outputs/initial_mf_points/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
+    print('Calculating Reynolds number')
     vel = vel_calc(re)
+    print('Parsing conditions')
     parse_conditions(newcase, a, f, vel)
+    print('Running CFD...')
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
     #shutil.rmtree(newcase)
@@ -32,7 +34,7 @@ def eval_cfd(a, f, re, pitch, coil_rad,inversion_loc,fid):
 f1i = [0,0.25,0.5,0.75,1]
 f2i = [0,0.25,0.5,0.75,1]
 
-lb = np.array([0.001,2,10,0.0075,0.003,0])
+lb = np.array([0.001,2,10,0.0075,0.005,0])
 ub = np.array([0.008,8,50,0.015,0.0125,1])
 n_init = 8
 dataset_x = []
