@@ -23,7 +23,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         10;
+endTime         30;
 
 deltaT          0.000001;
 
@@ -292,6 +292,61 @@ functions
 			bounds (-0.002 0.008 0) (0.002 0.016 0.01);
 		}
 	}
+
+      stest
+   {      
+      type writeAndEndSwakExpression;
+      valueType patch;
+      patchName outlet;
+      logicalExpression "(test<threshold)";
+      logicalAccumulation and;
+
+      variables
+      (
+         "c=count;"
+         "c1=1;"
+         "count= (time()>10.1) ? (c+c1):0;"
+
+         "start= (count>10) ? 0:count;"
+         "count=start;"
+
+         //"s1=s;"
+         //"storeS= (count!=0) ? s1:0;"
+
+         "s1=s;"
+         "s2=storeS;"
+         "storeS= (count!=0) ? (s1+s2):0;"
+
+         "test= (count==10) ? storeS:1;"
+
+         "threshold=0.005;"
+         //"count= c+c1;"
+      );
+
+      storedVariables
+      (
+         {  name count;
+            initialValue "0";
+         }
+         {  
+            name storeS;
+            initialValue "0";
+         }
+      );
+
+      accumulations
+      (
+        average
+      );
+
+      expression "test";
+      verbose true;
+      autoInterpolate true;
+      outputControlMode timeStep;
+      outputInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
 
 
 }  

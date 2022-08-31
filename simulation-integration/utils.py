@@ -79,16 +79,30 @@ def vel_calc(re):
     return (re * 9.9 * 10**-4) / (990 * 0.005)
 
 def val_to_rtd(time,value,path):
+
+
+    value = np.array(value)
+    time = np.array(time)
+
+    plt.figure()
     peaks, _ = find_peaks(value, prominence=0.0001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
-
-    plt.figure()
     plt.plot(time, value, c="k", lw=1, alpha=0.1)
-    plt.plot(times_peaks, values_peaks, c="r", lw=1)
+    plt.plot(times_peaks, values_peaks, c="r", lw=1,label='CFD')
+
+    # m = np.argmax(value)
+    # value = np.append(value[:m],np.flip(value[:m]))
+    # time = np.linspace(time[0],(time[m])*2,len(value))
+    # peaks, _ = find_peaks(value, prominence=0.0001)
+    # times_peaks = time[peaks]
+    # values_peaks = value[peaks]
+    # plt.plot(times_peaks, values_peaks, c="b", lw=1,label='Un-skew')
+
     plt.grid()
     plt.xlabel("time")
     plt.ylabel("concentration")
+    plt.legend()
     plt.savefig(path+"/preprocessed_plot.png")
 
     # difference between time values
