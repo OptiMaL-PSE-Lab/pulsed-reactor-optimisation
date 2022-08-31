@@ -17,13 +17,13 @@ FoamFile
 
 application     pimpleFoam;
 
-startFrom       latestTime;
+startFrom       startTime;
 
 startTime       0;
 
 stopAt          endTime;
 
-endTime         15;
+endTime         45;
 
 deltaT          0.000001;
 
@@ -65,13 +65,13 @@ functions
   {
     type scalarTransport;
     libs ("libsolverFunctionObjects.so");
-	enabled true;
-	writeControl outputTime;
-	log yes;
-	nCorr 1;
-	D 1e-10;
-	
-	phi "phi";
+      enabled true;
+      writeControl outputTime;
+      log yes;
+      nCorr 1;
+      D 1e-10;
+      
+      phi "phi";
   }
   
   vorticity1
@@ -94,7 +94,7 @@ functions
     writeInterval   0.5;
   }
   
-    massfraction
+   massfraction
    {
        type  patchAverage; //patchIntegrate; //patchAverage;
        functionObjectLibs
@@ -153,7 +153,122 @@ functions
       writeControl    timeStep;
       writeInterval   1;
    }
+
+   compute_vrad
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName vradial;
+      valueType internalField;
+      expression "((U.z*pos().z+U.y*pos().y)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+   compute_vtan
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName vtangential;
+      valueType internalField;
+      expression "((U.z*pos().y-U.y*pos().z)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+
+   compute_teetaDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName teetaDash;
+      valueType internalField;
+      expression "U.x*((U.z*pos().y-U.y*pos().z)/pow((pow(pos().y,2)+pow(pos().z,2)),0.5))*(pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+
+   compute_rDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName rDash;
+      valueType internalField;
+      expression "U.x*((U.z*pos().z+U.y*pos().y)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+   compute_zDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName zDash;
+      valueType internalField;
+      expression "U.x*U.x";
+      autowrite true;
+   }
+  
+      stest
+   {      
+      type writeAndEndSwakExpression;
+      valueType patch;
+      patchName outlet;
+      logicalExpression "(test<threshold)";
+      logicalAccumulation and;
+
+      variables
+      (
+         "c=count;"
+         "c1=1;"
+         "count= (time()>10.1) ? (c+c1):0;"
+
+         "start= (count>10) ? 0:count;"
+         "count=start;"
+
+         //"s1=s;"
+         //"storeS= (count!=0) ? s1:0;"
+
+         "s1=s;"
+         "s2=storeS;"
+         "storeS= (count!=0) ? (s1+s2):0;"
+
+         "test= (count==10) ? storeS:1;"
+
+         "threshold=0.005;"
+         //"count= c+c1;"
+      );
+
+      storedVariables
+      (
+         {  name count;
+            initialValue "0";
+         }
+         {  
+            name storeS;
+            initialValue "0";
+         }
+      );
+
+      accumulations
+      (
+        average
+      );
+
+      expression "test";
+      verbose true;
+      autoInterpolate true;
+      outputControlMode timeStep;
+      outputInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
+
+
 }  
+
+DebugSwitches
+{
+   sampledPlane 1;
+}
 
 
 

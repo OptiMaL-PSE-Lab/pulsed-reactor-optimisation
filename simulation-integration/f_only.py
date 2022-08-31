@@ -11,12 +11,12 @@ from matplotlib import gridspec
 from distutils.dir_util import copy_tree
 from utils import vel_calc,parse_conditions,run_cfd,calculate_N
 
-def eval_cfd_a(a):
-    f = 5
+def eval_cfd_a(f):
+    a = 0.002
     re = 50 
     identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to copy mesh')
-    newcase = "outputs/a_only/" + identifier
+    newcase = "outputs/f_only/" + identifier
     os.mkdir(newcase)
     copy_tree("mesh_generation/experimental_mesh", newcase)   
     print('Starting simulation...')
@@ -26,7 +26,7 @@ def eval_cfd_a(a):
     N = calculate_N(value, time,newcase)
     return N
 
-logger = newJSONLogger(path="outputs/a_only/logs.json")
+logger = newJSONLogger(path="outputs/f_only/logs.json")
 
 # defining utility function
 
@@ -38,7 +38,7 @@ utility_f = UtilityFunction(kind="ucb", kappa=5, xi=0.0)
 optimizer = BayesianOptimization(
     f=eval_cfd_a,
     pbounds={
-        "a": (0.001, 0.008),
+        "f": (2,8),
     },
     pcons=[],
     verbose=2,
@@ -61,7 +61,7 @@ def plot_gp(optimizer, x,iteration):
     acq = plt.subplot(gs[1])
     axis.set_xticks([],[])
     
-    x_obs = np.array([[res["params"]["a"]] for res in optimizer.res])
+    x_obs = np.array([[res["params"]["f"]] for res in optimizer.res])
     y_obs = np.array([res["target"] for res in optimizer.res])
     
     mu, sigma = posterior(optimizer, x_obs, y_obs, x)
@@ -73,7 +73,7 @@ def plot_gp(optimizer, x,iteration):
               np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
         alpha=.1, fc='k', ec='None',label='95% confidence interval')
     
-    axis.set_xlim((0.001,0.008))
+    axis.set_xlim((2,8))
     axis.set_ylim((None, None))
     axis.set_ylabel('N')
     
@@ -82,14 +82,14 @@ def plot_gp(optimizer, x,iteration):
     acq.plot(x, utility, label='Utility Function', color='k')
     acq.scatter(x[np.argmax(utility)], np.max(utility), marker='+', s=80, c='k',lw=1,
              label=u'Next Best Guess')
-    acq.set_xlim((0.001, 0.008))
+    acq.set_xlim((2, 8))
     acq.set_ylim((0, np.max(utility) + 0.5))
     acq.set_ylabel('UCB')
-    acq.set_xlabel('a')
+    acq.set_xlabel('f')
     
     axis.legend(frameon=False)
     acq.legend(frameon=False)
-    fig.savefig('outputs/a_only/'+str(iteration)+'.png')
+    fig.savefig('outputs/f_only/'+str(iteration)+'.png')
     return 
 
 # setting up the optimisation problem
@@ -97,9 +97,9 @@ def plot_gp(optimizer, x,iteration):
 # Opening JSON file
 try:
     logs = []
-    with open("outputs/a_only/logs.json") as f:
-        print(f)
-        for line in f:
+    with open("outputs/f_only/logs.json") as fi:
+        print(fi)
+        for line in fi:
             print(line)
             logs.append(json.loads(line))
     print(logs)
@@ -111,13 +111,14 @@ except FileNotFoundError:
     pass
 
 # assign logger to optimizer
-x = np.linspace(0.001, 0.008, 1000).reshape(-1, 1)
+x = np.linspace(2,8, 1000).reshape(-1, 1)
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 # plot_gp(optimizer,x,iteration)
-iteration = 0
+
+iteration = 0 
 n_init = 5
-init_points = np.linspace(0.001,0.008,n_init).reshape(-1,1)
-keys = ['a']
+init_points = np.linspace(2,8,n_init).reshape(-1,1)
+keys = ['f']
 for p in init_points:
     p_dict = {}
     for i in range(len(keys)):
@@ -130,7 +131,7 @@ for p in init_points:
 while True:
     utility_p = utility_f.utility(x, optimizer._gp, 0)
     next_point = {}
-    next_point['a'] = x[np.argmax(utility_p)]
+    next_point['f'] = x[np.argmax(utility_p)]
     target = eval_cfd_a(**next_point)
     iteration += 1 
     optimizer.register(params=next_point, target=target)
