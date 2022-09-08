@@ -6,23 +6,51 @@ import GPy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
+def vis_mf():
 
-with open('outputs/initial_mf_points/dataset_x.pickle','rb') as f:
-	res = pickle.load(f)
-t = []
-f = []
-y = []
-for d in res:
-	t.append(d['t'])
-	f.append(d['x']['fid'])
-	y.append(d['N'])
-t = np.cumsum(np.asarray(t))/3600
+	with open('outputs/initial_mf_points/dataset_x.pickle','rb') as f:
+		res = pickle.load(f)
+	t = []
+	f = []
+	y = []
+	for d in res:
+		t.append(d['t'])
+		f.append(d['x']['fid'])
+		y.append(d['N'])
+	t = np.cumsum(np.asarray(t))/3600
 
-fig,axs = plt.subplots(1,1,figsize=(6,4))
-axs.scatter(t,y,marker='+',c=f)
-axs.set_xlabel('time (hr)')
-axs.set_ylabel('Plug-flow characteristic')
-plt.savefig('outputs/mf_results.png')
+	fig,axs = plt.subplots(1,1,figsize=(6,4))
+	axs.scatter(t,y,marker='+',c=f)
+	axs.set_xlabel('time (hr)')
+	axs.set_ylabel('Plug-flow characteristic')
+	plt.savefig('outputs/mf_results.png')
+	plt.savefig('outputs/mf_results.pdf')
+
+vis_mf()
+
+def vis_geom():
+	with open('outputs/geom/logs.json','rb') as f:
+		res = f.readlines()
+	t = [] 
+	N = [] 
+	for l in res:
+		l = json.loads(l)
+		N.append(l['target'])
+		t.append(l['datetime']['elapsed'])
+	
+	t = np.array(t)/3600
+
+	fig,axs = plt.subplots(1,1,figsize=(6,4))
+	axs.scatter(t,N,marker='+',c='k')
+	axs.fill_betweenx([0,20],min(t),t[8],color='k',alpha=0.1)
+	axs.set_xlabel('time (hr)')
+	axs.set_ylabel('Plug-flow characteristic')
+	axs.set_ylim(0,20)
+	axs.set_xlim(0,20)
+	plt.savefig('outputs/geom_results.png')
+	plt.savefig('outputs/geom_results.pdf')
+	return 
+vis_geom()
 
 
 
@@ -102,4 +130,5 @@ def vis_a_and_f():
 	axs[0].plot(np.arange(len(y)),best,c='k',ls='dashed')
 	axs[0].set_xlabel('Iteration')
 	axs[0].set_ylabel('Plug-flow characteristic')
+	plt.savefig('outputs/a_and_f_results.png')
 	plt.savefig('outputs/a_and_f_results.pdf')
