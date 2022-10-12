@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -N initial_mf_points
+#PBS -N initial_mf
 #PBS -j oe
-#PBS -o outputs/logs/initial_mf_points.out
-#PBS -e outputs/logs/initial_mf_points.err
+#PBS -o outputs/logs/initial_mf.out
+#PBS -e outputs/logs/initial_mf.err
 #PBS -lselect=2:ncpus=8:mem=98gb
 #PBS -lwalltime=48:00:00
 

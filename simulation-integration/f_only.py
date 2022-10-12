@@ -42,7 +42,7 @@ optimizer = BayesianOptimization(
     },
     pcons=[],
     verbose=2,
-    random_state=1
+    noise=True
 )
 
 
@@ -83,7 +83,6 @@ def plot_gp(optimizer, x,iteration):
     acq.scatter(x[np.argmax(utility)], np.max(utility), marker='+', s=80, c='k',lw=1,
              label=u'Next Best Guess')
     acq.set_xlim((2, 8))
-    acq.set_ylim((0, np.max(utility) + 0.5))
     acq.set_ylabel('UCB')
     acq.set_xlabel('f')
     
@@ -116,7 +115,7 @@ optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 # plot_gp(optimizer,x,iteration)
 
 iteration = 0 
-n_init = 5
+n_init = 8
 init_points = np.linspace(2,8,n_init).reshape(-1,1)
 keys = ['f']
 for p in init_points:
