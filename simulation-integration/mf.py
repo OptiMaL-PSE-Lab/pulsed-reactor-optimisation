@@ -6,6 +6,7 @@ from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 import os 
 import pickle 
+import time
 import numpy as np 
 from uuid import uuid4
 import sys
@@ -30,6 +31,14 @@ from gpflow.training import AdamOptimizer
 import gpflow.training.monitor as mon
 from gpflow.training import AdamOptimizer, ScipyOptimizer, NatGradOptimizer
 import time 
+
+def LHS(bounds,p):
+    d = len(bounds)
+    sample = np.zeros((p,len(bounds)))
+    for i in range(0,d):
+        sample[:,i] = np.linspace(bounds[i,0],bounds[i,1],p)
+        rnd.shuffle(sample[:,i])
+    return sample 
 
 def make_dgpMF_model(X, Y, Z):
     
@@ -105,12 +114,14 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc,fid):
     length = 0.0753
     identifier = identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to mesh '+identifier)
-    newcase = "outputs/geom/" + identifier
+    newcase = "outputs/mf/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, [fid,fid],path=newcase,validation=True,build=True)
     vel = vel_calc(re)
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
+    for i in range(16):
+        shutil.rmtree(newcase+'/processor'+str(i))
     #shutil.rmtree(newcase)
     return N
 
@@ -149,6 +160,8 @@ def parse_initial_conditions(path):
             fid_sc = np.append(fid_sc,[[data[i]['N']]],axis=0)
             fid_t = np.append(fid_t,[[data[i]['t']]],axis=0)
             i += 1
+            if i == 11:
+                break 
         fid_data = np.append(fid_data,[X[i,:-1]],axis=0)
         fid_sc = np.append(fid_sc,[[data[i]['N']]],axis=0)
         fid_t = np.append(fid_t,[[data[i]['t']]],axis=0)
@@ -159,10 +172,12 @@ def parse_initial_conditions(path):
         x_data.append(fid_data)
         y_data.append(fid_sc)
         t_data.append(fid_t)
+        if i == 12:
+            break 
 
 
     fig,ax=plt.subplots(1,1,figsize=(6,4))
-    fid_v = np.linspace(0,1,5)
+    fid_v = np.linspace(0,1,3)
     j = 0 
     mean_t = []
     for i in range(len(t_data)):
@@ -192,13 +207,13 @@ try:
         data = json.load(fp) 
 
     def get_ind(f):
-        fids = [0,0.25,0.5,0.75,1]
+        fids = [0,0.5,1]
         for i in range(len(fids)):
             if f == fids[i]:
                 return i
 
     x_data = [np.array([[0 for i in range(6)]]) for i in range(5)]
-    y_data = [np.array([[0]]) for i in range(5)]
+    y_data = [np.array([[0]]) for i in range(3)]
     for d in data.values():
         f_i = get_ind(d['fid'])
         x_data[f_i] = np.append(x_data[f_i],[list(d['params'].values())],axis=0)
@@ -213,12 +228,12 @@ try:
     x_data_og,y_data_og,t_data = parse_initial_conditions('outputs/initial_mf_points/dataset_x.pickle')
 except: 
     x_data,y_data,t_data = parse_initial_conditions('outputs/initial_mf_points/dataset_x.pickle')
-    fid_list = [0,0.25,0.5,0.75,1]
+    fid_list = [0,0.5,1]
     data = {}
     keys = ['a','f','re','coil_rad','pitch','inversion_loc']
     c = 1 
     for i in range(len(x_data)):
-        for j in range(len(x_data[i])):
+        for j in range(4):
             p = {}
             p['target'] = y_data[i][j,0]
             pa = {}
@@ -233,13 +248,13 @@ except:
         json.dump(data,fp) 
 
 while True:
-    dgp = MultiFidelityDeepGP(x_data,y_data,n_iter=40000,multi_step_training=False)
+    dgp = MultiFidelityDeepGP(x_data,y_data,n_iter=50000,multi_step_training=False)
     print('Optimizing')
 
     t_data = np.array(t_data)
     t_data = 1/((t_data)/(max(t_data)))
 
-    #dgp.optimize()
+    dgp.optimize()
 
     def aq_fun(x,dgp):
         s = time.time()
@@ -247,12 +262,13 @@ while True:
         for i in range(len(res_mean)):
             res_mean[i] = np.mean(res_mean[i],axis=0)
             res_var[i] = np.mean(res_var[i],axis=0)
-        return -(res_mean[-1] + 2.5*res_var[-1])
+        return -(res_mean[-1] + 1.5*res_var[-1])
 
-    fid_list = [0,0.25,0.5,0.75,1]
-    lb = np.array([0.001,2,10,0.0075,0.005,0])
-    ub = np.array([0.008,8,50,0.015,0.0125,1])
-    n_multi = 5
+    fid_list = [0,0.5,1]
+    lb = np.array([0.001,2,10,0.005,0.0075,0])
+    ub = np.array([0.008,8,50,0.0125,0.015,1])
+    n_multi = 10
+
     x0_list = np.random.uniform(0,1,(len(lb),n_multi))
     x0_list = np.array([[(x0_list[i,j]) * (ub[i]-lb[i]) + lb[i] for i in range(len(lb))]for j in range(n_multi)])
 
@@ -261,7 +277,7 @@ while True:
     for x0 in x0_list:
         print("Multistart: ",i,' Best upper-bound: ',f_max)
         i += 1
-        res = minimize(aq_fun,x0,args=(dgp),method='Nelder-Mead',options={'maxiter':1000})
+        res = minimize(aq_fun,x0,args=(dgp),bounds=[(lb[j],ub[j]) for j in range(len(lb))],method='Nelder-Mead',options={'maxiter':10000})
         if res.fun > f_max:
             f_max = res.fun
             res_best = res
@@ -274,7 +290,7 @@ while True:
             res_mean[i] = np.mean(res_mean[i],axis=0)
             res_var[i] = np.mean(res_var[i],axis=0)    
 
-        choices = (np.array(res_var) * 2.5) 
+        choices = (np.array(res_var) * 1.5) 
         choices = np.array([choices[i][0,0] for i in range(len(choices))])
         choices *= t_data
         ind = np.argmax(choices)
@@ -284,12 +300,15 @@ while True:
 
     xn = res_best.x
     fid,f_ind = fid_choice(xn,dgp)
+    s = time.time()
     N = eval_cfd(xn[0],xn[1],xn[2],xn[3],xn[4],xn[5],fid)
+    e = time.time()
     x_data[f_ind] = np.append(x_data[f_ind],[xn],axis=0)
     y_data[f_ind] = np.append(y_data[f_ind],[[N]],axis=0)
     keys = ['a','f','re','coil_rad','pitch','inversion_loc'] 
     p = {}
     p['target'] = N
+    p['t'] = e-s
     pa = {}
     for k in range(len(keys)):
         pa[keys[k]] = xn[k]

@@ -42,7 +42,7 @@ optimizer = BayesianOptimization(
     },
     pcons=[],
     verbose=2,
-    random_state=1
+    noise=False
 )
 
 

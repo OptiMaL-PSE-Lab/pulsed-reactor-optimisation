@@ -3,7 +3,7 @@
 #PBS -j oe
 #PBS -o outputs/logs/mf.out
 #PBS -e outputs/logs/mf.err
-#PBS -lselect=1:ncpus=16:mem=98gb:ngpus=1:gpu_type=RTX6000
+#PBS -lselect=2:ncpus=8:mem=98gb:ngpus=1:gpu_type=RTX6000
 #PBS -lwalltime=48:00:00
 
 module load anaconda3/personal

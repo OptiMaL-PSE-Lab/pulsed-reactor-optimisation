@@ -23,7 +23,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         30;
+endTime         60;
 
 deltaT          0.000001;
 
@@ -305,7 +305,7 @@ functions
       (
          "c=count;"
          "c1=1;"
-         "count= (time()>10.1) ? (c+c1):0;"
+         "count= (time()>20.1) ? (c+c1):0;"
 
          "start= (count>10) ? 0:count;"
          "count=start;"
@@ -319,7 +319,7 @@ functions
 
          "test= (count==10) ? storeS:1;"
 
-         "threshold=0.005;"
+         "threshold=0.00001;"
          //"count= c+c1;"
       );
 

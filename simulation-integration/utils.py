@@ -85,7 +85,7 @@ def val_to_rtd(time,value,path):
     time = np.array(time)
 
     plt.figure()
-    peaks, _ = find_peaks(value, prominence=0.0001)
+    peaks, _ = find_peaks(value, prominence=0.00001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
     plt.plot(time, value, c="k", lw=1, alpha=0.1)
@@ -121,7 +121,7 @@ def calculate_N(value, time,path):
     theta,etheta = val_to_rtd(time,value,path)
 
     # fitting value of N
-    s = 1000
+    s = 10000
     x0_list = np.array(
         [
             np.logspace(np.log(1), np.log(50), s),
@@ -147,6 +147,8 @@ def calculate_N(value, time,path):
     plt.plot(theta, etheta_calc, c="k",ls='dashed', label="Dimensionless")
     plt.grid()
     plt.legend()
+    plt.xlim(0,4)
+    plt.ylim(0,2.5)
     plt.savefig(path+"/dimensionless_conversion.png")
     return N
 

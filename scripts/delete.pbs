@@ -7,6 +7,7 @@
 #PBS -lwalltime=4:00:00
 
 cd $PBS_O_WORKDIR
-echo deleting a_only_init
-rsync -a --delete outputs/empty_dir/    outputs/a_only_init/
+rsync -a --delete outputs/empty_dir/    outputs/mf/
+# rsync -a --delete outputs/empty_dir/    outputs/initial_mf_points/
+# rsync -a --delete outputs/empty_dir/    outputs/geom/
 echo done

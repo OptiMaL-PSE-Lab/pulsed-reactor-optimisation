@@ -2,6 +2,7 @@ literature/
 slides/
 preprint/
 paper/
+multi_fidelity/
 data/helical_coil_data.xlsx
 outputs/
 simulation-integration/output_old/

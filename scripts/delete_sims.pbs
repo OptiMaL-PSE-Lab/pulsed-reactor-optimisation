@@ -1,0 +1,36 @@
+#PBS -N del_sim
+#PBS -j oe
+#PBS -o outputs/logs/del_sim.out
+#PBS -e outputs/logs/del_sim.err
+#PBS -lselect=1:ncpus=1:mem=64gb
+#PBS -lwalltime=2:00:00
+
+cd $PBS_O_WORKDIR
+echo "deleting similation run time folders"
+
+for d in outputs/a_and_f/*
+    do
+
+        rm -rf $d/processor*/
+        wait
+        ls $d
+
+done
+
+
+echo "deleting sumilation run time folders"
+for d in outputs/a_only/*
+    do
+        rm -rf $d/processor*/
+        wait
+        ls $d
+
+done
+
+echo "deleting sumilation run time folders"
+for d in outputs/f_only/*
+    do
+        rm -rf $d/processor*/
+        wait
+        ls $d
+done

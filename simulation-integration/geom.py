@@ -4,12 +4,22 @@ from utils import newJSONLogger, vel_calc, parse_conditions, run_cfd, calculate_
 from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 import os 
+import numpy.random as rnd
 import numpy as np 
 from uuid import uuid4
 import sys
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.coil_basic import create_mesh
 import shutil 
+
+def LHS(bounds,p):
+    d = len(bounds)
+    sample = np.zeros((p,len(bounds)))
+    for i in range(0,d):
+        sample[:,i] = np.linspace(bounds[i,0],bounds[i,1],p)
+        rnd.shuffle(sample[:,i])
+    return sample 
+
 
 def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
     fid = [1,1]
@@ -23,7 +33,8 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
     parse_conditions(newcase, a, f, vel)
     time, value = run_cfd(newcase)
     N = calculate_N(value, time,newcase)
-    #shutil.rmtree(newcase)
+    for i in range(16):
+        shutil.rmtree(newcase+'/processor'+str(i))
     return N
 
 logger = newJSONLogger(path="outputs/geom/logs.json")
@@ -43,11 +54,12 @@ optimizer = BayesianOptimization(
         "inversion_loc": (0,1)
     },
     pcons=[],
-    verbose=2,
-    random_state=1,
+    verbose=2
 )
 
 # Opening JSON file
+# assign logger to optimizer
+
 try:
     logs = []
     with open("outputs/geom/logs.json") as f:
@@ -56,27 +68,28 @@ try:
 
     for log in logs:
         optimizer.register(params=log["params"], target=log["target"])
+
+    iteration = len(logs)
+
+
+
 except FileNotFoundError:
+    optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
+    lb = np.array([0.001,2,10,0.005,0.0075,0])
+    ub = np.array([0.008,8,50,0.0125,0.015,1])
+    bounds = np.array([lb,ub]).T
+    n_init = 12
+    init_points = LHS(bounds,n_init)
+    keys = ['a','f','re','coil_rad','pitch','inversion_loc']
+    for p in init_points:
+        p_dict = {}
+        for i in range(len(keys)):
+            p_dict[keys[i]] = p[i]
+        target = eval_cfd(**p_dict)
+        optimizer.register(params=p_dict, target=target)
     pass
-# assign logger to optimizer
+
 optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
-
-iteration = 0
-lb = np.array([0.001,2,10,0.005,0.0075,0])
-ub = np.array([0.008,8,50,0.0125,0.015,1])
-n_init = 8
-init_points = np.random.uniform(0,1,(len(lb),n_init))
-init_points = np.array([[(init_points[i,j]) *(ub[i]-lb[i])+lb[i] for i in range(len(lb))]for j in range(n_init)])
-
-keys = ['a','f','re','coil_rad','pitch','inversion_loc']
-for p in init_points:
-    p_dict = {}
-    for i in range(len(keys)):
-        p_dict[keys[i]] = p[i]
-    target = eval_cfd(**p_dict)
-    optimizer.register(params=p_dict, target=target)
-    iteration += 1
-
 while True:
     next_point = optimizer.suggest(utility)
     target = eval_cfd(**next_point)
