@@ -80,21 +80,26 @@ def interpolate(y, v, kind):
     return y_new[:-1]
 
 
-def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,validation,build):
+def create_mesh(x: dict,length:float,tube_rad:float,path: str):
+    coil_rad = x['coil_rad'] 
+    pitch = x['pitch']
+    inversion_loc = x['inversion_loc']
+
     try:
         shutil.copytree("mesh_generation/mesh", path)
     except FileExistsError:
         print('Folder already exists')
-    fid[1] = int(fid[1]*4)+2
-    print('Radial Fidelity: ',fid[1])
+
+    x['fid_axial'] = int(x['fid_axial']*4)+2
     max_fid_1 = 40
-    fid[0] = int(fid[0] * max_fid_1)+20
-    print('Axial Fidelity: ',fid[0])
+    x['fid_radial'] = int(x['fid_radial'] * max_fid_1)+20
+
     coils = length/(2*np.pi*coil_rad)
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 20 + fid[0] # points determined by fidelity
+    points = 20 + x['fid_axial'] 
+
     t_x = -np.arctan(h/length)
     if inversion_loc < 0.05 or inversion_loc > 0.95:
         inversion_loc = None
@@ -147,11 +152,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
             # height is linear
             data["z"].append(new_z[i])
 
-    if validation is True:
-        port_len = coil_rad+tube_rad
-    else:
-        port_len = 5*tube_rad
-        
+    port_len = coil_rad+tube_rad
+
     start_dx =  data['x'][0] 
     start_dy =  data['y'][0] - port_len 
     if inversion_loc is not None:
@@ -166,12 +168,10 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     print('Adding start and end ports')
     n_x = int(points / 6)
 
-
     inlet_x = np.linspace(start_dx,data['x'][0],n_x+1)[:-1]
     inlet_y = np.linspace(start_dy,data['y'][0],n_x+1)[:-1]
     outlet_x = np.linspace(data['x'][-1],end_dx,n_x+1)[1:]
     outlet_y = np.linspace(data['y'][-1],end_dy,n_x+1)[1:]
-
 
     mid = int(n_x/2)
 
@@ -202,7 +202,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     data['r'] = np.append(np.append([data['r'][0] for i in range(n_x)],data['r']),[data['r'][-1] for i in range(n_x)])
 
     # calculating real values from differences and initial conditions
-
 
     le = len(data[keys[0]])
     mesh = Mesh()
@@ -252,7 +251,6 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
             x2, y2, z2 = create_circle([data[keys[i]][p] for i in range(len(keys))],flip_1)
             x1, y1, z1 = create_circle(
                 [data[keys[i]][p + 1] for i in range(len(keys))],flip_2)
-
 
         for ax in axs:
             ax.plot3D(x2, y2, z2, color='k', alpha=0.75, lw=0.5)
@@ -320,8 +318,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid[1])
-            block.chop(1, count=fid[1])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -372,8 +370,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid[1])
-            block.chop(1, count=fid[1])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -409,8 +407,8 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=fid[1])
-            block.chop(1, count=fid[1])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -419,10 +417,9 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
     #plt.show()
     
     for ax in axs:
-        
-        ax.set_xticks([],[])
-        ax.set_yticks([],[])
-        ax.set_zticks([],[])
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
         ax.set_box_aspect(
             [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
         )
@@ -441,11 +438,11 @@ def create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path,valid
 
     plt.subplots_adjust(left=0.01,right=0.99,wspace=0.05,top=0.99,bottom=0.01)
     plt.savefig(path+"/pre-render.png", dpi=200)
+
     # run script to create mesh
-    if build is not False:
-        print('Writing geometry')
-        mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-        print('Running blockMesh')
-        os.system('chmod +x '+path+'/Allrun.mesh')
-        os.system(path +"/Allrun.mesh")
+    print('Writing geometry')
+    mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+    print('Running blockMesh')
+    os.system('chmod +x '+path+'/Allrun.mesh')
+    os.system(path +"/Allrun.mesh")
     return 
