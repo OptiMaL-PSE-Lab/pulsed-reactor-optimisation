@@ -23,17 +23,11 @@ def LHS(bounds,p):
     return sample 
     
 def eval_cfd(a, f, re, pitch, coil_rad,inversion_loc,fid):
-# def eval_cfd(pitch, coil_rad,inversion_loc,fid):
     tube_rad = 0.0025
     length = 0.075
-
-    # a = 0 
-    # f = 0 
-    # re = 50
-
     identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     print('Starting to mesh '+identifier)
-    newcase = "outputs/initial_mf_points/" + identifier
+    newcase = "outputs/mf_data/" + identifier
     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
     print('Calculating Reynolds number')
     vel = vel_calc(re)
@@ -50,14 +44,12 @@ def eval_cfd(a, f, re, pitch, coil_rad,inversion_loc,fid):
 
 
 
-f1i = [0,0.5,1]
-f2i = [0,0.5,1]
+f1i = [0.0,1]
+f2i = [0.0,1]
 
 lb = np.array([0.001,2,10,0.0075,0.005,0])
 ub = np.array([0.008,8,50,0.015,0.0125,1])
-# lb = np.array([0.005,0.0075,0])
-# ub = np.array([0.0125,0.015,1])
-n_init = 5
+n_init = [30,10]
 
 # with open('outputs/initial_mf_points/dataset_x.pickle','rb') as f:
 #    dataset_x = pickle.load(f)
@@ -66,12 +58,12 @@ dataset_x = []
 for i in range(len(f1i)):
 
     bounds = np.array([lb,ub]).T
-    init_points = LHS(bounds,n_init)
+    init_points = LHS(bounds,n_init[i])
 
     f1 = f1i[i]
     f2 = f2i[i]
     
-    for j in range(n_init):
+    for j in range(n_init[i]):
         s = time.time()
         geom = init_points[j]
         N,newcase_path = eval_cfd(geom[0],geom[1],geom[2],geom[3],geom[4],geom[5],[f1,f2])
@@ -96,11 +88,11 @@ for i in range(len(f1i)):
         x_dict['case'] = newcase_path
         dataset_x.append(x_dict)
         print(dataset_x)
-        with open('outputs/initial_mf_points/dataset_x.pickle','wb') as file:
+        with open('outputs/mf_data/dataset_x.pickle','wb') as file:
             pickle.dump(dataset_x,file)
 
-    with open('outputs/initial_mf_points/dataset_x.pickle','wb') as file:
+    with open('outputs/mf_data/dataset_x.pickle','wb') as file:
         pickle.dump(dataset_x,file)
-with open('outputs/initial_mf_points/dataset_x.pickle','wb') as file:
+with open('outputs/mf_data/dataset_x.pickle','wb') as file:
     pickle.dump(dataset_x,file)
     

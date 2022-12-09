@@ -1,6 +1,6 @@
 from bayes_opt_with_constraints.bayes_opt import BayesianOptimization, UtilityFunction
 from datetime import datetime
-from utils import newJSONLogger, vel_calc, parse_conditions, run_cfd, calculate_N
+from utils import newJSONLogger, vel_calc, parse_conditions, run_cfd, calculate_N, parse_conditions_geom_only
 from bayes_opt_with_constraints.bayes_opt.event import Events
 import json
 import os 
@@ -37,6 +37,23 @@ def eval_cfd(a, f, re, coil_rad, pitch, inversion_loc):
         shutil.rmtree(newcase+'/processor'+str(i))
     return N
 
+# def eval_cfd(coil_rad, pitch, inversion_loc):
+#     fid = [1,1]
+#     re = 50
+#     tube_rad = 0.0025
+#     length = 0.0753
+#     identifier = identifier = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+#     print('Starting to mesh '+identifier)
+#     newcase = "outputs/geom/" + identifier
+#     create_mesh(coil_rad, tube_rad, pitch, length, inversion_loc, fid,path=newcase,validation=False,build=True)
+#     # vel = vel_calc(re)
+#     # parse_conditions_geom_only(newcase,vel)
+#     # time, value = run_cfd(newcase)
+#     # N = calculate_N(value, time,newcase)
+#     # for i in range(16):
+#     #     shutil.rmtree(newcase+'/processor'+str(i))
+#     return N
+
 logger = newJSONLogger(path="outputs/geom/logs.json")
 
 # defining utility function
@@ -57,6 +74,16 @@ optimizer = BayesianOptimization(
     verbose=2
 )
 
+# optimizer = BayesianOptimization(
+#     f=eval_cfd,
+#     pbounds={
+#         "coil_rad": (0.005, 0.0125),
+#         "pitch": (0.0075, 0.015),
+#         "inversion_loc": (0,1)
+#     },
+#     pcons=[],
+#     verbose=2
+# )
 # Opening JSON file
 # assign logger to optimizer
 
@@ -77,10 +104,13 @@ except FileNotFoundError:
     optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
     lb = np.array([0.001,2,10,0.005,0.0075,0])
     ub = np.array([0.008,8,50,0.0125,0.015,1])
+    # lb = np.array([0.005,0.0075,0])
+    # ub = np.array([0.0125,0.015,1])
     bounds = np.array([lb,ub]).T
     n_init = 12
     init_points = LHS(bounds,n_init)
     keys = ['a','f','re','coil_rad','pitch','inversion_loc']
+    # keys = ['coil_rad','pitch','inversion_loc']
     for p in init_points:
         p_dict = {}
         for i in range(len(keys)):

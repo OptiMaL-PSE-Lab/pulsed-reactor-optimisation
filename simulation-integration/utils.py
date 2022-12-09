@@ -155,6 +155,21 @@ def calculate_N(value, time,path):
 
 
 
+def parse_conditions_geom_only(case, vel):
+    velBC = ParsedParameterFile(path.join(case, "0", "U"))
+    # velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
+    # velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.5f;"' % f
+    velBC["boundaryField"]["inlet"]["variables"][2] = '"vel= %.5f;"' % vel
+    velBC["boundaryField"]["inlet"]["value"].setUniform(Vector(vel, 0, 0))
+    velBC.writeFile()
+    decomposer = UtilityRunner(
+        argv=["decomposePar", "-case", case],
+        logname="decomposePar",
+    )
+    decomposer.start()
+    return
+
+
 def parse_conditions(case, a, f, vel):
     velBC = ParsedParameterFile(path.join(case, "0", "U"))
     velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
