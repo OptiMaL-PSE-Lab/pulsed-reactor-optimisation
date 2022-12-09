@@ -8,6 +8,6 @@
 
 cd $PBS_O_WORKDIR
 rsync -a --delete outputs/empty_dir/    outputs/mf/
-# rsync -a --delete outputs/empty_dir/    outputs/initial_mf_points/
-# rsync -a --delete outputs/empty_dir/    outputs/geom/
+rsync -a --delete outputs/empty_dir/    outputs/initial_mf_points/
+rsync -a --delete outputs/empty_dir/    outputs/geom/
 echo done

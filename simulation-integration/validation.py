@@ -27,6 +27,7 @@ def eval_cfd_validation(a, f, re, pitch, coil_rad,inversion_loc,fid):
     N = calculate_N(value, time,newcase)
     return N,time,value,newcase
 
+eval_cfd_validation(0.006,4,50,0.006,0.0065,0.7,[0.75,0.75])
 # fig,ax = plt.subplots(1,2,figsize=(8,4))
 # fig.subplots_adjust(wspace=0.2,bottom=0.15,right=0.975,left=0.075)
 # for i in range(2):
@@ -40,68 +41,68 @@ def eval_cfd_validation(a, f, re, pitch, coil_rad,inversion_loc,fid):
 # ax[0].set_title('Experiment 1')
 # ax[1].set_title('Experiment 2')
 
-f1i = [0,0.25,0.5,0.75,1]
-f2i = [0,0.25,0.5,0.75,1]
-#color = iter(cm.coolwarm(np.linspace(0, 1, 5)))
+# f1i = [0,0.25,0.5,0.75,1]
+# f2i = [0,0.25,0.5,0.75,1]
+# #color = iter(cm.coolwarm(np.linspace(0, 1, 5)))
 
-lb = np.array([0.001,2,10,0.0075,0.003,0])
-ub = np.array([0.008,8,50,0.015,0.0125,1])
-n_init = 5
-t_list = np.zeros((len(f1i),n_init))
-N_list = np.zeros((len(f1i),n_init))
-points_list = []
-for i in range(len(f1i)):
+# lb = np.array([0.001,2,10,0.0075,0.003,0])
+# ub = np.array([0.008,8,50,0.015,0.0125,1])
+# n_init = 5
+# t_list = np.zeros((len(f1i),n_init))
+# N_list = np.zeros((len(f1i),n_init))
+# points_list = []
+# for i in range(len(f1i)):
 
-    init_points = np.random.uniform(0,1,(len(lb),n_init))
-    init_points = np.array([[(init_points[i,j]) * (ub[i]-lb[i]) + lb[i] for i in range(len(lb))]for j in range(n_init)])
+#     init_points = np.random.uniform(0,1,(len(lb),n_init))
+#     init_points = np.array([[(init_points[i,j]) * (ub[i]-lb[i]) + lb[i] for i in range(len(lb))]for j in range(n_init)])
 
-    f1 = f1i[i]
-    f2 = f2i[i]
+#     f1 = f1i[i]
+#     f2 = f2i[i]
 
-    #c = next(color)
-    for j in range(n_init):
-        s = time.time()
-        geom = init_points[j]
-        N,time_list,value,path = eval_cfd_validation(geom[0],geom[1],geom[2],geom[3],geom[4],geom[5],[f1,f2])
+#     #c = next(color)
+#     for j in range(n_init):
+#         s = time.time()
+#         geom = init_points[j]
+#         N,time_list,value,path = eval_cfd_validation(geom[0],geom[1],geom[2],geom[3],geom[4],geom[5],[f1,f2])
         
-        e = time.time()
-        t_list[i,j] = e-s
-        N_list[i,j] = N
-        #shutil.rmtree(path)
-    points_list.append(init_points)
-    with open('outputs/validation/initial_points.pickle','wb') as file:
-        pickle.dump([t_list,N_list,points_list],file)
-with open('outputs/validation/initial_points.pickle','wb') as file:
-    pickle.dump([t_list,N_list,points_list],file)
+#         e = time.time()
+#         t_list[i,j] = e-s
+#         N_list[i,j] = N
+#         #shutil.rmtree(path)
+#     points_list.append(init_points)
+#     with open('outputs/validation/initial_points.pickle','wb') as file:
+#         pickle.dump([t_list,N_list,points_list],file)
+# with open('outputs/validation/initial_points.pickle','wb') as file:
+#     pickle.dump([t_list,N_list,points_list],file)
     
-#     theta,etheta = val_to_rtd(time,value,path)
+# #     theta,etheta = val_to_rtd(time,value,path)
 
-#     # df = pd.read_csv('simulation-integration/output_validation/e_1_fid_'+str(f)+'.csv')
-#     # theta = df['theta'].values
-#     # etheta = df['etheta'].values
-#     #ax[0].plot(theta,etheta,c=c)
+# #     # df = pd.read_csv('simulation-integration/output_validation/e_1_fid_'+str(f)+'.csv')
+# #     # theta = df['theta'].values
+# #     # etheta = df['etheta'].values
+# #     #ax[0].plot(theta,etheta,c=c)
 
-#     res1 = pd.DataFrame({'time':time,'concentration':value})
-#     res2 = pd.DataFrame({'theta':theta,'etheta':etheta})
-#     res = pd.concat([res1, res2], axis=1) 
-#     res.to_csv('outputs/validation/e_1_fid_'+str(f1)+'_'+str(f2)+'.csv')
-#     #fig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
+# #     res1 = pd.DataFrame({'time':time,'concentration':value})
+# #     res2 = pd.DataFrame({'theta':theta,'etheta':etheta})
+# #     res = pd.concat([res1, res2], axis=1) 
+# #     res.to_csv('outputs/validation/e_1_fid_'+str(f1)+'_'+str(f2)+'.csv')
+# #     #fig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
 
-#     N,time,value,path = eval_cfd_validation(0.004,5,50,0.012,0.01,0.0025,0.0753,[f1,f2])
-#     theta,etheta = val_to_rtd(time,value,path)
+# #     N,time,value,path = eval_cfd_validation(0.004,5,50,0.012,0.01,0.0025,0.0753,[f1,f2])
+# #     theta,etheta = val_to_rtd(time,value,path)
 
-#     # df = pd.read_csv('simulation-integration/output_validation/e_2_fid_'+str(f)+'.csv')
-#     # theta = df['theta'].values
-#     # etheta = df['etheta'].values
-#     #ax[1].plot(theta,etheta,c=c,label='Fidelity: '+str(i+1))
-#     #ax[0].grid(alpha=0.5)
-#     #ax[1].grid(alpha=0.5)
-#     res1 = pd.DataFrame({'time':time,'concentration':value})
-#     res2 = pd.DataFrame({'theta':theta,'etheta':etheta})
-#     res = pd.concat([res1, res2], axis=1) 
-#     res.to_csv('outputs/validation/e_2_fid_'+str(f1)+'_'+str(f2)+'.csv')
-#     #fig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
+# #     # df = pd.read_csv('simulation-integration/output_validation/e_2_fid_'+str(f)+'.csv')
+# #     # theta = df['theta'].values
+# #     # etheta = df['etheta'].values
+# #     #ax[1].plot(theta,etheta,c=c,label='Fidelity: '+str(i+1))
+# #     #ax[0].grid(alpha=0.5)
+# #     #ax[1].grid(alpha=0.5)
+# #     res1 = pd.DataFrame({'time':time,'concentration':value})
+# #     res2 = pd.DataFrame({'theta':theta,'etheta':etheta})
+# #     res = pd.concat([res1, res2], axis=1) 
+# #     res.to_csv('outputs/validation/e_2_fid_'+str(f1)+'_'+str(f2)+'.csv')
+# #     #fig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
 
-# #ax[1].legend(frameon=False)
-# f#ig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
+# # #ax[1].legend(frameon=False)
+# # f#ig.savefig('simulation-integration/output_validation/experimental_validation.pdf')
 
