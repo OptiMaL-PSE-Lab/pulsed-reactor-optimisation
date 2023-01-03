@@ -81,12 +81,13 @@ def interpolate(y, v, kind):
 
 
 def create_mesh(x: dict,length:float,tube_rad:float,path: str):
+    
     coil_rad = x['coil_rad'] 
     pitch = x['pitch']
     inversion_loc = x['inversion_loc']
 
     try:
-        shutil.copytree("mesh_generation/mesh", path)
+        shutil.copytree("mesh_generation/coil_basic", path)
     except FileExistsError:
         print('Folder already exists')
 
