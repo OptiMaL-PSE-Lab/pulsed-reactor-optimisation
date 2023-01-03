@@ -42,13 +42,12 @@ bounds['re'] = [10,50]
 bounds['pitch'] = [0.0075,0.015]
 bounds['coil_rad'] = [0.003,0.0125]
 bounds['inversion_loc'] = [0,1]
-bounds['fid_axial'] = [0,1]
-bounds['fid_radial'] = [0,1]
+bounds['fid_axial'] = [0.5,1]
+bounds['fid_radial'] = [0.5,1]
 
 def sample_bounds(bounds,n):
         sample = lhs(np.array(list(bounds.values())),n)
         return sample
-
 
 def sample_to_dict(sample):
         sample_dict = {}
@@ -62,9 +61,8 @@ n = 25
 samples = sample_bounds(bounds,n)
 
 data = {'data':[]}
-order = 0  
 for sample in samples:
-        res = eval_cfd(sample)
+        res = eval_cfd(sample_to_dict(sample))
         data['data'].append({'ID':res['ID'],'x':sample_to_dict(sample),'cost':res['cost'],'obj':res['obj']})
         with open('outputs/data.json', 'w') as fp:
                 json.dump(data, fp)
