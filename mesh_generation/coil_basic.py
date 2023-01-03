@@ -87,7 +87,7 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
     inversion_loc = x['inversion_loc']
 
     try:
-        shutil.copytree("mesh_generation/coil_basic", path)
+        shutil.copytree("mesh_generation/mesh", path)
     except FileExistsError:
         print('Folder already exists')
 
