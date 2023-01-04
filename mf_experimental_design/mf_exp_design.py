@@ -8,6 +8,7 @@ import time
 import gpjax as gpx 
 from jax import grad, jit
 import jax.numpy as jnp
+from uuid import uuid4
 import jax.random as jr
 import optax as ox
 import json 
@@ -16,7 +17,8 @@ import json
 
 def eval_cfd(x: dict):
     start = time.time()
-    ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    #ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    ID = str(uuid4())
     print("Starting to mesh " + ID)
     case = "outputs/mf/" + ID
     create_mesh(
@@ -32,7 +34,7 @@ def eval_cfd(x: dict):
         shutil.rmtree(case + "/processor" + str(i))
     # shutil.rmtree(newcase)
     end = time.time()
-    return {'obj':N,'cost':end-start,'name':ID}
+    return {'obj':N,'cost':end-start,'id':ID}
 
 
 bounds = {}
@@ -42,8 +44,8 @@ bounds['re'] = [10,50]
 bounds['pitch'] = [0.0075,0.015]
 bounds['coil_rad'] = [0.003,0.0125]
 bounds['inversion_loc'] = [0,1]
-bounds['fid_axial'] = [0.5,1]
-bounds['fid_radial'] = [0.5,1]
+bounds['fid_axial'] = [0,1]
+bounds['fid_radial'] = [0,1]
 
 def sample_bounds(bounds,n):
         sample = lhs(np.array(list(bounds.values())),n)
@@ -62,8 +64,11 @@ samples = sample_bounds(bounds,n)
 
 data = {'data':[]}
 for sample in samples:
-        res = eval_cfd(sample_to_dict(sample))
-        data['data'].append({'ID':res['ID'],'x':sample_to_dict(sample),'cost':res['cost'],'obj':res['obj']})
+        sample_dict = sample_to_dict(sample)
+        print(sample_dict)
+        res = eval_cfd(sample_dict)
+        data['data'].append({'id':res['id'],'x':sample_dict,'cost':res['cost'],'obj':res['obj']})
+        print(data)
         with open('outputs/data.json', 'w') as fp:
                 json.dump(data, fp)
 

@@ -91,9 +91,9 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
     except FileExistsError:
         print('Folder already exists')
 
-    x['fid_axial'] = int(x['fid_axial']*4)+2
+    x['fid_radial'] = int(x['fid_radial']*4)+2
     max_fid_1 = 40
-    x['fid_radial'] = int(x['fid_radial'] * max_fid_1)+20
+    x['fid_axial'] = int(x['fid_axial'] * max_fid_1)+20
 
     coils = length/(2*np.pi*coil_rad)
     h = coils * pitch 
