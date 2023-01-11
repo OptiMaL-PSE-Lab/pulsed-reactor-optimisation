@@ -91,15 +91,14 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
     except FileExistsError:
         print('Folder already exists')
 
-    x['fid_radial'] = int(x['fid_radial']*4)+2
-    max_fid_1 = 40
-    x['fid_axial'] = int(x['fid_axial'] * max_fid_1)+20
+    x['fid_radial'] = int(x['fid_radial'])
+    x['fid_axial'] = int(x['fid_axial'])
 
     coils = length/(2*np.pi*coil_rad)
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 20 + x['fid_axial'] 
+    points = 20 + x['fid_radial'] 
 
     t_x = -np.arctan(h/length)
     if inversion_loc < 0.05 or inversion_loc > 0.95:
@@ -319,8 +318,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_radial'])
-            block.chop(1, count=x['fid_radial'])
+            block.chop(0, count=x['fid_axial'])
+            block.chop(1, count=x['fid_axial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -371,8 +370,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_radial'])
-            block.chop(1, count=x['fid_radial'])
+            block.chop(0, count=x['fid_axial'])
+            block.chop(1, count=x['fid_axial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -408,8 +407,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_radial'])
-            block.chop(1, count=x['fid_radial'])
+            block.chop(0, count=x['fid_axial'])
+            block.chop(1, count=x['fid_axial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
