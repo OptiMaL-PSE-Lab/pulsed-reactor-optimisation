@@ -173,10 +173,7 @@ def optimise_aquisition(cost_gp,gp,ms_num):
 #                 json.dump(data, fp)
 
 
-t_limit = 48 * 60 * 60 # 48hrs -> seconds 
-t = 0 
-
-while t < t_limit:
+while True:
         # reading data from file format
         data_path = 'outputs/data.json'
         data = read_json(data_path)
