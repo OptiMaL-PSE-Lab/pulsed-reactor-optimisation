@@ -98,7 +98,7 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
     h = coils * pitch 
     keys = ["x", "y", "t","t_x", "r", "z"]
     data = {}
-    points = 20 + x['fid_radial'] 
+    points = 20 + x['fid_axial'] 
 
     t_x = -np.arctan(h/length)
     if inversion_loc < 0.05 or inversion_loc > 0.95:
@@ -318,8 +318,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_axial'])
-            block.chop(1, count=x['fid_axial'])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -370,8 +370,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_axial'])
-            block.chop(1, count=x['fid_axial'])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)
@@ -407,8 +407,8 @@ def create_mesh(x: dict,length:float,tube_rad:float,path: str):
                 block.set_patch("bottom", "outlet")
 
 
-            block.chop(0, count=x['fid_axial'])
-            block.chop(1, count=x['fid_axial'])
+            block.chop(0, count=x['fid_radial'])
+            block.chop(1, count=x['fid_radial'])
             block.chop(2, count=2)
 
             mesh.add_block(block)

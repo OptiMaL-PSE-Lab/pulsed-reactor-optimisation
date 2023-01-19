@@ -131,71 +131,58 @@ def build_gp_dict(posterior,learned_params,D,likelihood):
         gp_dict['likelihood'] = likelihood
         return gp_dict
 
-def aquisition_function(x,gp,cost_gp,fid_high):
+def aquisition_function(x,gp,cost_gp,fid_high,gamma,beta):
         cost,cost_var = inference(cost_gp,jnp.array([x]))
         # fixing fidelity
         for i in range(n_fid):
                 i += 1 
                 x = x.at[-i].set(fid_high[-i])
         mean,cov = inference(gp,jnp.array([x]))
-        return -((mean[0]+cov[0])/cost[0])[0]
+        return -((mean[0]+beta*cov[0])/(gamma*cost[0]))[0]
 
 
-def optimise_aquisition(cost_gp,gp,ms_num):
-        # normalise bounds
-        b_list = list(joint_bounds.values())
-        fid_high = jnp.array([list(z_bounds.values())[i][1] for i in range(n_fid)])
-        # sample and normalise initial guesses
-        x_init = jnp.array(sample_bounds(joint_bounds,ms_num))
-        f_best = 1E20
-        f = value_and_grad(aquisition_function)
-        run_store = []
-        for i in range(ms_num):
-                x = x_init[i]
-                res = minimize(f,x0=x,args=(gp,cost_gp,fid_high),method='SLSQP',bounds=b_list,jac=True,options={'disp':False})
-                aq_val = res.fun
-                x = res.x
-                run_store.append(aq_val)
-                if aq_val < f_best:
-                        f_best = aq_val
-                        x_best = x
-        return x_best,aq_val
+n = 25
 
-# n = 25
-# samples = sample_bounds(bounds,n)
+x_bounds = {}
+x_bounds['a'] = [0.001,0.008]
+x_bounds['f'] = [2,8]
+x_bounds['re'] = [10,50]
+x_bounds['pitch'] = [0.0075,0.02]
+x_bounds['coil_rad'] = [0.0035,0.0125]
+x_bounds['inversion_loc'] = [0,1]
 
+z_bounds = {}
+z_bounds['fid_axial'] = [20.001,49.99]
+z_bounds['fid_radial'] = [1.001,5.99]
+n_fid = len(z_bounds)
+
+joint_bounds = x_bounds | z_bounds 
+
+x_bounds_og = x_bounds
+z_bounds_og = z_bounds
+joint_bounds_og = joint_bounds
+
+# samples = sample_bounds(joint_bounds,n)
+# data_path = 'outputs/mf/data.json'
 # data = {'data':[]}
-# order = 0  
 # for sample in samples:
-#         res = eval_cfd(sample)
-#         data['data'].append({'id':res['id'],'x':sample_to_dict(sample,joint_bounds),'cost':res['cost'],'obj':res['obj']})
-#         with open('outputs/data.json', 'w') as fp:
-#                 json.dump(data, fp)
+#         for i in range(n_fid):
+#                 sample[-(i+1)] = int(sample[-(i+1)])
+#         sample_dict = sample_to_dict(sample,joint_bounds)
+#         run_info = {'id':'running','x':sample_dict,'cost':'running','obj':'running'}
+#         data['data'].append(run_info)
+#         save_json(data,data_path)
+#         res = eval_cfd(sample_dict)
+#         run_info = {'id':res['id'],'x':sample_dict,'cost':res['cost'],'obj':res['obj']}
+#         data['data'][-1] = run_info
+#         save_json(data,data_path)
 
+data_path = 'outputs/mf/data.json'
 
 while True:
         # reading data from file format
-        data_path = 'outputs/data.json'
         data = read_json(data_path)
         inputs,outputs,cost = format_data(data)
-
-
-        x_bounds = {}
-        x_bounds['a'] = [0.001,0.008]
-        x_bounds['f'] = [2,8]
-        x_bounds['re'] = [10,50]
-        x_bounds['pitch'] = [0.0075,0.015]
-        x_bounds['coil_rad'] = [0.003,0.0125]
-        x_bounds['inversion_loc'] = [0,1]
-
-        z_bounds = {}
-        z_bounds['fid_axial'] = [20,60]
-        z_bounds['fid_radial'] = [2,6]
-        n_fid = len(z_bounds)
-
-        joint_bounds = x_bounds | z_bounds 
-
-
 
         # normalising all data
 
@@ -211,9 +198,9 @@ while True:
         c_mean,c_std = mean_std(cost)
         cost = normalise(cost,c_mean,c_std)
 
-        x_bounds = normalise_bounds_dict(x_bounds,x_mean,x_std)
-        z_bounds = normalise_bounds_dict(z_bounds,z_mean,z_std)
-        joint_bounds = normalise_bounds_dict(joint_bounds,j_mean,j_std)
+        x_bounds = normalise_bounds_dict(x_bounds_og,x_mean,x_std)
+        z_bounds = normalise_bounds_dict(z_bounds_og,z_mean,z_std)
+        joint_bounds = normalise_bounds_dict(joint_bounds_og,j_mean,j_std)
 
 
         # training two Gaussian processes:
@@ -225,11 +212,47 @@ while True:
 
         # optimising the aquisition of inputs, disregarding fidelity
         print('optimising aquisition function')
-        x_opt,f_opt = optimise_aquisition(cost_gp,gp,5)
+
+        gamma = 1.5
+        beta = 2.5 
+
+        def optimise_aquisition(cost_gp,gp,ms_num,gamma,beta):
+                # normalise bounds
+                b_list = list(joint_bounds.values())
+                fid_high = jnp.array([list(z_bounds.values())[i][1] for i in range(n_fid)])
+                # sample and normalise initial guesses
+                x_init = jnp.array(sample_bounds(joint_bounds,ms_num))
+                f_best = 1E20
+                f = value_and_grad(aquisition_function)
+                run_store = []
+                for i in range(ms_num):
+                        x = x_init[i]
+                        res = minimize(f,x0=x,args=(gp,cost_gp,fid_high,gamma,beta),method='SLSQP',bounds=b_list,jac=True,options={'disp':False})
+                        aq_val = res.fun
+                        x = res.x
+                        run_store.append(aq_val)
+                        if aq_val < f_best:
+                                f_best = aq_val
+                                x_best = x
+                return x_best,aq_val
+
+        x_opt,f_opt = optimise_aquisition(cost_gp,gp,16,gamma,beta)
+        print('normalised res:',x_opt)
         x_opt = list(unnormalise(x_opt,j_mean,j_std))
+        print('unnormalised res:',x_opt)
+
+        for i in range(n_fid):
+                x_opt[-(i+1)] = int(x_opt[-(i+1)])
+
         sample = sample_to_dict(x_opt,joint_bounds)
+
+        print('Running ',sample)
+        run_info = {'id':'running','x':sample,'cost':'running','obj':'running'}
+        data['data'].append(run_info)
+        save_json(data,data_path)
+
         res = eval_cfd(sample)
         run_info = {'id':res['id'],'x':sample,'cost':res['cost'],'obj':res['obj']}
-        data['data'].append(run_info)
+        data['data'][-1] = run_info
         save_json(data,data_path)
 
