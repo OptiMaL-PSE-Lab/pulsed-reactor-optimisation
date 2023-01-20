@@ -10,6 +10,7 @@ from jax import grad, jit, value_and_grad
 import jax.numpy as jnp
 from uuid import uuid4
 import jax.random as jr
+from utils import plot_results
 import optax as ox
 import jax
 from scipy.optimize import minimize
@@ -68,9 +69,10 @@ def format_data(data):
         obj = []
         cost = []
         for d in data['data']:
-                inputs += [list(d['x'].values())]
-                obj += [d['obj']]
-                cost += [d['cost']]
+                if d['id'] != 'running':
+                        inputs += [list(d['x'].values())]
+                        obj += [d['obj']]
+                        cost += [d['cost']]
 
         inputs = jnp.array(inputs)
         obj = jnp.array(obj).reshape(-1,1)
@@ -136,10 +138,17 @@ def aquisition_function(x,gp,cost_gp,fid_high,gamma,beta):
         cost,cost_var = inference(cost_gp,jnp.array([x]))
         # fixing fidelity
         for i in range(n_fid):
-                i += 1 
-                x = x.at[-i].set(fid_high[-i])
+                x = jnp.append(x,fid_high[-i])
         mean,cov = inference(gp,jnp.array([x]))
         return -((mean[0]+beta*cov[0])/(gamma*cost[0]))[0]
+
+def high_fid_mean(x,gp,fid_high):
+        # fixing fidelity
+        for i in range(n_fid):
+                i += 1 
+                x = x.at[-i].set(fid_high[-i])
+        obj_mean,obj_var = inference(gp,jnp.array([x]))
+        return -obj_mean[0]
 
 
 n = 25
@@ -178,11 +187,78 @@ joint_bounds_og = joint_bounds.copy()
 #         data['data'][-1] = run_info
 #         save_json(data,data_path)
 
+
+
+def get_max_highest(data):
+
+        max_f_dict = read_json('outputs/mf/criteria.json')
+        max_f_store = max_f_dict['data']
+
+        inputs_full,outputs_full,cost_full = format_data(data)
+        for j in range(25+len(max_f_store),len(inputs_full)):
+
+                inputs = inputs_full[:j,:]
+                outputs = outputs_full[:j]
+
+                
+                # normalising all data
+
+                j_mean,j_std = mean_std(inputs)
+                inputs = normalise(inputs,j_mean,j_std)
+                x_mean = j_mean[:-n_fid]
+                x_std = j_std[:-n_fid]
+                z_mean = j_mean[-n_fid:]
+                z_std = j_std[-n_fid:]
+
+                o_mean,o_std = mean_std(outputs)
+                outputs = normalise(outputs,o_mean,o_std)
+
+                x_bounds = normalise_bounds_dict(x_bounds_og,x_mean,x_std)
+                z_bounds = normalise_bounds_dict(z_bounds_og,z_mean,z_std)
+
+                # training two Gaussian processes:
+                print('Training GPs')
+                # all inputs and fidelities against objective
+                gp = build_gp_dict(*train_gp(inputs,outputs)) 
+
+                def optimise_for_max_obj(gp,ms_num):
+                        # normalise bounds
+                        b_list = list(x_bounds.values())
+                        fid_high = jnp.array([list(z_bounds.values())[i][1] for i in range(n_fid)])
+                        # sample and normalise initial guesses
+                        x_init = jnp.array(sample_bounds(x_bounds,ms_num))
+                        f_best = 1E20
+                        f = value_and_grad(high_fid_mean)
+                        for ms_i in range(ms_num):
+                                x = x_init[ms_i]
+                                res = minimize(f,x0=x,args=(gp,fid_high),method='SLSQP',bounds=b_list,jac=True,options={'disp':False})
+                                f_val = res.fun
+                                print(f_val)
+                                x = res.x
+                                if f_val < f_best:
+                                        f_best = f_val
+                                        x_best = x
+                        return x_best,f_val
+
+                x_opt,f_opt = optimise_for_max_obj(gp,10)
+                f_opt = unnormalise(-f_opt,o_mean,o_std)
+                max_f_store.append(float(f_opt[0]))
+                max_f_dict = {'data':list(max_f_store)}
+                save_json(max_f_dict,'outputs/mf/criteria.json')
+                
+        return 
+
+
+
 data_path = 'outputs/mf/data.json'
+crit_path = 'outputs/mf/criteria.json'
 
 while True:
         # reading data from file format
         data = read_json(data_path)
+        crit = read_json(crit_path)['data']
+        max_f_store = get_max_highest(data)
+        plot_results(data,crit)
         inputs,outputs,cost = format_data(data)
 
         # normalising all data
@@ -237,7 +313,7 @@ while True:
                                 x_best = x
                 return x_best,aq_val
 
-        x_opt,f_opt = optimise_aquisition(cost_gp,gp,16,gamma,beta)
+        x_opt,f_opt = optimise_aquisition(cost_gp,gp,1,gamma,beta)
         print('normalised res:',x_opt)
         x_opt = list(unnormalise(x_opt,j_mean,j_std))
         print('unnormalised res:',x_opt)
@@ -248,12 +324,12 @@ while True:
         sample = sample_to_dict(x_opt,joint_bounds)
 
         print('Running ',sample)
-        run_info = {'id':'running','x':sample,'cost':'running','obj':'running'}
-        data['data'].append(run_info)
-        save_json(data,data_path)
+        run_info = {'id':'running','x':sample,'cost':1000+np.random.uniform(),'obj':6+np.random.uniform()}
+        # data['data'].append(run_info)
+        # save_json(data,data_path)
 
-        res = eval_cfd(sample)
-        run_info = {'id':res['id'],'x':sample,'cost':res['cost'],'obj':res['obj']}
+        #res = eval_cfd(sample)
+        #run_info = {'id':res['id'],'x':sample,'cost':res['cost'],'obj':res['obj']}
         data['data'][-1] = run_info
         save_json(data,data_path)
 
