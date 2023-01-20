@@ -1,8 +1,10 @@
 import numpy as np
+import json
 from datetime import datetime
 from scipy.special import factorial
 import matplotlib.pyplot as plt
 import os
+from matplotlib.pyplot import cm
 from os import path
 import shutil
 import sys
@@ -17,6 +19,14 @@ from PyFoam.Execution.UtilityRunner import UtilityRunner
 from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
 import numpy.random as rnd 
+
+from matplotlib import rc
+
+rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
+#rc('font',**{'family':'serif','serif':['Times']})
+#rc('text', usetex=True)
+
+
 
 try:
     HPC = str(sys.argv[1])
@@ -201,3 +211,111 @@ def run_cfd(case):
     time = np.array(times)  # list of times
     value = np.array(values)  # list of concentrations
     return time, value
+
+def read_json(path):
+        with open(path, 'r') as f:
+                data = json.load(f)
+        return data
+
+
+def plot_results(data,crit):
+    data = data['data']
+    crit = crit['data']
+    obj = []
+    cost = []
+    fid = []
+    n = 25
+    cutoff = True
+
+    if cutoff is True:
+        data = data[n:]
+
+    for d in data:
+        if d['id'] != 'running':
+            obj.append(d['obj'])
+            cost.append(d['cost'])
+            x = d['x']
+            fid_vals = []
+            for x_k in list(x.keys()):
+                if x_k.split('_')[0] == 'fid':
+                    fid_vals.append(x[x_k])
+            fid.append(fid_vals)
+    it = np.arange(len(obj))
+    b = 0 
+    best_obj = []
+    for o in obj:
+        if o > b:
+            best_obj.append(o)
+            b = o 
+        else:
+            best_obj.append(b)
+    b = 0 
+    best_crit = []
+    for c in crit:
+        if c > b:
+            best_crit.append(c)
+            b = c 
+        else:
+            best_crit.append(b)
+
+    lw = 1
+    ms = 40
+    grid_alpha = 0.3
+    font_size = 12
+
+    fig,ax = plt.subplots(1,3,figsize=(9,3),sharex=True)
+
+    for a in ax:
+        a.spines["right"].set_visible(False)
+        a.spines["top"].set_visible(False)
+    ax[0].scatter(it,obj,c='k',marker='+',s=ms,lw=lw)
+    ax[0].plot(it,best_obj,c='k',ls='--',lw=lw)
+    ax[0].grid(alpha=grid_alpha)
+    ax[0].set_xlabel(r'$t$',fontsize=font_size)
+    ax[0].set_ylabel(r'$\frac{\mu(x_t,z^\bullet) + \beta^{1/2}\sigma(x_t,z^*)}{\gamma\lambda(x_t,z_t)}$',fontsize=font_size)
+
+    ax[1].scatter(it,crit,c='k',marker='+',s=ms,lw=lw)
+    ax[1].plot(it,best_crit,c='k',ls='--',lw=lw)
+    ax[1].grid(alpha=grid_alpha)
+    ax[1].set_xlabel(r'$t$',fontsize=font_size)
+    ax[1].set_ylabel(r'$\max_x \; \mu_t(x,z^\bullet)$',fontsize=font_size)
+
+    ax[2].scatter(it,cost,c='k',marker='+',s=ms,lw=lw)
+    ax[2].grid(alpha=grid_alpha)
+    ax[2].set_xlabel(r'$t$',fontsize=font_size)
+    ax[2].set_ylabel(r'$\lambda(x_t,z_t)$',fontsize=font_size)
+
+    fig.tight_layout()
+    plt.savefig('outputs/mf/res.png',dpi=800)
+
+    return 
+
+
+
+data = read_json('outputs/mf/data.json')
+
+def plot_fidelities(data):
+    z_vals = []
+    for d in data['data']:
+        xv = d['x']
+        zv = []
+        for xk in list(xv.keys()):
+            if xk.split('_')[0] == 'fid':
+                zv.append(xv[xk])
+        z_vals.append(zv)
+    z_vals = np.array(z_vals)
+
+    z_vals = z_vals[25:,:]
+    color = cm.viridis(np.linspace(0, 1, len(z_vals-1)))
+    fig,axs = plt.subplots(1,1,figsize=(9,4))
+
+    axs.scatter(z_vals[:,0],z_vals[:,1],c=np.arange(len(z_vals)),marker='o',s=60)
+    axs.set_ylabel('Radial Fidelity',fontsize=12)
+    axs.set_xlabel('Axial Fidelity',fontsize=12)
+    axs.set_yticks([1,2,3,4,5],[1,2,3,4,5])
+    fig.tight_layout()
+    axs.grid(alpha=0.3)
+    # for i, c in zip(range(len(z_vals)-1), color):
+    #     axs.plot([z_vals[i,0],z_vals[i+1,0]],[z_vals[i,1],z_vals[i+1,1]],lw=6,color=c,alpha=0.95)
+    fig.savefig('outputs/mf/fidelities.png',dpi=800)
+    return 
