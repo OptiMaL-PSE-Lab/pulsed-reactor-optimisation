@@ -1,4 +1,5 @@
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import json
 from datetime import datetime
 from scipy.special import factorial
@@ -8,6 +9,7 @@ from matplotlib.pyplot import cm
 from os import path
 import shutil
 import sys
+import matplotlib.colors as colors
 from uuid import uuid4
 import pickle
 from distutils.dir_util import copy_tree
@@ -18,14 +20,13 @@ from PyFoam.Execution.AnalyzedRunner import AnalyzedRunner
 from PyFoam.Execution.UtilityRunner import UtilityRunner
 from PyFoam.LogAnalysis.SimpleLineAnalyzer import GeneralSimpleLineAnalyzer
 from PyFoam.LogAnalysis.BoundingLogAnalyzer import BoundingLogAnalyzer
-import numpy.random as rnd 
+import numpy.random as rnd
 
 from matplotlib import rc
 
 rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
-#rc('font',**{'family':'serif','serif':['Times']})
-#rc('text', usetex=True)
-
+# rc('font',**{'family':'serif','serif':['Times']})
+# rc('text', usetex=True)
 
 
 try:
@@ -39,14 +40,13 @@ except:
     HPC = False
 
 
-
-def lhs(bounds: list,p: int):
+def lhs(bounds: list, p: int):
     d = len(bounds)
-    sample = np.zeros((p,len(bounds)))
-    for i in range(0,d):
-        sample[:,i] = np.linspace(bounds[i,0],bounds[i,1],p)
-        rnd.shuffle(sample[:,i])
-    return sample 
+    sample = np.zeros((p, len(bounds)))
+    for i in range(0, d):
+        sample[:, i] = np.linspace(bounds[i, 0], bounds[i, 1], p)
+        rnd.shuffle(sample[:, i])
+    return sample
 
 
 def calc_etheta(N: float, theta: float, off: float, up: float) -> float:
@@ -69,7 +69,7 @@ def loss(X: list, theta: list, etheta: list) -> float:
     #         error_sq += 0
     #     else:
     #         error_sq += (calc_etheta(N, theta[i], off, up) - etheta[i]) ** 2
-    error_sq += (max(etheta)-max(et))**2
+    error_sq += (max(etheta) - max(et)) ** 2
     return error_sq
 
 
@@ -87,7 +87,8 @@ class CompactAnalyzer(BoundingLogAnalyzer):
 def vel_calc(re):
     return (re * 9.9 * 10**-4) / (990 * 0.005)
 
-def val_to_rtd(time,value,path):
+
+def val_to_rtd(time, value, path):
     value = np.array(value)
     time = np.array(time)
     plt.figure()
@@ -95,7 +96,7 @@ def val_to_rtd(time,value,path):
     times_peaks = time[peaks]
     values_peaks = value[peaks]
     plt.plot(time, value, c="k", lw=1, alpha=0.1)
-    plt.plot(times_peaks, values_peaks, c="r", lw=1,label='CFD')
+    plt.plot(times_peaks, values_peaks, c="r", lw=1, label="CFD")
 
     # m = np.argmax(value)
     # value = np.append(value[:m],np.flip(value[:m]))
@@ -109,7 +110,7 @@ def val_to_rtd(time,value,path):
     plt.xlabel("time")
     plt.ylabel("concentration")
     plt.legend()
-    plt.savefig(path+"/preprocessed_plot.png")
+    plt.savefig(path + "/preprocessed_plot.png")
 
     # difference between time values
     dt = np.diff(times_peaks)[0]
@@ -119,11 +120,12 @@ def val_to_rtd(time,value,path):
     tau = (sum(times_peaks * values_peaks * dt)) / sum(values_peaks * dt)
     etheta = tau * et
     theta = times_peaks / tau
-    return theta,etheta
+    return theta, etheta
 
-def calculate_N(value, time,path):
+
+def calculate_N(value, time, path):
     # obtaining a smooth curve by taking peaks
-    theta,etheta = val_to_rtd(time,value,path)
+    theta, etheta = val_to_rtd(time, value, path)
     # fitting value of N
     s = 10000
     x0_list = np.array(
@@ -144,19 +146,17 @@ def calculate_N(value, time,path):
     N, off, up = X
 
     plt.figure()
-    plt.scatter(theta, etheta, c="k", alpha=0.4,label="CFD")
+    plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
     etheta_calc = []
     for t in theta:
         etheta_calc.append(calc_etheta(N, t, off, up))
-    plt.plot(theta, etheta_calc, c="k",ls='dashed', label="Dimensionless")
+    plt.plot(theta, etheta_calc, c="k", ls="dashed", label="Dimensionless")
     plt.grid()
     plt.legend()
-    plt.xlim(0,4)
-    plt.ylim(0,2.5)
-    plt.savefig(path+"/dimensionless_conversion.png")
+    plt.xlim(0, 4)
+    plt.ylim(0, 2.5)
+    plt.savefig(path + "/dimensionless_conversion.png")
     return N
-
-
 
 
 def parse_conditions_geom_only(case, vel):
@@ -175,9 +175,9 @@ def parse_conditions_geom_only(case, vel):
 
 
 def parse_conditions(case, x):
-    a = x['a']
-    f = x['f']
-    vel = vel_calc(x['re'])
+    a = x["a"]
+    f = x["f"]
+    vel = vel_calc(x["re"])
 
     velBC = ParsedParameterFile(path.join(case, "0", "U"))
     velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
@@ -212,15 +212,16 @@ def run_cfd(case):
     value = np.array(values)  # list of concentrations
     return time, value
 
+
 def read_json(path):
-        with open(path, 'r') as f:
-                data = json.load(f)
-        return data
+    with open(path, "r") as f:
+        data = json.load(f)
+    return data
 
 
-def plot_results(data,crit):
-    data = data['data']
-    crit = crit['data']
+def plot_results(data, crit):
+    data = data["data"]
+    crit = crit["data"]
     obj = []
     cost = []
     fid = []
@@ -231,91 +232,130 @@ def plot_results(data,crit):
         data = data[n:]
 
     for d in data:
-        if d['id'] != 'running':
-            obj.append(d['obj'])
-            cost.append(d['cost'])
-            x = d['x']
+        if d["id"] != "running":
+            obj.append(d["obj"])
+            cost.append(d["cost"])
+            x = d["x"]
             fid_vals = []
             for x_k in list(x.keys()):
-                if x_k.split('_')[0] == 'fid':
+                if x_k.split("_")[0] == "fid":
                     fid_vals.append(x[x_k])
             fid.append(fid_vals)
     it = np.arange(len(obj))
-    b = 0 
+    b = 0
     best_obj = []
     for o in obj:
         if o > b:
             best_obj.append(o)
-            b = o 
+            b = o
         else:
             best_obj.append(b)
-    b = 0 
+    b = 0
     best_crit = []
     for c in crit:
         if c > b:
             best_crit.append(c)
-            b = c 
+            b = c
         else:
             best_crit.append(b)
 
-    lw = 1
-    ms = 40
+    lw = 2
+    ms = 60
     grid_alpha = 0.3
-    font_size = 12
+    font_size = 15
 
-    fig,ax = plt.subplots(1,3,figsize=(9,3),sharex=True)
+    fig, ax = plt.subplots(2, 2, figsize=(12, 6))
 
-    for a in ax:
+    for a in ax.ravel():
+    
         a.spines["right"].set_visible(False)
         a.spines["top"].set_visible(False)
-    ax[0].scatter(it,obj,c='k',marker='+',s=ms,lw=lw)
-    ax[0].plot(it,best_obj,c='k',ls='--',lw=lw)
-    ax[0].grid(alpha=grid_alpha)
-    ax[0].set_xlabel(r'$t$',fontsize=font_size)
-    ax[0].set_ylabel(r'$\frac{\mu(x_t,z^\bullet) + \beta^{1/2}\sigma(x_t,z^*)}{\gamma\lambda(x_t,z_t)}$',fontsize=font_size)
+        a.tick_params(axis='both', which='major', labelsize=font_size-2)
 
-    ax[1].scatter(it,crit,c='k',marker='+',s=ms,lw=lw)
-    ax[1].plot(it,best_crit,c='k',ls='--',lw=lw)
-    ax[1].grid(alpha=grid_alpha)
-    ax[1].set_xlabel(r'$t$',fontsize=font_size)
-    ax[1].set_ylabel(r'$\max_x \; \mu_t(x,z^\bullet)$',fontsize=font_size)
 
-    ax[2].scatter(it,cost,c='k',marker='+',s=ms,lw=lw)
-    ax[2].grid(alpha=grid_alpha)
-    ax[2].set_xlabel(r'$t$',fontsize=font_size)
-    ax[2].set_ylabel(r'$\lambda(x_t,z_t)$',fontsize=font_size)
+    im1 = ax[0,0].scatter(it, obj, c=cost, marker="+", s=ms, lw=lw,norm=colors.LogNorm(vmin=min(cost), vmax=max(cost)))
+    ax[0,0].plot(it, best_obj, c="k", ls="--", lw=lw,alpha=0.75,label='Best')
+    ax[0,0].legend(frameon=False,fontsize=14)
+    ax[0,0].grid(alpha=grid_alpha)
+    ax[0,0].set_xlabel(r"Iteration", fontsize=font_size)
+    ax[0,0].set_ylabel("Tanks-in-series",
+        fontsize=font_size,
+    )
+    divider = make_axes_locatable(ax[0,0])
+    cax = divider.append_axes('right', size='3%', pad=0.05)
+    cb = fig.colorbar(im1, cax=cax, orientation='vertical')
+    cax.tick_params(labelsize=14) 
+    cb.set_label(label='Simulation Cost (s)',size=14)
+
+
+    ax[0,1].scatter(np.arange(len(crit)), crit, c="k", marker="+", s=ms, lw=lw)
+    ax[0,1].plot(np.arange(len(crit)), best_crit, c="k", ls="--", lw=lw,alpha=0.75,label='Best')
+    ax[0,1].legend(frameon=False,fontsize=14)
+    ax[0,1].grid(alpha=grid_alpha)
+    ax[0,1].set_xlabel(r"Iteration", fontsize=font_size)
+    ax[0,1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
+
+    time = np.cumsum(cost)
+    im2 = ax[1,0].scatter(time, obj, c=cost, marker="+", s=ms, lw=lw,norm=colors.LogNorm(vmin=min(cost), vmax=max(cost)))
+    ax[1,0].plot(time, best_obj, c="k", ls="--", lw=lw,alpha=0.75,label='Best')
+    ax[1,0].legend(frameon=False,fontsize=14)
+    ax[1,0].grid(alpha=grid_alpha)
+    ax[1,0].ticklabel_format(style='sci', axis='x',scilimits=(0,4))
+
+    ax[1,0].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
+    ax[1,0].set_ylabel("Tanks-in-series",
+        fontsize=font_size,
+    )
+    divider = make_axes_locatable(ax[1,0])
+    cax = divider.append_axes('right', size='3%', pad=0.05)
+    cb = fig.colorbar(im2, cax=cax, orientation='vertical')
+    cax.tick_params(labelsize=14) 
+    cb.set_label(label='Simulation Cost (s)',size=14)
+
+    ax[1,1].scatter(time, crit, c="k", marker="+", s=ms, lw=lw)
+    ax[1,1].plot(time, best_crit, c="k", ls="--", lw=lw,alpha=0.75,label='Best')
+    ax[1,1].legend(frameon=False,fontsize=14)
+    ax[1,1].grid(alpha=grid_alpha)
+    ax[1,1].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
+    ax[1,1].ticklabel_format(style='sci', axis='x',scilimits=(0,4))
+    ax[1,1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
 
     fig.tight_layout()
-    plt.savefig('outputs/mf/res.png',dpi=800)
+    fig.subplots_adjust(wspace=0.4)
+    plt.savefig("outputs/mf/res.png", dpi=800)
 
-    return 
+    return
 
-
-
-data = read_json('outputs/mf/data.json')
 
 def plot_fidelities(data):
     z_vals = []
-    for d in data['data']:
-        xv = d['x']
+    for d in data["data"]:
+        xv = d["x"]
         zv = []
         for xk in list(xv.keys()):
-            if xk.split('_')[0] == 'fid':
+            if xk.split("_")[0] == "fid":
                 zv.append(xv[xk])
         z_vals.append(zv)
     z_vals = np.array(z_vals)
 
-    z_vals = z_vals[25:,:]
-    color = cm.viridis(np.linspace(0, 1, len(z_vals-1)))
-    fig,axs = plt.subplots(1,1,figsize=(9,4))
+    z_vals = z_vals[25:, :]
+    color = cm.viridis(np.linspace(0, 1, len(z_vals - 1)))
+    fig, axs = plt.subplots(1, 1, figsize=(9, 4))
 
-    axs.scatter(z_vals[:,0],z_vals[:,1],c=np.arange(len(z_vals)),marker='o',s=60)
-    axs.set_ylabel('Radial Fidelity',fontsize=12)
-    axs.set_xlabel('Axial Fidelity',fontsize=12)
-    axs.set_yticks([1,2,3,4,5],[1,2,3,4,5])
-    fig.tight_layout()
+    sc = axs.scatter(
+        z_vals[:, 0], z_vals[:, 1], c=np.arange(len(z_vals)), marker="+", lw=3, s=80
+    )
+    fig.colorbar(sc, ax=axs, label="$t$")
+    axs.set_ylabel("Radial Fidelity", fontsize=12)
+    axs.set_xlabel("Axial Fidelity", fontsize=12)
+    axs.set_yticks([1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
     axs.grid(alpha=0.3)
+    fig.subplots_adjust(right=1.05, left=0.075, top=0.95, bottom=0.15)
     # for i, c in zip(range(len(z_vals)-1), color):
     #     axs.plot([z_vals[i,0],z_vals[i+1,0]],[z_vals[i,1],z_vals[i+1,1]],lw=6,color=c,alpha=0.95)
-    fig.savefig('outputs/mf/fidelities.png',dpi=800)
-    return 
+    fig.savefig("outputs/mf/fidelities.png", dpi=800)
+    return
+
+
+
+# plot_fidelities(data)

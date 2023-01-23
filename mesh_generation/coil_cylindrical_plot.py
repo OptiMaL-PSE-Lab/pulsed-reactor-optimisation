@@ -11,6 +11,7 @@ import math
 import imageio
 import os
 
+
 def rotate_z(x0, y0, z0, r_z):
     # rotation of points around z axis by r_z radians
     x = np.array(x0) - np.mean(x0)
@@ -117,7 +118,7 @@ def parse_inputs(NB, f):
     return x
 
 
-def create_mesh(ax,data):
+def create_mesh(ax, data):
 
     # factor to interpolate between control points
     interpolation_factor = data["factor"]  # interpolate 10 times the points between
@@ -133,7 +134,6 @@ def create_mesh(ax,data):
     le = len(vals["z"])
     data = vals
 
-    
     for p in range(1, le - 1):
         # get proceeding circle (as x,y,z samples)
         x2, y2, z2 = create_circle(
@@ -163,12 +163,11 @@ def create_mesh(ax,data):
     ax.set_box_aspect(
         [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
     )
-    ax.set_xlim(-10,10)
-    ax.set_ylim(-10,10)
-    ax.set_zlim(0,40)
+    ax.set_xlim(-10, 10)
+    ax.set_ylim(-10, 10)
+    ax.set_zlim(0, 40)
 
-    return 
-
+    return
 
 
 coils = 4  # number of coils
@@ -182,13 +181,13 @@ f = 30
 data = {}
 data["rho"] = [5 for i in range(n)]
 data["theta"] = np.linspace(0, N, n)
-data["z"] = np.linspace(0,40,n)
+data["z"] = np.linspace(0, 40, n)
 data["tube_rad"] = [0.75 for i in range(n)]
 data["factor"] = f
 
 
 for im in range(40):
-    fig = plt.figure(figsize=(6,2))
+    fig = plt.figure(figsize=(6, 2))
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.25)
     # First subplot
@@ -196,44 +195,49 @@ for im in range(40):
     vals = {}
     # calculating real values from differences and initial conditions
     for k in data.keys():
-        if k != 'factor':
-            vals[k] = parse_inputs(data[k], data['factor'])
+        if k != "factor":
+            vals[k] = parse_inputs(data[k], data["factor"])
 
-    ylims = [[-5,30],[-2,15]]
-    for key in ['theta','rho']:
-        ax = fig.add_subplot(1,3, i)
-        ax.scatter(data['z'],data[key],c='k')
-        ax.plot(vals['z'],vals[key],c='k')
-        ax.set_xlim(-5,45)
-        ax.set_xlabel(r'$z$')
-        ax.set_ylim(ylims[i-1][0],ylims[i-1][1])
+    ylims = [[-5, 30], [-2, 15]]
+    for key in ["theta", "rho"]:
+        ax = fig.add_subplot(1, 3, i)
+        ax.scatter(data["z"], data[key], c="k")
+        ax.plot(vals["z"], vals[key], c="k")
+        ax.set_xlim(-5, 45)
+        ax.set_xlabel(r"$z$")
+        ax.set_ylim(ylims[i - 1][0], ylims[i - 1][1])
         if i == 1:
-            ax.set_ylabel(r'$\theta$')
+            ax.set_ylabel(r"$\theta$")
         else:
-            ax.set_ylabel(r'$\rho$')
+            ax.set_ylabel(r"$\rho$")
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
         i += 1
 
-    ax = fig.add_subplot(1,3, 3, projection='3d')
-    create_mesh(ax,data)
+    ax = fig.add_subplot(1, 3, 3, projection="3d")
+    create_mesh(ax, data)
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_zticks([])
 
+    data["theta"] += 2 * np.sin(data["z"] / 4 + im / 2)
+    data["rho"] += 1 * np.cos(data["z"] / 4 + im / 2)
+    plt.savefig("mesh_generation/output_images/" + str(im) + ".png")
 
-    data['theta'] += 2*np.sin(data['z']/4+im/2)
-    data['rho'] += 1*np.cos(data['z']/4+im/2)
-    plt.savefig('mesh_generation/output_images/'+str(im)+'.png')
 
+images = []  # creating image array
 
-images = [] # creating image array
+for im in range(40):  # iterating over images
 
-for im in range(40): # iterating over images
-
-    images.append(imageio.imread('mesh_generation/output_images/'+str(im)+'.png')) # adding each image to the array 
+    images.append(
+        imageio.imread("mesh_generation/output_images/" + str(im) + ".png")
+    )  # adding each image to the array
     # note see how this follows the standard naming convention
 
-    os.remove('mesh_generation/output_images/'+str(im)+'.png') # this then deletes the image file from the folder
-    
-imageio.mimsave('mesh_generation/output_images/cylindrical.gif', images) # this then saves theA
+    os.remove(
+        "mesh_generation/output_images/" + str(im) + ".png"
+    )  # this then deletes the image file from the folder
+
+imageio.mimsave(
+    "mesh_generation/output_images/cylindrical.gif", images
+)  # this then saves theA
