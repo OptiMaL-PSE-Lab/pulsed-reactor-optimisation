@@ -117,11 +117,12 @@ def unnormalise(vec,mean,std):
 
 def normalise_bounds_dict(bounds,mean,std):
         keys = list(bounds.keys())
+        new_bounds = {}
         for i in range(len(keys)):
                 original_bounds = np.array(bounds[keys[i]])
                 normalised_bounds = (original_bounds-mean[i])/std[i]
-                bounds[keys[i]] = list(normalised_bounds)
-        return bounds
+                new_bounds[keys[i]] = list(normalised_bounds)
+        return new_bounds
 
 def build_gp_dict(posterior,learned_params,D,likelihood):
         gp_dict = {}
@@ -158,9 +159,9 @@ n_fid = len(z_bounds)
 
 joint_bounds = x_bounds | z_bounds 
 
-x_bounds_og = x_bounds
-z_bounds_og = z_bounds
-joint_bounds_og = joint_bounds
+x_bounds_og = x_bounds.copy()
+z_bounds_og = z_bounds.copy()
+joint_bounds_og = joint_bounds.copy()
 
 # samples = sample_bounds(joint_bounds,n)
 # data_path = 'outputs/mf/data.json'
@@ -213,7 +214,7 @@ while True:
         # optimising the aquisition of inputs, disregarding fidelity
         print('optimising aquisition function')
 
-        gamma = 1.5
+        gamma = 0.5
         beta = 2.5 
 
         def optimise_aquisition(cost_gp,gp,ms_num,gamma,beta):
