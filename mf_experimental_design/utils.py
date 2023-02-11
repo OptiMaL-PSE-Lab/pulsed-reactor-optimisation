@@ -15,7 +15,7 @@ from uuid import uuid4
 import pickle
 import time 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
-from mf_experimental_design.utils import *
+
 from mesh_generation.coil_basic import create_mesh
 
 from distutils.dir_util import copy_tree
@@ -162,27 +162,18 @@ def eval_cfd(x: dict):
     return {"obj": N, "cost": end - start, "id": ID}
 
 
-def calc_etheta(N: float, theta: float, off: float, up: float) -> float:
-    theta = theta - off
+def calc_etheta(N: float, theta: float) -> float:
     z = factorial(N - 1)
     xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
     etheta_calc = xy / z
-    return etheta_calc * up
+    return etheta_calc 
 
 
-def loss(X: list, theta: list, etheta: list) -> float:
-    N, off, up = X
-    error_sq = 0
+def loss(N: list, theta: list, etheta: list) -> float:
     et = []
     for i in range(len(etheta)):
-        et.append(calc_etheta(N, theta[i], off, up))
-
-    # for i in range(len(theta)):
-    #     if theta[i] > 2:
-    #         error_sq += 0
-    #     else:
-    #         error_sq += (calc_etheta(N, theta[i], off, up) - etheta[i]) ** 2
-    error_sq += (max(etheta) - max(et)) ** 2
+        et.append(calc_etheta(N, theta[i]))
+    error_sq = (max(etheta) - max(et)) ** 2
     return error_sq
 
 
@@ -204,12 +195,9 @@ def vel_calc(re):
 def val_to_rtd(time, value, path):
     value = np.array(value)
     time = np.array(time)
-    plt.figure()
     peaks, _ = find_peaks(value, prominence=0.00001)
     times_peaks = time[peaks]
     values_peaks = value[peaks]
-    plt.plot(time, value, c="k", lw=1, alpha=0.1)
-    plt.plot(times_peaks, values_peaks, c="r", lw=1, label="CFD")
 
     # m = np.argmax(value)
     # value = np.append(value[:m],np.flip(value[:m]))
@@ -219,11 +207,14 @@ def val_to_rtd(time, value, path):
     # values_peaks = value[peaks]
     # plt.plot(times_peaks, values_peaks, c="b", lw=1,label='Un-skew')
 
-    plt.grid()
-    plt.xlabel("time")
-    plt.ylabel("concentration")
-    plt.legend()
-    plt.savefig(path + "/preprocessed_plot.png")
+    if path != None:
+        plt.figure()
+        plt.plot(time, value, c="k", lw=1, alpha=0.1)
+        plt.plot(times_peaks, values_peaks, c="r", lw=1, label="CFD")
+        plt.xlabel("time")
+        plt.ylabel("concentration")
+        plt.legend()
+        plt.savefig(path + "/preprocessed_plot.png")
 
     # difference between time values
     dt = np.diff(times_peaks)[0]
@@ -241,35 +232,30 @@ def calculate_N(value, time, path):
     theta, etheta = val_to_rtd(time, value, path)
     # fitting value of N
     s = 10000
-    x0_list = np.array(
-        [
-            np.logspace(np.log(1), np.log(50), s),
-            np.random.uniform(-0.001, 0.001, s),
-            np.random.uniform(1, 1.0001, s),
-        ]
-    ).T
+    n0_list = np.logspace(np.log(1), np.log(50), s)
 
     best = np.Inf
-    for x0 in x0_list:
-        l = loss(x0, theta, etheta)
+    for n0 in n0_list:
+        l = loss(n0, theta, etheta)
         if l < best:
             best = l
-            X = x0
+            N = n0
 
-    N, off, up = X
 
-    plt.figure()
-    plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
-    etheta_calc = []
-    for t in theta:
-        etheta_calc.append(calc_etheta(N, t, off, up))
-    plt.plot(theta, etheta_calc, c="k", ls="dashed", label="Dimensionless")
-    plt.grid()
-    plt.legend()
-    plt.xlim(0, 4)
-    plt.ylim(0, 2.5)
-    plt.savefig(path + "/dimensionless_conversion.png")
-    return N
+    if path == None:
+        return N 
+    else:
+        plt.figure()
+        plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
+        etheta_calc = []
+        for t in theta:
+            etheta_calc.append(calc_etheta(N, t))
+        plt.plot(theta, etheta_calc, c="k", ls="dashed", label="Dimensionless")
+        plt.legend()
+        plt.xlim(0, 4)
+        plt.ylim(0, 2.5)
+        plt.savefig(path + "/dimensionless_conversion.png")
+        return N
 
 
 def parse_conditions_geom_only(case, vel):
@@ -332,7 +318,8 @@ def read_json(path):
     return data
 
 
-def plot_results(data,n):
+def plot_results(path,n):
+    data = read_json(path)
     data = data["data"]
     
     obj = []
@@ -434,7 +421,7 @@ def plot_results(data,n):
 
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.4)
-    plt.savefig("outputs/mf/res.png", dpi=800)
+    plt.savefig("outputs/mf/res"+path.split('.')[0].split['/'][-1]+".png", dpi=800)
 
     return
 
@@ -448,7 +435,7 @@ def train_gp(inputs, outputs):
     mll = jit(posterior.marginal_log_likelihood(D, negative=True))
     opt = ox.adam(learning_rate=1e-3)
     parameter_state = gpx.initialise(posterior)
-    inference_state = gpx.fit(mll, parameter_state, opt, num_iters=10000)
+    inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000)
 
     learned_params, _ = inference_state.unpack()
     return posterior, learned_params, D, likelihood
@@ -475,7 +462,8 @@ def build_gp_dict(posterior, learned_params, D, likelihood):
 
 import jax.numpy as jnp 
 
-def plot_fidelities(data):
+def plot_fidelities(path):
+    data = read_json(path)
     z_vals = []
     c_vals = []
     for d in data["data"]:
@@ -513,6 +501,106 @@ def plot_fidelities(data):
     #fig.subplots_adjust(right=1.05, left=0.075, top=0.95, bottom=0.15)
     # for i, c in zip(range(len(z_vals)-1), color):
     #     axs.plot([z_vals[i,0],z_vals[i+1,0]],[z_vals[i,1],z_vals[i+1,1]],lw=6,color=c,alpha=0.95)
-    fig.savefig("outputs/mf/fidelities.png", dpi=800)
+    fig.savefig("outputs/mf/fidelities"+path.split('.')[0].split['/'][-1]+".png", dpi=800)
     return
 
+
+def list_from_dict(list_of_dicts,key):
+    l = []
+    for d in list_of_dicts:
+        l.append(d[key])
+    return l 
+
+def plot_data_file(path):
+    all_data = read_json(path)['data']
+    data = []
+    for d in all_data:
+        try:
+            flag = d['flag']
+            data.append(d)
+        except KeyError:
+            pass    
+    n = len(data)
+
+    obj_mean = list_from_dict(data,'obj_mean')
+    obj_std = list_from_dict(data,'obj_std')
+    cost_mean = list_from_dict(data,'cost_mean')
+    cost_std = list_from_dict(data,'cost_std')
+    pred_s_obj_mean = list_from_dict(data,'pred_s_obj_mean')
+    pred_s_cost_mean = list_from_dict(data,'pred_s_cost_mean')
+    pred_g_cost_mean = list_from_dict(data,'pred_g_cost_mean')
+    pred_s_cost_std = list_from_dict(data,'pred_s_cost_std')
+    pred_g_cost_std = list_from_dict(data,'pred_g_cost_std')
+
+
+    pred_s_obj_mean_unnorm = []
+    pred_s_cost_mean_unnorm = []
+    max_s = []
+    max_g = []
+    for i in range(n):
+        pred_s_obj_mean_unnorm.append(unnormalise(pred_s_obj_mean[i],obj_mean[i],obj_std[i]))
+        pred_s_cost_mean_unnorm.append(unnormalise(pred_s_cost_mean[i],cost_mean[i],cost_std[i]))
+        max_s.append(unnormalise(pred_s_cost_mean[i]+2*pred_s_cost_std[i],cost_mean[i],cost_std[i]))
+        max_g.append(unnormalise(pred_g_cost_mean[i]+2*pred_g_cost_std[i],cost_mean[i],cost_std[i]))
+
+
+    obj = list_from_dict(data,'obj')
+    cost = list_from_dict(data,'cost')
+    time_left = list_from_dict(data,'time_left_at_beginning_of_iteration')
+
+
+    fig,ax = plt.subplots(1,2,figsize=(12,4))
+
+    ms = 30
+
+    ax[0].scatter(np.arange(n),pred_s_obj_mean_unnorm,c='k',s=ms,label='Predicted')
+    ax[0].scatter(np.arange(n),obj,c='r',s=ms,label='Evaluated')
+    for i in range(n):
+        ax[0].plot([i,i],[pred_s_obj_mean_unnorm[i],obj[i]],c='k',lw=2,ls='dotted')
+
+    ax[1].scatter(np.arange(n),pred_s_cost_mean_unnorm,c='k',s=ms,label='Predicted')
+    ax[1].scatter(np.arange(n),cost,c='r',s=ms,label='Evaluated')
+    for i in range(n):
+        ax[1].plot([i,i],[pred_s_cost_mean_unnorm[i],cost[i]],c='k',lw=2,ls='dotted')
+
+
+    ax[0].set_xlabel("Iteration")
+    ax[0].set_ylabel("Tanks-in-series")
+    ax[0].legend(frameon=False)
+
+    ax[1].set_xlabel("Iteration")
+    ax[1].set_ylabel("Simulation Cost (s)")
+    ax[1].legend(frameon=False)
+    plt.tight_layout()
+    plt.savefig('outputs/predicted_values'+path.split('.')[0].split['/'][-1]+'.png',dpi=800)
+
+
+    fig,ax = plt.subplots(1,2,figsize=(8,3))
+
+    max_s = np.array(max_s)
+    max_g = np.array(max_g)
+    time = np.cumsum(cost)
+
+    ax[0].plot(np.arange(n),time_left,c='k',lw=2,label='Remaining')
+    ax[0].plot(np.arange(n),max_s,c='r',lw=2,label='Max Predicted: Standard')
+    ax[0].scatter(np.arange(n),cost,c='r',s=30,label='Actual')
+    ax[0].plot(np.arange(n),max_s+max_g,c='b',lw=2,label='Max Predicted: Both')
+
+    ax[1].plot(time,time_left,c='k',lw=2,label='Remaining')
+    ax[1].plot(time,max_s,c='r',lw=2,label='Max Predicted: Standard')
+    ax[1].scatter(time,cost,c='r',s=30,label='Actual')
+    ax[1].plot(time,max_s+max_g,c='b',lw=2,label='Max Predicted: Both')
+
+    for a in ax:
+        a.set_yscale('log')
+    ax[0].set_xlabel("Iteration")
+    ax[0].set_ylabel("Time (s)")
+    ax[0].legend(frameon=False)
+    ax[1].set_xlabel("Wall-clock time (s)")
+    ax[1].set_ylabel("Time (s)")
+    ax[1].legend(frameon=False)
+    plt.tight_layout()
+    plt.savefig('outputs/time_remaining'+path.split('.')[0].split['/'][-1]+'.png',dpi=800)
+ 
+
+    return 
