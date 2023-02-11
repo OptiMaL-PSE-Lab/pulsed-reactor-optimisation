@@ -4,13 +4,6 @@ import jax.numpy as jnp
 from utils import *
 
 
-
-
-
-
-
-
-
 n = 25
 
 x_bounds = {}
@@ -48,15 +41,17 @@ joint_bounds_og = joint_bounds.copy()
 #         save_json(data,data_path)
 
 
-data_path = "outputs/mf/data.json"
-data = read_json(data_path)
+data_path = "outputs/mf/first.json"
 
+data = read_json(data_path)
+plot_results(data_path,25)
+plot_fidelities(data_path)
+plot_data_file(data_path)
 time_left = 72 * 60 * 60
 
 while True:
     # reading data from file format
     data = read_json(data_path)
-
 
     inputs, outputs, cost = format_data(data)
 
@@ -149,7 +144,7 @@ while True:
 
         return x_best, aq_val  
     
-    multistart = 1
+    multistart = 36
     
     x_opt, f_opt = optimise_aquisition(cost_gp, gp, multistart, gamma, beta)
     x_greedy,f_greedy = optimise_greedy(gp,multistart)
@@ -167,14 +162,12 @@ while True:
 
     max_time_standard = mu_standard + p_c * np.sqrt(var_standard)
     max_time_greedy = mu_greedy + p_c * np.sqrt(var_greedy)
-
     norm_time_left = (time_left-c_mean)/c_std
 
     flag = 'NORMAL'
     if max_time_standard + max_time_greedy > norm_time_left:
         x_opt = x_greedy
         flag = "GREEDY"
-
 
     x_opt = list(unnormalise(x_opt, j_mean, j_std))
     x_opt = [np.float64(xi) for xi in x_opt]
@@ -183,7 +176,6 @@ while True:
     for i in range(n_fid):
         x_opt[-(i + 1)] = int(x_opt[-(i + 1)])
 
-
     sample = sample_to_dict(x_opt, joint_bounds)
 
     print("Running ", sample)
@@ -191,8 +183,8 @@ while True:
         "flag":flag,
         "id": "running",
         "x": sample,
-        "cost": 1000 + np.random.uniform(),
-        "obj": 6 + np.random.uniform(),
+        "cost": "running",
+        "obj": "running",
         "joint_mean":list([np.float64(j_mean[i]) for i in range(len(j_mean))]),
         "joint_std":list([np.float64(j_std[i]) for i in range(len(j_std))]),
         "obj_mean":np.float64(o_mean[0]),
@@ -214,8 +206,8 @@ while True:
     data['data'].append(run_info)
     save_json(data,data_path)
 
-    #res = eval_cfd(sample)
-    res = {'id':'test','cost':5000*np.random.uniform(),"obj":30*np.random.uniform()}
+    res = eval_cfd(sample)
+    # res = {'id':'test','cost':5000*np.random.uniform(),"obj":30*np.random.uniform()}
     run_info['id'] = res['id']
     run_info['cost'] = res['cost']
     run_info['obj'] = res['obj']
@@ -226,5 +218,6 @@ while True:
 
     save_json(data, data_path)
 
-    plot_results(data,n)
-    plot_fidelities(data)
+    plot_results(data_path,25)
+    plot_fidelities(data_path)
+    plot_data_file(data_path)   
