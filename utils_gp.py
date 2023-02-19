@@ -32,8 +32,8 @@ def train_gp(inputs, outputs,ms):
 
         parameter_state = gpx.initialise(posterior)
         #parameter_state.trainables['likelihood']['obs_noise'] = False
-        parameter_state.params['likelihood']['obs_noise'] = 0
-        parameter_state.params['kernel']['lengthscale'] = init_params[0,:]
+        parameter_state.params['likelihood']['obs_noise'] = 0.01
+        parameter_state.params['kernel']['lengthscale'] = p
 
         inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000)
         nll = float(inference_state.history[-1])
