@@ -4,8 +4,10 @@ from utils import *
 from utils_plotting import * 
 from utils_gp import * 
 
-def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only):
 
+def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,debug):
+
+        time_left = 72*60*60
         n_fid = len(z_bounds)
         joint_bounds = x_bounds | z_bounds
         x_bounds_og = x_bounds.copy()
@@ -54,16 +56,17 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only):
 
                 # training two Gaussian processes:
                 print("Training GPs")
+                gp_ms = 10
                 # all inputs and fidelities against objective
-                gp = build_gp_dict(*train_gp(inputs, outputs,10))
+                gp = build_gp_dict(*train_gp(inputs, outputs,gp_ms))
                 # inputs and fidelities against cost
-                cost_gp = build_gp_dict(*train_gp(inputs, cost,10))
+                cost_gp = build_gp_dict(*train_gp(inputs, cost,gp_ms))
 
                 # optimising the aquisition of inputs, disregarding fidelity
                 print("optimising aquisition function")
 
 
-                def optimise_aquisition(cost_gp, gp, ms_num, gamma, beta):
+                def optimise_aquisition(cost_gp, gp, ms_num, gamma, beta,cost_offset):
                         # normalise bounds
                         b_list = list(joint_bounds.values())
                         fid_high = jnp.array([list(z_bounds.values())[i][1] for i in range(n_fid)])
@@ -77,7 +80,7 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only):
                                 res = minimize(
                                         f,
                                         x0=x,
-                                        args=(gp, cost_gp, fid_high, gamma, beta),
+                                        args=(gp, cost_gp, fid_high, gamma, beta,cost_offset),
                                         method="SLSQP",
                                         bounds=b_list,
                                         jac=True,
@@ -122,9 +125,10 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only):
 
                         return x_best, aq_val  
                 
-                multistart = 36
+                multistart = 32
                 
-                x_opt, f_opt = optimise_aquisition(cost_gp, gp, multistart, gamma, beta)
+                cost_offset = min(cost) * 1.5 
+                x_opt, f_opt = optimise_aquisition(cost_gp, gp, multistart, gamma, beta,cost_offset)
                 x_greedy,f_greedy = optimise_greedy(gp,multistart)
 
 
@@ -183,7 +187,10 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only):
                 data['data'].append(run_info)
                 save_json(data,data_path)
 
-                res = f(sample)
+                if debug is not True:
+                        res = f(sample)
+                else:
+                        res = {'id':'DEBUG','cost':1000,'obj':10}
                 run_info['id'] = res['id']
                 run_info['cost'] = res['cost']
                 run_info['obj'] = res['obj']

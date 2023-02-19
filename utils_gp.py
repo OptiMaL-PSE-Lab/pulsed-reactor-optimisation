@@ -1,13 +1,13 @@
 from utils import * 
 
-def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta):
+def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
     cost, cost_var = inference(cost_gp, jnp.array([x]))
     # fixing fidelity
     for i in range(len(fid_high)):
         i += 1
         x = x.at[-i].set(fid_high[-i])
     mean, cov = inference(gp, jnp.array([x]))
-    return -((mean[0] + beta * cov[0]) / (gamma * cost[0]))[0]
+    return -((mean[0] + beta * cov[0]) / ((gamma *  (cost[0]-cost_offset)))[0])[0]
 
 def greedy_function(x, gp, fid_high):
     # fixing fidelity
@@ -35,7 +35,7 @@ def train_gp(inputs, outputs,ms):
         parameter_state.params['likelihood']['obs_noise'] = 0.01
         parameter_state.params['kernel']['lengthscale'] = p
 
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=200000)
         nll = float(inference_state.history[-1])
         if nll < best_nll:
             best_nll = nll

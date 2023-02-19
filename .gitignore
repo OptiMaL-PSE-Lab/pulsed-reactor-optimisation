@@ -7,3 +7,4 @@ debug.vtk
 pulsed_flow_helical_tube/simulations/
 parameterisation_study/simulations/
 time_gp_test.py 
+**.png
