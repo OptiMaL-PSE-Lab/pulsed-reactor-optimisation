@@ -57,7 +57,7 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
 
                 # training two Gaussian processes:
                 print("Training GPs")
-                gp_ms = 10
+                gp_ms = 16
                 # all inputs and fidelities against objective
                 gp = build_gp_dict(*train_gp(inputs, outputs,gp_ms))
                 # inputs and fidelities against cost
@@ -85,7 +85,8 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
                                         method="SLSQP",
                                         bounds=b_list,
                                         jac=True,
-                                        options={"disp": False},
+                                        tol=1e-8,
+                                        options={"disp": True},
                                 )
                                 aq_val = res.fun
                                 x = res.x
@@ -113,7 +114,7 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
                                         method="SLSQP",
                                         bounds=b_list,
                                         jac=True,
-                                        options={"disp": False},
+                                        options={"disp": True},
                                 )
                                 aq_val = res.fun
                                 x = res.x

@@ -19,7 +19,7 @@ def greedy_function(x, gp, fid_high):
 
 def train_gp(inputs, outputs,ms):
 
-    init_params = lhs(np.array([[0.01,10] for i in range(len(inputs[0,:]))]),ms,log=True)
+    init_params = lhs(np.array([[1,10] for i in range(len(inputs[0,:]))]),ms,log=True)
     D = gpx.Dataset(X=inputs, y=outputs)
     for p in init_params:
         best_nll = 1E30
@@ -32,10 +32,10 @@ def train_gp(inputs, outputs,ms):
 
         parameter_state = gpx.initialise(posterior)
         #parameter_state.trainables['likelihood']['obs_noise'] = False
-        parameter_state.params['likelihood']['obs_noise'] = 0.01
+        #parameter_state.params['likelihood']['obs_noise'] = 0.01
         parameter_state.params['kernel']['lengthscale'] = p
 
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=200000)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000)
         nll = float(inference_state.history[-1])
         if nll < best_nll:
             best_nll = nll
