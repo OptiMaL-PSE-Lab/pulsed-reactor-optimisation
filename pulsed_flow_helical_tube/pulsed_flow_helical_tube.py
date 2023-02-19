@@ -15,8 +15,8 @@ x_bounds["coil_rad"] = [0.0035, 0.0125]
 x_bounds["inversion_loc"] = [0, 1]
 
 z_bounds = {}
-z_bounds["fid_axial"] = [20.001, 49.99]
-z_bounds["fid_radial"] = [1.001, 5.99]
+z_bounds["fid_axial"] = [19.51, 50.49]
+z_bounds["fid_radial"] = [1.51, 5.49]
 
 data_path = "pulsed_flow_helical_tube/data.json"
 
@@ -33,7 +33,7 @@ def eval_cfd(x: dict):
     parse_conditions(case, x)
     times, values = run_cfd(case)
     N = calculate_N(values, times, case)
-    for i in range(16):
+    for i in range(48):
         shutil.rmtree(case + "/processor" + str(i))
     # shutil.rmtree(newcase)
     end = time.time()
