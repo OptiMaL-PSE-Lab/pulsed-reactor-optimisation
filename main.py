@@ -36,9 +36,10 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
                 # reading data from file format
                 data = read_json(data_path)
                 inputs, outputs, cost = format_data(data)
-
+                print(inputs,outputs,cost)
                 # normalising all data
                 j_mean, j_std = mean_std(inputs)
+                
                 inputs = normalise(inputs, j_mean, j_std)
                 x_mean = j_mean[:-n_fid]
                 x_std = j_std[:-n_fid]
