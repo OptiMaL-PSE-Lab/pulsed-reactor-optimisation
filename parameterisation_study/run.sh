@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -N cylindrical_discrepancy
 #PBS -j oe
-#PBS -o cylindrical_discrepancy/logs.out
-#PBS -e cylindrical_discrepancy/logs.err
+#PBS -o parameterisation_study/logs.out
+#PBS -e parameterisation_study/logs.err
 #PBS -lselect=1:ncpus=48:mem=32gb
 #PBS -lwalltime=72:00:00
 
