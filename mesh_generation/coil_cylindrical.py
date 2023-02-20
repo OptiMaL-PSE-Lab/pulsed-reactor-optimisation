@@ -119,25 +119,33 @@ def parse_inputs(NB, f,name):
     return x
 
 
-def create_mesh(data,path,n_interp):
+def create_mesh(data,path,n_interp,nominal_data):
+
 
     # factor to interpolate between control points
-    interpolation_factor = data["fid_radial"]  # interpolate x times the points between
-
+    interpolation_factor = data["fid_axial"]  # interpolate x times the points between
+    fid_radial = data["fid_radial"]
 
     keys = ["rho", "theta", "z", "tube_rad"]
 
     # do interpolation between points
     vals = {}
     # calculating real values from differences and initial conditions
+    for i in range(n_interp):
+        nominal_data['rho_'+str(i)] += data['rho_'+str(i)]
+        nominal_data['z_'+str(i)] += data['z_'+str(i)]
+
+    data = nominal_data
+    
     for k in keys:
         data[k] = [data[k+'_'+str(i)] for i in range(n_interp)]
         vals[k] = parse_inputs(data[k], interpolation_factor,k)
 
     le = len(vals["z"])
     data = vals
+    data['fid_radial'] = fid_radial
     mesh = Mesh()
-    fig, axs = plt.subplots(1, 3, figsize=(8, 4), subplot_kw=dict(projection="3d"))
+    fig, axs = plt.subplots(1, 3, figsize=(9, 4), subplot_kw=dict(projection="3d"))
 
     for p in range(1, le - 1):
         # get proceeding circle (as x,y,z samples)
@@ -195,6 +203,7 @@ def create_mesh(data,path,n_interp):
                 list(([x2[l[i]], y2[l[i]], z2[l[i]]] + centre2) / 2),
             ]
 
+
             if l[j] == 0:
                 v = l[j - 1] + (l[j - 1] - l[j - 2])
                 a = int(l[i] + (v - l[i]) / 2)
@@ -214,8 +223,8 @@ def create_mesh(data,path,n_interp):
             block.set_patch(["front"], "walls")
 
             # partition block
-            block.chop(0, count=10)
-            block.chop(1, count=10)
+            block.chop(0, count=data["fid_radial"])
+            block.chop(1, count=data["fid_radial"])
             block.chop(2, count=1)
 
             # if at the start or end then state this
@@ -243,8 +252,8 @@ def create_mesh(data,path,n_interp):
         if p == le - 2:
             block.set_patch("bottom", "outlet")
 
-        block.chop(0, count=10)
-        block.chop(1, count=10)
+        block.chop(0, count=data['fid_radial'])
+        block.chop(1, count=data['fid_radial'])
         block.chop(2, count=1)
 
         mesh.add_block(block)
@@ -258,14 +267,14 @@ def create_mesh(data,path,n_interp):
         ax.set_yticks([])
         ax.set_zticks([])
 
-    axs[0].set_xlabel("x")
-    axs[0].set_zlabel("z")
+    # axs[0].set_xlabel("x")
+    # axs[0].set_zlabel("z")
 
-    axs[1].set_ylabel("y")
-    axs[1].set_zlabel("z")
+    # axs[1].set_ylabel("y")
+    # axs[1].set_zlabel("z")
 
-    axs[2].set_ylabel("y")
-    axs[2].set_xlabel("x")
+    # axs[2].set_ylabel("y")
+    # axs[2].set_xlabel("x")
 
     axs[0].view_init(0, 270)
     axs[1].view_init(0, 180)
@@ -278,6 +287,7 @@ def create_mesh(data,path,n_interp):
         shutil.copytree("mesh_generation/mesh", path)
     except:
         print("file already exists...")
+    plt.tight_layout()
     plt.savefig(str(path)+"/pre-render.png", dpi=600)
 
 
