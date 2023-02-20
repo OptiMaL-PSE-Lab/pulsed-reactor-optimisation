@@ -16,3 +16,4 @@ pulsed_flow_helical_tube/third_run
 **/run.sh
 visualisation/
 environment_old.yml
+!images/inversion_demo.png
