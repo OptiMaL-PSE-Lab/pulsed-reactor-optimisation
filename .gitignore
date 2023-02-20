@@ -9,3 +9,9 @@ parameterisation_study/simulations/
 time_gp_test.py 
 **.png
 *logs.out
+todo 
+pulsed_flow_helical_tube/second_run
+pulsed_flow_helical_tube/third_run
+*data.json
+**.sh
+visualisation/

@@ -40,7 +40,7 @@ def plot_fidelities(path):
     #fig.subplots_adjust(right=1.05, left=0.075, top=0.95, bottom=0.15)
     # for i, c in zip(range(len(z_vals)-1), color):
     #     axs.plot([z_vals[i,0],z_vals[i+1,0]],[z_vals[i,1],z_vals[i+1,1]],lw=6,color=c,alpha=0.95)
-    plt.savefig(path.split('/')[0]+"/fidelities.png", dpi=800)
+    plt.savefig(path.split('data.json')[0]+"/fidelities.png", dpi=800)
     return
 
 def plot_data_file(path):
@@ -111,7 +111,7 @@ def plot_data_file(path):
     ax[1].set_ylabel("Simulation Cost (s)")
     ax[1].legend(frameon=False)
     plt.tight_layout()
-    plt.savefig(path.split('/')[0]+"/predicted_values.png", dpi=800)
+    plt.savefig(path.split('data.json')[0]+"/predicted_values.png", dpi=800)
 
 
     fig,ax = plt.subplots(1,2,figsize=(8,3))
@@ -141,7 +141,7 @@ def plot_data_file(path):
     ax[1].set_xlabel("Wall-clock time (s)")
     ax[1].set_ylabel("Time (s)")
     #plt.tight_layout()
-    plt.savefig(path.split('/')[0]+"/time_remaining.png", dpi=800)
+    plt.savefig(path.split('data.json')[0]+"/time_remaining.png", dpi=800)
  
 
     return 
@@ -289,6 +289,6 @@ def plot_results(path):
 
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.4)
-    plt.savefig(path.split('/')[0]+"/res.png", dpi=800)
+    plt.savefig(path.split('data.json')[0]+"/res.png", dpi=800)
 
     return

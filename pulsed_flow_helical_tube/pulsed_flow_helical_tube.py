@@ -23,7 +23,7 @@ data_path = "pulsed_flow_helical_tube/data.json"
 def eval_cfd(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    case = data_path.split('/')[0]+'/simulations/'+ID
+    case = data_path.split('data.json')[0]+'simulations/'+ID
     create_mesh(
         x,
         length=0.0753,
@@ -39,4 +39,6 @@ def eval_cfd(x: dict):
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
-mfbo(eval_cfd,data_path,x_bounds,z_bounds,gamma=1.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False,debug=False)
+# mfbo(eval_cfd,data_path,x_bounds,z_bounds,gamma=1.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False,debug=False)
+#mfbo(eval_cfd,"pulsed_flow_helical_tube/second_run/data.json",x_bounds,z_bounds,gamma=0.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False,debug=False)
+mfbo(eval_cfd,"pulsed_flow_helical_tube/third_run/data.json",x_bounds,z_bounds,gamma=0.5,beta=5,p_c=2,sample_initial=False,plot_only=False,debug=False)
