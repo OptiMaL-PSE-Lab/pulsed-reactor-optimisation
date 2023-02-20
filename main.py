@@ -15,9 +15,9 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
         joint_bounds_og = joint_bounds.copy()
 
 
-        if sample_initial == True:
+        if sample_initial != False:
                 samples = sample_bounds(joint_bounds,sample_initial)
-                data_path = 'outputs/mf/data.json'
+                data_path = data_path
                 data = {'data':[]}
                 for sample in samples:
                         for i in range(n_fid):
@@ -30,7 +30,7 @@ def mfbo(f,data_path,x_bounds,z_bounds,gamma,beta,p_c,sample_initial,plot_only,d
                         run_info = {'id':res['id'],'x':sample_dict,'cost':res['cost'],'obj':res['obj']}
                         data['data'][-1] = run_info
                         save_json(data,data_path)
-                
+                plot_only = True
 
         while plot_only is False:
                 # reading data from file format

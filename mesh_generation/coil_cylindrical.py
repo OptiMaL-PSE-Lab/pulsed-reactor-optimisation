@@ -114,8 +114,6 @@ def interpolate(y, f, kind,name):
 
 def parse_inputs(NB, f,name):
     x = interpolate(NB, f, "quadratic",name)
-
-
     return x
 
 
@@ -123,8 +121,8 @@ def create_mesh(data,path,n_interp,nominal_data):
 
 
     # factor to interpolate between control points
-    interpolation_factor = data["fid_axial"]  # interpolate x times the points between
-    fid_radial = data["fid_radial"]
+    interpolation_factor = int(np.rint(data["fid_axial"]))  # interpolate x times the points between
+    fid_radial = int(np.rint(data["fid_radial"]))
 
     keys = ["rho", "theta", "z", "tube_rad"]
 

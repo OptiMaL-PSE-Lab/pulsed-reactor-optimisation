@@ -245,6 +245,22 @@ def parse_conditions(case, x):
     decomposer.start()
     return
 
+def parse_conditions_given(case, a, f, re):
+    vel = vel_calc(re)
+
+    velBC = ParsedParameterFile(path.join(case, "0", "U"))
+    velBC["boundaryField"]["inlet"]["variables"][1] = '"amp= %.5f;"' % a
+    velBC["boundaryField"]["inlet"]["variables"][0] = '"freq= %.5f;"' % f
+    velBC["boundaryField"]["inlet"]["variables"][2] = '"vel= %.5f;"' % vel
+    velBC["boundaryField"]["inlet"]["value"].setUniform(Vector(vel, 0, 0))
+    velBC.writeFile()
+    decomposer = UtilityRunner(
+        argv=["decomposePar", "-case", case],
+        logname="decomposePar",
+    )
+    decomposer.start()
+    return
+
 
 def run_cfd(case):
     if HPC is True:
