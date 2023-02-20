@@ -1,29 +1,31 @@
-<a href="https://www.imperial.ac.uk/optimisation-and-machine-learning-for-process-engineering/about-us/">
-<img src="https://avatars.githubusercontent.com/u/81195336?s=200&v=4" alt="Optimal PSE logo" title="OptimalPSE" align="right" height="150" />
+<a>
+<img src="images/inversion_demo.png" alt="inversion demonstration" title="inversion demonstration" align="center" />
 </a>
 
-# CFD Optimisation
+# Multi-fidelity Bayesian Optimisation for Simulated Chemical Reactors
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
 
+## Outline
 
-This repository contains a number of projects concerned with the optimisation of operating conditions, and geometry of coiled tube reactors. 
+```pulsed_flow_helical_tube``` contains the code to optimise helical-tube reactor geometry and operating conditions.
 
-<a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/c225d8022cdf18229178eb9790b5dd4ace349656/mesh_generation/output_images/pre_render_cylindrical.png" alt="pre_render" title="pre_render" align="left" height="200" />
-</a>
+```mesh_generation``` contains mesh generation code. Helical tube reactors are meshed in Python using [```classy_blocks```](https://github.com/damogranlabs/classy_blocks). Meshes are generated based on parameterisation variables, as well as fidelities. 
 
-
-
-```pulsed-reactor-optimisation``` aims to optimise the geometric parameters and operating conditions of a pulsed flow helical tube reactor via CFD. More information can be found within the project's README. Importantly the optimisation and CFD is decoupled and must be done by a human.
-
-<a>
-<img src="https://github.com/OptiMaL-PSE-Lab/pulsed-reactor-optimisation/blob/c225d8022cdf18229178eb9790b5dd4ace349656/mesh_generation/output_images/coil_cylinder_render.png" alt="pre_render" title="pre_render" align="right" height="200" />
-</a>
-
-```mesh_generation``` contains tools for parametrically creating meshes of coiled tubes, general helices, and other reactors of interest.
-
-```simulation-integration``` provides an example of how OpenFOAM and Python can be linked using PyFOAM for the purposes of optimisation. With a case study regarding the optimisation of coiled tube reactor operating conditions. The CFD and optimisation are completely coupled here, allowing for automated evaluation on a high performance cluster. 
+```example/``` contains an example on how to use the repository. Note the function used is relatively naive, so results should be taken with a pinch of salt. Importantly, the objective is **maximised**. 
 
 
+## References 
+
+```
+@misc{dgp_based_mfbo,
+  doi = {10.48550/ARXIV.2210.17213},
+  url = {https://arxiv.org/abs/2210.17213},
+  author = {Savage,  Tom and Basha,  Nausheen and Matar,  Omar and Chanona,  Ehecatl Antonio Del-Rio},
+  title = {Deep Gaussian Process-based Multi-fidelity Bayesian Optimization for Simulated Chemical Reactors},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {Creative Commons Attribution Non Commercial Share Alike 4.0 International}
+}
+```

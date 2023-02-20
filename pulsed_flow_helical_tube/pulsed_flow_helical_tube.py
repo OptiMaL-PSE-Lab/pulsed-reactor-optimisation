@@ -20,6 +20,11 @@ z_bounds["fid_axial"] = [19.51, 50.49]
 z_bounds["fid_radial"] = [1.51, 5.49]
 
 data_path = "pulsed_flow_helical_tube/data.json"
+try:
+    print('Building simulation folder')
+    os.mkdir(data_path.split("data.json")[0] + "simulations/")
+except FileExistsError:
+    print('Simulation folder already exists')
 
 
 def eval_cfd(x: dict):
@@ -42,17 +47,15 @@ def eval_cfd(x: dict):
     return {"obj": N, "cost": end - start, "id": ID}
 
 
-# mfbo(eval_cfd,data_path,x_bounds,z_bounds,gamma=1.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False,debug=False)
-# mfbo(eval_cfd,"pulsed_flow_helical_tube/second_run/data.json",x_bounds,z_bounds,gamma=0.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False,debug=False)
+# mfbo(eval_cfd,data_path,x_bounds,z_bounds,gamma=1.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False)
+# mfbo(eval_cfd,"pulsed_flow_helical_tube/second_run/data.json",x_bounds,z_bounds,gamma=0.5,beta=2.5,p_c=2,sample_initial=False,plot_only=False)
 mfbo(
     eval_cfd,
-    "pulsed_flow_helical_tube/third_run/data.json",
+    data_path,
     x_bounds,
     z_bounds,
+    time_budget=72*60*60,
     gamma=0.5,
     beta=5,
-    p_c=2,
-    sample_initial=False,
-    plot_only=False,
-    debug=False,
+    sample_initial=False
 )

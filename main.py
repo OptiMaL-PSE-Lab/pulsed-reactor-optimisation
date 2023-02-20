@@ -5,24 +5,57 @@ from utils_plotting import *
 from utils_gp import *
 
 
-def mfbo(
-    f, data_path, x_bounds, z_bounds, gamma, beta, p_c, sample_initial, plot_only, debug
-):
-    time_left = 72 * 60 * 60
+def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2, gp_ms=16,opt_ms=32,sample_initial=True,int_fidelities=False):
+    """
+    1. TIME BUDGET DISREGARDS INITIAL SAMPLES 
+    2. TIME FROM ANYTHING OTHER THAN EVALUATIONS DOESN'T CONTRIBUTE TO BUDGET
+    """
+
+    
+    # if carrying on from file
+    if sample_initial == False:
+        # read file
+        data = read_json(data_path)
+        # get last datapoint saved
+        last_point = data['data'][-1]
+
+        try:
+            # if this is from optimisation (aka has a flag)
+            flag = last_point['flag'] 
+            # set time left to one of these
+            if last_point['cost'] != 'running':
+                time_left = last_point['time_left_at_beginning_of_iteration'] - last_point['cost']
+            else:
+                time_left = last_point['time_left_at_beginning_of_iteration']
+        except KeyError:
+            # if last point is sampled
+            # set time left to just the time budget stated
+            time_left = time_budget
+    else:
+        time_left = time_budget
+
+    # defining joint space bounds
     n_fid = len(z_bounds)
     joint_bounds = x_bounds | z_bounds
     x_bounds_og = x_bounds.copy()
     z_bounds_og = z_bounds.copy()
     joint_bounds_og = joint_bounds.copy()
 
+
     if sample_initial != False:
+        # perform initial sample of joint space
         samples = sample_bounds(joint_bounds, sample_initial)
-        data_path = data_path
+        # intialise data json
         data = {"data": []}
         for sample in samples:
-            for i in range(n_fid):
-                sample[-(i + 1)] = int(sample[-(i + 1)])
+            # for each fidelity value make this an int
+            if int_fidelities == True:
+                for i in range(n_fid):
+                    sample[-(i + 1)] = np.rint(sample[-(i + 1)])
+            
+            # create sample dict for evaluation
             sample_dict = sample_to_dict(sample, joint_bounds)
+            # preliminary run info 
             run_info = {
                 "id": "running",
                 "x": sample_dict,
@@ -31,6 +64,8 @@ def mfbo(
             }
             data["data"].append(run_info)
             save_json(data, data_path)
+
+            # perform function evaluation
             res = f(sample_dict)
             run_info = {
                 "id": res["id"],
@@ -39,10 +74,12 @@ def mfbo(
                 "obj": res["obj"],
             }
             data["data"][-1] = run_info
+            # save to file
             save_json(data, data_path)
-        plot_only = True
+        
+    
+    while True:
 
-    while plot_only is False:
         # reading data from file format
         data = read_json(data_path)
         inputs, outputs, cost = format_data(data)
@@ -61,13 +98,13 @@ def mfbo(
         c_mean, c_std = mean_std(cost)
         cost = normalise(cost, c_mean, c_std)
 
+        # normalise bounds 
         x_bounds = normalise_bounds_dict(x_bounds_og, x_mean, x_std)
         z_bounds = normalise_bounds_dict(z_bounds_og, z_mean, z_std)
         joint_bounds = normalise_bounds_dict(joint_bounds_og, j_mean, j_std)
 
         # training two Gaussian processes:
         print("Training GPs")
-        gp_ms = 16
         # all inputs and fidelities against objective
         gp = build_gp_dict(*train_gp(inputs, outputs, gp_ms))
         # inputs and fidelities against cost
@@ -83,8 +120,11 @@ def mfbo(
             # sample and normalise initial guesses
             x_init = jnp.array(sample_bounds(joint_bounds, ms_num))
             f_best = 1e20
+            # define grad and value for acquisition (jax)
             f = value_and_grad(aquisition_function)
             run_store = []
+
+            # iterate over multistart
             for i in range(ms_num):
                 x = x_init[i]
                 res = minimize(
@@ -100,9 +140,11 @@ def mfbo(
                 aq_val = res.fun
                 x = res.x
                 run_store.append(aq_val)
+                # if this is the best, then store solution
                 if aq_val < f_best:
                     f_best = aq_val
                     x_best = x
+            # return best solution found
             return x_best, aq_val
 
         def optimise_greedy(gp, ms_num):
@@ -112,6 +154,7 @@ def mfbo(
             # sample and normalise initial guesses
             x_init = jnp.array(sample_bounds(x_bounds, ms_num))
             f_best = 1e20
+            # jax magic
             f = value_and_grad(greedy_function)
             run_store = []
             for i in range(ms_num):
@@ -131,45 +174,58 @@ def mfbo(
                 if aq_val < f_best:
                     f_best = aq_val
                     x_best = x
+
+            # because this is only in x-space append highest fidelities 
+            # for complete solution
             for i in range(len(fid_high)):
                 x_best = np.append(x_best, fid_high[i])
 
             return x_best, aq_val
 
-        multistart = 32
 
+
+        # this is to ensure cost-adjusted acquisition can't be -inf
         cost_offset = min(cost) * 1.5
-        x_opt, f_opt = optimise_aquisition(
-            cost_gp, gp, multistart, gamma, beta, cost_offset
-        )
-        x_greedy, f_greedy = optimise_greedy(gp, multistart)
 
+        # solve two problems
+        x_opt, f_opt = optimise_aquisition(
+            cost_gp, gp, opt_ms, gamma, beta, cost_offset
+        )
+        x_greedy, f_greedy = optimise_greedy(gp, opt_ms)
+
+
+        # get predicted values for these solutions 
         mu_standard_obj, var_standard_obj = inference(gp, jnp.array([x_opt]))
         mu_greedy_obj, var_greedy_obj = inference(gp, jnp.array([x_greedy]))
-
-        print("normalised res:", x_opt)
 
         mu_standard, var_standard = inference(cost_gp, jnp.array([x_opt]))
         mu_greedy, var_greedy = inference(cost_gp, jnp.array([x_greedy]))
 
+        # work out different predicted times for evaluation
         max_time_standard = mu_standard + p_c * np.sqrt(var_standard)
         max_time_greedy = mu_greedy + p_c * np.sqrt(var_greedy)
+        # this is the time left normalised
         norm_time_left = (time_left - c_mean) / c_std
 
-        flag = "NORMAL"
+        flag = "NORMAL" # assume we do a normal evaluation
+
+        # if there's not enough time left for both, do a greedy evaluation
         if max_time_standard + max_time_greedy > norm_time_left:
             x_opt = x_greedy
             flag = "GREEDY"
 
+        # unnormalise solution ready for evaluation
         x_opt = list(unnormalise(x_opt, j_mean, j_std))
         x_opt = [np.float64(xi) for xi in x_opt]
         print("unnormalised res:", x_opt)
 
-        for i in range(n_fid):
-            x_opt[-(i + 1)] = int(x_opt[-(i + 1)])
+        if int_fidelities == True:
+            for i in range(n_fid):
+                x_opt[-(i + 1)] = int(x_opt[-(i + 1)])
 
         sample = sample_to_dict(x_opt, joint_bounds)
 
+        # initialise sample results
         print("Running ", sample)
         run_info = {
             "flag": flag,
@@ -198,23 +254,21 @@ def mfbo(
         data["data"].append(run_info)
         save_json(data, data_path)
 
-        if debug is not True:
-            res = f(sample)
-        else:
-            res = {"id": "DEBUG", "cost": 1000, "obj": 10}
+
+        # perform evaluation
+        res = f(sample)
         run_info["id"] = res["id"]
         run_info["cost"] = res["cost"]
         run_info["obj"] = res["obj"]
 
+        # make last thing in data list this evaluation and not the placeholder
         data["data"][-1] = run_info
 
         time_left = time_left - run_info["cost"]
 
+        # do all plotting you desire
         save_json(data, data_path)
         plot_results(data_path)
         plot_fidelities(data_path)
         plot_data_file(data_path)
 
-    plot_results(data_path)
-    plot_fidelities(data_path)
-    plot_data_file(data_path)

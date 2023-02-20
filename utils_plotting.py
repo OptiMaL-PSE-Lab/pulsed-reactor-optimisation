@@ -1,11 +1,16 @@
 from utils import *
-
+rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
 
 def plot_fidelities(path):
     data = read_json(path)
     z_vals = []
     c_vals = []
+    n_init = 0 
     for d in data["data"]:
+        try:
+            flag = d['flag']
+        except:
+            n_init += 1
         if d["cost"] != "running":
             xv = d["x"]
             c_vals.append(d["cost"])
@@ -15,9 +20,12 @@ def plot_fidelities(path):
                     zv.append(xv[xk])
             z_vals.append(zv)
     z_vals = np.array(z_vals)
+    if len(z_vals[0]) != 2:
+        print('Only 2 fidelities can be plotted...')
+        return 
 
-    c_vals = c_vals[25:]
-    z_vals = z_vals[25:, :]
+    c_vals = c_vals[n_init:]
+    z_vals = z_vals[n_init:, :]
     color = cm.viridis(c_vals)
     fig, axs = plt.subplots(1, 1, figsize=(5.5, 4))
     divider = make_axes_locatable(axs)
@@ -31,7 +39,7 @@ def plot_fidelities(path):
         lw=0,
         s=120,
         alpha=0.8,
-        norm=colors.LogNorm(vmin=500, vmax=5000),
+        norm=colors.LogNorm(vmin=np.min(c_vals), vmax=np.max(c_vals)),
     )
 
     cb = fig.colorbar(sc, cax=cax, orientation="vertical")
@@ -123,7 +131,7 @@ def plot_data_file(path):
         )
 
     ax[0].set_xlabel("Iteration")
-    ax[0].set_ylabel("Tanks-in-series")
+    ax[0].set_ylabel("Objective")
     ax[0].legend(frameon=False)
 
     ax[1].set_xlabel("Iteration")
@@ -249,13 +257,14 @@ def plot_results(path):
         # a.spines["right"].set_visible(False)
         # a.spines["top"].set_visible(False)
         a.tick_params(axis="both", which="major", labelsize=font_size - 2)
-        a.set_ylim(0, max(best_crit) + 1)
+        #a.set_ylim(0, max(best_crit) + 1)
 
     from matplotlib import cm
 
-    norm = colors.LogNorm(vmin=min(cost), vmax=max(cost))
+    norm = colors.LogNorm(vmin=np.min(cost), vmax=np.max(cost))
 
     rgba_color = [np.array(cm.viridis(norm(c), bytes=True)) / 255 for c in cost]
+    print(rgba_color)
     im1 = ax[0, 0].scatter(
         full_it,
         obj,
@@ -271,7 +280,7 @@ def plot_results(path):
     # ax[0,0].legend(frameon=False,fontsize=14)
     ax[0, 0].set_xlabel(r"Iteration", fontsize=font_size)
     ax[0, 0].set_ylabel(
-        "Tanks-in-series",
+        "Objective",
         fontsize=font_size,
     )
     divider = make_axes_locatable(ax[0, 0])
@@ -333,7 +342,7 @@ def plot_results(path):
 
     ax[1, 0].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
     ax[1, 0].set_ylabel(
-        "Tanks-in-series",
+        "Objective",
         fontsize=font_size,
     )
     for i in range(len(full_it) - 1):

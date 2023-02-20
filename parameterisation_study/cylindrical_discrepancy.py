@@ -40,7 +40,11 @@ for i in range(n):
     x_bounds["z_" + str(i)] = [-0.001, 0.001]
 
 data_path = "parameterisation_study/data.json"
-
+try:
+    print('Building simulation folder')
+    os.mkdir(data_path.split("data.json")[0] + "simulations/")
+except FileExistsError:
+    print('Simulation folder already exists')
 
 def eval_cfd(x: dict):
     start = time.time()
@@ -67,10 +71,7 @@ mfbo(
     data_path,
     x_bounds,
     z_bounds,
-    gamma=1.5,
-    beta=2.5,
-    p_c=2,
+    time_budget=72*60*60,
     sample_initial=25,
-    plot_only=False,
-    debug=False,
+    int_fidelities=True
 )
