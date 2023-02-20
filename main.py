@@ -24,7 +24,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
             flag = last_point['flag'] 
             # set time left to one of these
             if last_point['cost'] != 'running':
-                time_left = last_point['time_left_at_beginning_of_iteration'] - last_point['cost']
+                time_left = last_point['time_left_at_end_of_iteration']
             else:
                 time_left = last_point['time_left_at_beginning_of_iteration']
         except KeyError:
@@ -80,6 +80,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
     
     while True:
 
+        start_time = time.time()
         # reading data from file format
         data = read_json(data_path)
         inputs, outputs, cost = format_data(data)
@@ -261,10 +262,14 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         run_info["cost"] = res["cost"]
         run_info["obj"] = res["obj"]
 
+        end_time = time.time()
+
         # make last thing in data list this evaluation and not the placeholder
         data["data"][-1] = run_info
 
-        time_left = time_left - run_info["cost"]
+        time_left = time_left - run_info["cost"] - (end_time - start_time)
+        run_info["time_left_at_end_of_iteration"] = time_left
+
 
         # do all plotting you desire
         save_json(data, data_path)
