@@ -45,6 +45,7 @@ def mfbo(
     while plot_only is False:
         # reading data from file format
         data = read_json(data_path)
+        time_left = data['data'][-1]['time_left_at_beginning_of_iteration'] - data['data'][-1]['cost']
         inputs, outputs, cost = format_data(data)
         print(inputs, outputs, cost)
         # normalising all data
