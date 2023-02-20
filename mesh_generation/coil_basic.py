@@ -90,7 +90,6 @@ def interpolate(y, v, kind):
 
 
 def create_mesh(x: dict, length: float, tube_rad: float, path: str):
-
     coil_rad = x["coil_rad"]
     pitch = x["pitch"]
     inversion_loc = x["inversion_loc"]
@@ -133,7 +132,6 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
     orig_len = len(data["t"])
 
     if inversion_loc is not None:
-
         il = inversion_loc
         n = int(points * (1 - il))
         new_tv = 2 * coils * np.pi * il + np.pi
@@ -257,7 +255,6 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
     data["z"][n_x - m : n_x + m] = d_z
 
     for p in tqdm(range(1, le - 2)):
-
         # obtaining two circles
         if inversion_loc is not None:
             if p < orig_len:
@@ -320,8 +317,12 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
         ip2 = np.array([(fa * op2[i] + (1 - fa) * c2) for i in range(len(l))])
 
         for i in range(len(l) - 1):
-
-            block_points = [op1[i], op1[i + 1], ip1[i + 1], ip1[i],] + [
+            block_points = [
+                op1[i],
+                op1[i + 1],
+                ip1[i + 1],
+                ip1[i],
+            ] + [
                 op2[i],
                 op2[i + 1],
                 ip2[i + 1],
@@ -366,8 +367,12 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
         ip2 = np.array([(fa_new * op2[i] + (1 - fa_new) * c2) for i in range(len(l))])
 
         for i in range(len(l) - 1):
-
-            block_points = [op1[i], op1[i + 1], ip1[i + 1], ip1[i],] + [
+            block_points = [
+                op1[i],
+                op1[i + 1],
+                ip1[i + 1],
+                ip1[i],
+            ] + [
                 op2[i],
                 op2[i + 1],
                 ip2[i + 1],
@@ -408,7 +413,6 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
 
         i = 1
         for j in range(int(div / 2)):
-
             # add centre rectangular block
             block_points = [ip1[i - 1], ip1[i], ip1[i + 1], c1] + [
                 ip2[i - 1],

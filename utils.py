@@ -13,8 +13,8 @@ from scipy.optimize import minimize
 import matplotlib.colors as colors
 from uuid import uuid4
 import pickle
-import time 
-import jax.numpy as jnp 
+import time
+import jax.numpy as jnp
 from distutils.dir_util import copy_tree
 from scipy.signal import find_peaks
 from PyFoam.Basics.DataStructures import Vector
@@ -77,9 +77,8 @@ def normalise_bounds_dict(bounds, mean, std):
     return new_bounds
 
 
-
 def sample_bounds(bounds, n):
-    sample = lhs(jnp.array(list(bounds.values())), n,log=False)
+    sample = lhs(jnp.array(list(bounds.values())), n, log=False)
     return sample
 
 
@@ -103,7 +102,7 @@ def save_json(data, path):
     return
 
 
-def lhs(bounds: list, p: int,log):
+def lhs(bounds: list, p: int, log):
     d = len(bounds)
     sample = np.zeros((p, len(bounds)))
     for i in range(0, d):
@@ -115,12 +114,11 @@ def lhs(bounds: list, p: int,log):
     return sample
 
 
-
 def calc_etheta(N: float, theta: float) -> float:
     z = factorial(N - 1)
     xy = (N * ((N * theta) ** (N - 1))) * (np.exp(-N * theta))
     etheta_calc = xy / z
-    return etheta_calc 
+    return etheta_calc
 
 
 def loss(N: list, theta: list, etheta: list) -> float:
@@ -195,9 +193,8 @@ def calculate_N(value, time, path):
             best = l
             N = n0
 
-
     if path == None:
-        return N 
+        return N
     else:
         plt.figure()
         plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
@@ -245,6 +242,7 @@ def parse_conditions(case, x):
     decomposer.start()
     return
 
+
 def parse_conditions_given(case, a, f, re):
     vel = vel_calc(re)
 
@@ -288,12 +286,11 @@ def read_json(path):
     return data
 
 
-def list_from_dict(list_of_dicts,key):
+def list_from_dict(list_of_dicts, key):
     l = []
     for d in list_of_dicts:
         try:
             l.append(d[key])
         except KeyError:
             l.append([np.nan])
-    return l 
-
+    return l
