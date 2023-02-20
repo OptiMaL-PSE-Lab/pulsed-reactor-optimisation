@@ -6,8 +6,8 @@ from main import mfbo
 from mesh_generation.coil_cylindrical import create_mesh
 
 
-coils = 3  # number of coils
-h = 3 * 0.0075  # max height
+coils = 4  # number of coils
+h = coils * 0.0075  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
 n = 8 # points per coil to use
 
@@ -30,19 +30,20 @@ f = 2
 re = 50
 
 z_bounds = {}
-z_bounds['fid_axial'] = [3.51,16.49]
+z_bounds['fid_axial'] = [9.51,20.49]
 z_bounds['fid_radial'] = [0.51,6.49]
 
 x_bounds = {}
 for i in range(n):
-    x_bounds['rho_'+str(i)] = [-0.015,0.015]
-    x_bounds['z_'+str(i)] = [-(h/(2*n)),h/(2*n)]
+    x_bounds['rho_'+str(i)] = [0,0.01]
+    x_bounds['z_'+str(i)] = [-0.001,0.001]
 
 data_path = "parameterisation_study/data.json"
 
 def eval_cfd(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    ID = 'test'
     case = data_path.split('/')[0]+'/simulations/'+ID
     create_mesh(
         x,
