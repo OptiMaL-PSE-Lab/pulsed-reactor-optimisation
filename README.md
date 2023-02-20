@@ -15,6 +15,28 @@
 
 ```example/``` contains an example on how to use the repository. Note the function used is relatively naive, so results should be taken with a pinch of salt. Importantly, the objective is **maximised**. 
 
+## Instructions for Simulated Chemical Reactors
+
+- Install the classy_blocks library as a submodule in the mesh_generation folder
+```
+$ cd mesh_generation
+$ git submodule add git@github.com:damogranlabs/classy_blocks.git
+```
+
+- Create and activate the Anaconda environment
+```
+$ conda env create -f environment.yml
+$ conda activate mf_design_env
+```
+
+
+### Requirements
+- Strongly advise using Linux.
+- OpenFOAM V1906
+- Anaconda
+- [Swak4FOAM download](https://openfoamwiki.net/index.php/Installation/swak4Foam/Downloading) (development version)
+- [Swak4FOAM install](https://openfoamwiki.net/index.php/Installation/swak4Foam)
+
 
 ## References 
 
