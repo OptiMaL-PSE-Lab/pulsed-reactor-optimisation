@@ -1,4 +1,5 @@
-from utils import * 
+from utils import *
+
 
 def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
     cost, cost_var = inference(cost_gp, jnp.array([x]))
@@ -7,22 +8,24 @@ def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
         i += 1
         x = x.at[-i].set(fid_high[-i])
     mean, cov = inference(gp, jnp.array([x]))
-    return -((mean[0] + beta * cov[0]) / ((gamma *  (cost[0]-cost_offset)))[0])[0]
+    return -((mean[0] + beta * cov[0]) / ((gamma * (cost[0] - cost_offset)))[0])[0]
+
 
 def greedy_function(x, gp, fid_high):
     # fixing fidelity
     for i in range(len(fid_high)):
-        x = jnp.append(x,fid_high[i])
+        x = jnp.append(x, fid_high[i])
     mean, cov = inference(gp, jnp.array([x]))
-    return - mean[0]
+    return -mean[0]
 
 
-def train_gp(inputs, outputs,ms):
-
-    init_params = lhs(np.array([[1,10] for i in range(len(inputs[0,:]))]),ms,log=True)
+def train_gp(inputs, outputs, ms):
+    init_params = lhs(
+        np.array([[1, 10] for i in range(len(inputs[0, :]))]), ms, log=True
+    )
     D = gpx.Dataset(X=inputs, y=outputs)
     for p in init_params:
-        best_nll = 1E30
+        best_nll = 1e30
         kern = gpx.Matern52(active_dims=[i for i in range(D.in_dim)])
         prior = gpx.Prior(kernel=kern)
         likelihood = gpx.Gaussian(num_datapoints=D.n)
@@ -31,9 +34,9 @@ def train_gp(inputs, outputs,ms):
         opt = ox.adam(learning_rate=1e-3)
 
         parameter_state = gpx.initialise(posterior)
-        #parameter_state.trainables['likelihood']['obs_noise'] = False
-        #parameter_state.params['likelihood']['obs_noise'] = 0.01
-        parameter_state.params['kernel']['lengthscale'] = p
+        # parameter_state.trainables['likelihood']['obs_noise'] = False
+        # parameter_state.params['likelihood']['obs_noise'] = 0.01
+        parameter_state.params["kernel"]["lengthscale"] = p
 
         inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000)
         nll = float(inference_state.history[-1])
@@ -58,6 +61,7 @@ def inference(gp, inputs):
     predictive_cov = predictive_distribution.covariance()
     return predictive_mean, predictive_cov
 
+
 def build_gp_dict(posterior, learned_params, D, likelihood):
     gp_dict = {}
     gp_dict["posterior"] = posterior
@@ -65,6 +69,3 @@ def build_gp_dict(posterior, learned_params, D, likelihood):
     gp_dict["D"] = D
     gp_dict["likelihood"] = likelihood
     return gp_dict
-
-
-

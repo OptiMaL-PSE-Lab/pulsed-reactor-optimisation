@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import sys
 import os
+
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mesh_generation.classy_blocks.classes.primitives import Edge
 from mesh_generation.classy_blocks.classes.block import Block
@@ -96,7 +97,7 @@ def create_circle(d1, d2):
     return x2p + c1[0], y2p + c1[1], z2p + c1[2]
 
 
-def interpolate(y, f, kind,name):
+def interpolate(y, f, kind, name):
     # interpolates between a set of points by a factor of f
 
     x = np.linspace(0, len(y), len(y))
@@ -112,16 +113,16 @@ def interpolate(y, f, kind,name):
     return y_new
 
 
-def parse_inputs(NB, f,name):
-    x = interpolate(NB, f, "quadratic",name)
+def parse_inputs(NB, f, name):
+    x = interpolate(NB, f, "quadratic", name)
     return x
 
 
-def create_mesh(data,path,n_interp,nominal_data):
-
-
+def create_mesh(data, path, n_interp, nominal_data):
     # factor to interpolate between control points
-    interpolation_factor = int(np.rint(data["fid_axial"]))  # interpolate x times the points between
+    interpolation_factor = int(
+        np.rint(data["fid_axial"])
+    )  # interpolate x times the points between
     fid_radial = int(np.rint(data["fid_radial"]))
 
     keys = ["rho", "theta", "z", "tube_rad"]
@@ -130,18 +131,18 @@ def create_mesh(data,path,n_interp,nominal_data):
     vals = {}
     # calculating real values from differences and initial conditions
     for i in range(n_interp):
-        nominal_data['rho_'+str(i)] += data['rho_'+str(i)]
-        nominal_data['z_'+str(i)] += data['z_'+str(i)]
+        nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
+        nominal_data["z_" + str(i)] += data["z_" + str(i)]
 
     data = nominal_data
-    
+
     for k in keys:
-        data[k] = [data[k+'_'+str(i)] for i in range(n_interp)]
-        vals[k] = parse_inputs(data[k], interpolation_factor,k)
+        data[k] = [data[k + "_" + str(i)] for i in range(n_interp)]
+        vals[k] = parse_inputs(data[k], interpolation_factor, k)
 
     le = len(vals["z"])
     data = vals
-    data['fid_radial'] = fid_radial
+    data["fid_radial"] = fid_radial
     mesh = Mesh()
     fig, axs = plt.subplots(1, 3, figsize=(9, 4), subplot_kw=dict(projection="3d"))
 
@@ -159,16 +160,11 @@ def create_mesh(data,path,n_interp,nominal_data):
         )
         # plot for reference
         for ax in axs:
-            ax.plot3D(x2, y2, z2, c="k",lw=0.5)
+            ax.plot3D(x2, y2, z2, c="k", lw=0.5)
             ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
             for i in np.linspace(0, len(x1) - 1, 10):
                 i = int(i)
-                ax.plot3D(
-                    [x1[i], x2[i]],
-                    [y1[i], y2[i]],
-                    [z1[i], z2[i]],
-                    c="k",lw=0.5
-                )
+                ax.plot3D([x1[i], x2[i]], [y1[i], y2[i]], [z1[i], z2[i]], c="k", lw=0.5)
 
         # l defines the indices of 4 equally spaced points on circle
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
@@ -200,7 +196,6 @@ def create_mesh(data,path,n_interp,nominal_data):
                 list(([x2[l[j]], y2[l[j]], z2[l[j]]] + centre2) / 2),
                 list(([x2[l[i]], y2[l[i]], z2[l[i]]] + centre2) / 2),
             ]
-
 
             if l[j] == 0:
                 v = l[j - 1] + (l[j - 1] - l[j - 2])
@@ -250,8 +245,8 @@ def create_mesh(data,path,n_interp,nominal_data):
         if p == le - 2:
             block.set_patch("bottom", "outlet")
 
-        block.chop(0, count=data['fid_radial'])
-        block.chop(1, count=data['fid_radial'])
+        block.chop(0, count=data["fid_radial"])
+        block.chop(1, count=data["fid_radial"])
         block.chop(2, count=1)
 
         mesh.add_block(block)
@@ -278,20 +273,17 @@ def create_mesh(data,path,n_interp,nominal_data):
     axs[1].view_init(0, 180)
     axs[2].view_init(270, 0)
 
-    #plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
-    #plt.show()
-    #copy existing base mesh folder
+    # plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
+    # plt.show()
+    # copy existing base mesh folder
     try:
         shutil.copytree("mesh_generation/mesh", path)
     except:
         print("file already exists...")
     plt.tight_layout()
-    plt.savefig(str(path)+"/pre-render.png", dpi=600)
+    plt.savefig(str(path) + "/pre-render.png", dpi=600)
 
-
-
-    #write mesh and run mesh generation script
+    # write mesh and run mesh generation script
     mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
     os.system(path + "/Allrun.mesh")
-    return 
-
+    return
