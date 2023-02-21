@@ -1,9 +1,9 @@
 #!/bin/bash
-#PBS -N pulsed_flow_helical_tube_third
+#PBS -N first_run
 #PBS -j oe
-#PBS -o pulsed_flow_helical_tube/third_run/logs.out
-#PBS -e pulsed_flow_helical_tube/third_run/logs.err
-#PBS -lselect=1:ncpus=48:mem=32gb
+#PBS -o pulsed_flow_helical_tube/first_run/logs.out
+#PBS -e pulsed_flow_helical_tube/first_run/logs.err
+#PBS -lselect=1:ncpus=48:mem=48gb
 #PBS -lwalltime=72:00:00
 
 module load anaconda3/personal

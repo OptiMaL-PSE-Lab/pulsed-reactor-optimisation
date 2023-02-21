@@ -8,7 +8,6 @@ from utils_gp import *
 def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2, gp_ms=16,opt_ms=32,sample_initial=True,int_fidelities=False):
     """
     1. TIME BUDGET DISREGARDS INITIAL SAMPLES 
-    2. TIME FROM ANYTHING OTHER THAN EVALUATIONS DOESN'T CONTRIBUTE TO BUDGET
     """
 
     
@@ -76,7 +75,14 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
             data["data"][-1] = run_info
             # save to file
             save_json(data, data_path)
-        
+
+    data = read_json(data_path) 
+    data['gamma'] = gamma
+    data['beta'] = beta
+    data['p_c'] = p_c
+    data['gp_ms'] = gp_ms
+    data['opt_ms'] = opt_ms
+    save_json(data,data_path)
     
     while True:
 
@@ -84,7 +90,6 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         # reading data from file format
         data = read_json(data_path)
         inputs, outputs, cost = format_data(data)
-        print(inputs, outputs, cost)
         # normalising all data
         j_mean, j_std = mean_std(inputs)
 
@@ -112,7 +117,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         cost_gp = build_gp_dict(*train_gp(inputs, cost, gp_ms))
 
         # optimising the aquisition of inputs, disregarding fidelity
-        print("optimising aquisition function")
+        print("Optimising aquisition function")
 
         def optimise_aquisition(cost_gp, gp, ms_num, gamma, beta, cost_offset):
             # normalise bounds
@@ -167,6 +172,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
                     method="SLSQP",
                     bounds=b_list,
                     jac=True,
+                    tol=1e-8,
                     options={"disp": True},
                 )
                 aq_val = res.fun
@@ -255,6 +261,9 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         data["data"].append(run_info)
         save_json(data, data_path)
 
+        end_time = time.time()
+
+        other_time = (end_time - start_time)
 
         # perform evaluation
         res = f(sample)
@@ -262,14 +271,12 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         run_info["cost"] = res["cost"]
         run_info["obj"] = res["obj"]
 
-        end_time = time.time()
+        time_left = time_left - run_info["cost"] - other_time
+        run_info["time_left_at_end_of_iteration"] = time_left
+
 
         # make last thing in data list this evaluation and not the placeholder
         data["data"][-1] = run_info
-
-        time_left = time_left - run_info["cost"] - (end_time - start_time)
-        run_info["time_left_at_end_of_iteration"] = time_left
-
 
         # do all plotting you desire
         save_json(data, data_path)

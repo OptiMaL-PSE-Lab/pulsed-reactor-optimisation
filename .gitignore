@@ -15,5 +15,6 @@ pulsed_flow_helical_tube/third_run
 *data.json
 **/run.sh
 visualisation/
+pulsed_flow_helical_tube/**
 environment_old.yml
 !images/inversion_demo.png
