@@ -54,7 +54,6 @@ except FileExistsError:
 def eval_cfd(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    ID = 'test'
     case = data_path.split("data.json")[0] + "simulations/" + ID
     create_mesh(
         x,
