@@ -12,4 +12,4 @@ module load intel-suite
 
 cd $PBS_O_WORKDIR
 source activate mf_design_env
-python3 -B pulsed_flow_helical_tube/pulsed_flow_helical_tube.py
+python3 -B pulsed_flow_helical_tube/pulsed_flow_helical_tube.py pulsed_flow_helical_tube/first_run/data.json 1.5 2.5 2

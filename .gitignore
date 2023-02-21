@@ -10,11 +10,8 @@ time_gp_test.py
 **/*.png
 *logs.out
 todo 
-pulsed_flow_helical_tube/second_run
-pulsed_flow_helical_tube/third_run
+pulsed_flow_helical_tube/**/
 *data.json
-**/run.sh
 visualisation/
-pulsed_flow_helical_tube/**
 environment_old.yml
 !images/inversion_demo.png

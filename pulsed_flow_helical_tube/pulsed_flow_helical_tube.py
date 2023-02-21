@@ -1,11 +1,9 @@
 import sys
 import os
-
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from utils import *
 from main import mfbo
 from mesh_generation.coil_basic import create_mesh
-
 
 x_bounds = {}
 x_bounds["a"] = [0.001, 0.008]
@@ -19,7 +17,14 @@ z_bounds = {}
 z_bounds["fid_axial"] = [19.51, 50.49]
 z_bounds["fid_radial"] = [1.51, 5.49]
 
-data_path = "pulsed_flow_helical_tube/first_run/data.json"
+
+
+print(sys.argv)
+data_path = str(sys.argv[1])
+gamma = float(sys.argv[2])
+beta = float(sys.argv[3])
+p_c = float(sys.argv[4])
+
 try:
     print('Building simulation folder')
     os.mkdir(data_path.split("data.json")[0] + "simulations/")
@@ -30,7 +35,7 @@ except FileExistsError:
 def eval_cfd(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    case = data_path.split("data.json")[0] + "simulations/" + ID
+    case = data_path.split('data.json')[0]+'simulations/'+ID
     create_mesh(
         x,
         length=0.0753,
@@ -46,7 +51,4 @@ def eval_cfd(x: dict):
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
-
-mfbo(eval_cfd,data_path,x_bounds,z_bounds,time_budget=64*60*60,gamma=1.5,beta=2.5,p_c=2,gp_ms=8,opt_ms=16,sample_initial=False,int_fidelities=True)
-# mfbo(eval_cfd,data_path,x_bounds,z_bounds,time_budget=64*60*60,gamma=0.5,beta=2.5,p_c=2,gp_ms=8,opt_ms=16,sample_initial=False,int_fidelities=True)
-# mfbo(eval_cfd,data_path,x_bounds,z_bounds,time_budget=64*60*60,gamma=0.5,beta=5,p_c=2,gp_ms=8,opt_ms=16,sample_initial=False,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)
