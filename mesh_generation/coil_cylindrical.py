@@ -97,19 +97,34 @@ def create_circle(d1, d2):
     return x2p + c1[0], y2p + c1[1], z2p + c1[2]
 
 
-def interpolate(y, f, kind, name):
-    # interpolates between a set of points by a factor of f
+def interpolate(y, fac_interp, kind, name):
 
     x = np.linspace(0, len(y), len(y))
-    x_new = np.linspace(0, len(y), len(y) * f)
+    x_new = np.linspace(0, len(y), len(y) * fac_interp)
     f = interp1d(x, y, kind=kind)
     y_new = f(x_new)
+    y = y_new 
+
+    fac = 2
+    cutoff = 0.1
+    x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
+    x_start_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
+    f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
+    y_start_new = f(x_start_new)
+    x_end = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
+    x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
+    f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
+    y_end_new = f(x_end_new)
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+
     # fig,ax = plt.subplots(1,1,figsize=(4,3))
     # fig.tight_layout()
     # ax.scatter(x,y,c='k')
     # ax.set_ylabel(name)
     # ax.plot(x_new,y_new,c='k')
     # plt.savefig('outputs/'+name+'.png')
+
+
     return y_new
 
 
