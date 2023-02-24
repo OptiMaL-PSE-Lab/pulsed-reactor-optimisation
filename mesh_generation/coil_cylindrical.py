@@ -292,13 +292,9 @@ def create_mesh(data, path, n_interp, nominal_data):
     # plt.show()
     # copy existing base mesh folder
     try:
-        shutil.copytree("mesh_generation/mesh", path)
+        os.mkdir("visualiation/website_gif/")
     except:
         print("file already exists...")
     plt.tight_layout()
-    plt.savefig(str(path) + "/pre-render.png", dpi=600)
-
-    # write mesh and run mesh generation script
-    mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-    os.system(path + "/Allrun.mesh")
+    plt.savefig(str(path) + "/single_img.png", dpi=600)
     return
