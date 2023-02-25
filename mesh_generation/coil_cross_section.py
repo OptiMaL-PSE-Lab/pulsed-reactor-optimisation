@@ -8,9 +8,10 @@ from jax.nn import softplus
 from gpjax.config import add_parameter
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
-from mesh_generation.classy_blocks.classes.primitives import Edge
-from mesh_generation.classy_blocks.classes.block import Block
-from mesh_generation.classy_blocks.classes.mesh import Mesh
+sys.path.insert(1, "mesh_generation/classy_blocks/src/")
+from classy_blocks.classes.primitives import Edge
+from classy_blocks.classes.block import Block
+from classy_blocks.classes.mesh import Mesh
 import shutil
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -44,7 +45,7 @@ def angular_distance(x, y, c):
     return jnp.abs((x - y + c) % (c * 2) - c)
 
 
-class Polar(jk.kernels.AbstractKernel):
+class Polar(jk.base.AbstractKernel):
     def __init__(self) -> None:
         super().__init__()
         self.period: float = 2 * jnp.pi
@@ -227,9 +228,12 @@ def interpolate(y, fac_interp, kind):
 def plot_block(block,ax):
     block = np.array(block)
     lines = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
-    # ax.scatter(block[:,0],block[:,1],block[:,2])
-    for l in lines:
-        ax.plot([block[l[0],0],block[l[1],0]],[block[l[0],1],block[l[1],1]],[block[l[0],2],block[l[1],2]],c='k',lw=1)
+
+    cols = ['k','tab:red','tab:blue','tab:green','tab:orange','tab:purple','tab:gray','tab:brown']
+    ax.scatter(block[:,0],block[:,1],block[:,2],c=cols,alpha=1)
+    # for i in range(len(lines)):
+    #     l = lines[i]
+    #     ax.plot([block[l[0],0],block[l[1],0]],[block[l[0],1],block[l[1],1]],[block[l[0],2],block[l[1],2]],c=cols[i],lw=1)
     return 
 
 
@@ -303,33 +307,43 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     col = (212/255,41/255,144/255)
     for i in range(len(p_list[0,0,:])):
 
-        spacing = (len(p_list[:,0,i]))/8
-        starts = np.append(np.linspace(0,(len(p_list[:,0,i])),4,endpoint=False),0)
+        spacing = (len(p_list[:,0,i])+1)/8
+        starts = np.append(np.linspace(0,(len(p_list[:,0,i])+1),4,endpoint=False),0)
+        # for seg in range(4): 
         for seg in range(4): 
-
             s_indices = [starts[seg],starts[seg]+spacing,starts[seg+1]]
+
             if i != len(p_list[0,0,:])-1:
+
                 p1 = [list(p_c_list[int(s),:,i]) for s in s_indices]
                 p2 = [list(p_c_list[int(s),:,i+1]) for s in s_indices]
                 c1 = list(np.mean(p_c_list[:,:,i],axis=0))
                 c2 = list(np.mean(p_c_list[:,:,i+1],axis=0))
                 p1.append(c1)
                 p2.append(c2)
-                block_points = p1+p2
+                block_points = p2+p1
 
                 for ax in axs:
                     plot_block(block_points,ax)
-            
+
+                cols = ['k','tab:red','tab:blue','tab:green','tab:orange','tab:purple','tab:gray','tab:brown']
+                spline_indices = np.arange(starts[seg],starts[seg]+spacing)
+                spline_1 = [list(p_c_list[int(s),:,i+1]) for s in spline_indices]
+                spline_2 = [list(p_c_list[int(s),:,i]) for s in spline_indices]
+                spline_indices = np.append(np.arange(starts[seg]+spacing,starts[seg]+spacing+spacing-1),0)
+                spline_3 = [list(p_c_list[int(s),:,i+1]) for s in spline_indices]
+                spline_4 = [list(p_c_list[int(s),:,i]) for s in spline_indices]
                 block_edges = [
-                        Edge(0, 1, None), 
-                        Edge(4, 5, None),
-                        Edge(2, 3, None),
-                        Edge(6, 7, None),
+                        Edge(4, 5, spline_2), 
+                        Edge(5, 6, spline_4),
+                        Edge(0, 1, spline_1),
+                        Edge(1, 2, spline_3),
                     ]
                 
                 block = Block.create_from_points(block_points, block_edges)
-                for d in range(3):
-                    block.chop(d,count=1)
+                block.chop(0,count=3)
+                block.chop(1,count=3)
+                block.chop(2,count=3)
                 mesh.add_block(block)
 
 
@@ -513,7 +527,7 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
         print("Folder already exists")
 
     plt.subplots_adjust(left=0.01, right=0.99, wspace=0.05, top=0.99, bottom=0.01)
-    plt.savefig(path+'pre_render.png', dpi=200)
+    plt.savefig(path+'pre_render.png', dpi=600)
 
     # run script to create mesh
     print("Writing geometry")
@@ -546,11 +560,11 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 
 # -----------------------------
 
-# n = 8
-# n_cross_section = 8
-# coil_data = {"radius_center":0.001,"length":0.0753,"pitch":0.0075,"coil_rad":0.0085,"fid_axial":10,"fid_radial":2}
+n = 8
+n_cross_section = 8
+coil_data = {"radius_center":0.001,"length":0.0753,"pitch":0.0075,"coil_rad":0.0085,"fid_axial":10,"fid_radial":2}
 
-# cross_section_points = [np.random.uniform(0.0015,0.0035,n_cross_section) for i in range(n)]
-# # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
-# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=True)
+cross_section_points = [np.random.uniform(0.0015,0.0035,n_cross_section) for i in range(n)]
+# cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
+create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=True)
 
