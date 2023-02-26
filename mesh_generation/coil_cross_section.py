@@ -176,12 +176,14 @@ def create_circle(d,radius):
     angles = np.linspace(0,np.pi*2,len(radius),endpoint=False)
     r_mean = np.mean(radius)
     r_std = np.std(radius)
-    if r_std == 0:
-        r_std = -r_mean
+    if r_std != 0:
+        radius = (radius - r_mean)/r_std
+        angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),63)
+        radius  = radius * r_std + r_mean
+    else:
+        angles = np.linspace(0,np.pi*2,63,endpoint=False).reshape(-1,1)
+        radius = np.array([r_mean for i in range(63)])
 
-    radius = (radius - r_mean)/r_std
-    angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),63)
-    radius  = radius * r_std + r_mean
     for i in range(len(radius)):
         if radius[i] != radius[i]:
             radius = radius.at[i].set(r_mean)
@@ -242,8 +244,10 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     pitch = x["pitch"]
     length = x['length']
     r_c = x['radius_center']
+    s_rad = x['start_rad']
 
-
+    interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))]))
+    interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
 
     fid_rad = int(x["fid_radial"])
     fid_ax = int(x["fid_axial"])
@@ -309,7 +313,7 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 
         spacing = (len(p_list[:,0,i])+1)/8
         starts = np.append(np.linspace(0,(len(p_list[:,0,i])+1),4,endpoint=False),0)
-        # for seg in range(4): 
+
         for seg in range(4): 
             s_indices = [starts[seg],starts[seg]+spacing,starts[seg+1]]
 
@@ -323,191 +327,110 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                 p2.append(c2)
                 block_points = p2+p1
 
-                for ax in axs:
-                    plot_block(block_points,ax)
+                # for ax in axs:
+                #     plot_block(block_points,ax)
 
-                cols = ['k','tab:red','tab:blue','tab:green','tab:orange','tab:purple','tab:gray','tab:brown']
-                spline_indices = np.arange(starts[seg],starts[seg]+spacing)
-                spline_1 = [list(p_c_list[int(s),:,i+1]) for s in spline_indices]
-                spline_2 = [list(p_c_list[int(s),:,i]) for s in spline_indices]
-                spline_indices = np.append(np.arange(starts[seg]+spacing,starts[seg]+spacing+spacing-1),0)
-                spline_3 = [list(p_c_list[int(s),:,i+1]) for s in spline_indices]
-                spline_4 = [list(p_c_list[int(s),:,i]) for s in spline_indices]
                 block_edges = [
-                        Edge(4, 5, spline_2), 
-                        Edge(5, 6, spline_4),
-                        Edge(0, 1, spline_1),
-                        Edge(1, 2, spline_3),
+                        Edge(4, 5, None), 
+                        Edge(5, 6, None),
+                        Edge(0, 1, None),
+                        Edge(1, 2, None),
+                    ]
+                block = Block.create_from_points(block_points, block_edges)
+                block.chop(0,count=fid_rad)
+                block.chop(1,count=fid_rad)
+                block.chop(2,count=1)
+                if i == 0:
+                    block.set_patch("top", "inlet")
+                if i == len(p_list[0,0,:])-2:
+                    block.set_patch("bottom", "outlet")
+                mesh.add_block(block)
+
+
+
+                p1_inner = [list(p_c_list[int(s),:,i]) for s in [s_indices[0],s_indices[1]]]
+                p1_outer = [list(p_list[int(s),:,i]) for s in [s_indices[1],s_indices[0]]]
+                p2_inner = [list(p_c_list[int(s),:,i+1]) for s in [s_indices[0],s_indices[1]]]
+                p2_outer = [list(p_list[int(s),:,i+1]) for s in [s_indices[1],s_indices[0]]]
+                block_points = p1_inner+p1_outer+p2_inner+p2_outer
+
+                # for ax in axs:
+                #     plot_block(block_points,ax)
+
+                spline_indices = np.arange(starts[seg],starts[seg]+spacing)
+                spline_1 = [list(p_list[int(s),:,i+1]) for s in spline_indices]
+                spline_2 = [list(p_list[int(s),:,i]) for s in spline_indices]
+                spline_1.reverse()
+                spline_2.reverse()
+
+                block_edges = [
+                        Edge(6, 7, spline_1),
+                        Edge(2, 3, spline_2)
                     ]
                 
                 block = Block.create_from_points(block_points, block_edges)
-                block.chop(0,count=3)
-                block.chop(1,count=3)
-                block.chop(2,count=3)
+                block.chop(0,count=fid_rad)
+                block.chop(1,count=fid_rad)
+                block.chop(2,count=1)
+                if i == 0:
+                    block.set_patch("bottom", "inlet")
+                if i == len(p_list[0,0,:])-2:
+                    block.set_patch("top", "outlet")
+                block.set_patch(["back"], "wall")
+                mesh.add_block(block)
+
+
+                p1_inner = [list(p_c_list[int(s),:,i]) for s in [s_indices[1],s_indices[2]]]
+                p1_outer = [list(p_list[int(s),:,i]) for s in [s_indices[2],s_indices[1]]]
+                p2_inner = [list(p_c_list[int(s),:,i+1]) for s in [s_indices[1],s_indices[2]]]
+                p2_outer = [list(p_list[int(s),:,i+1]) for s in [s_indices[2],s_indices[1]]]
+                block_points = p1_inner+p1_outer+p2_inner+p2_outer
+
+                # for ax in axs:
+                #     plot_block(block_points,ax)
+
+                if seg == 3:
+                    spline_indices = np.append(np.arange(starts[seg]+spacing,starts[seg]+spacing+spacing-1),0)
+                else:
+                    spline_indices = np.arange(starts[seg]+spacing,starts[seg+1])
+                spline_1 = [list(p_list[int(s),:,i+1]) for s in spline_indices]
+                spline_2 = [list(p_list[int(s),:,i]) for s in spline_indices]
+                spline_1.reverse()
+                spline_2.reverse()
+                block_edges = [
+                        Edge(6, 7, spline_1),
+                        Edge(2, 3, spline_2),
+                    ]
+                
+                block = Block.create_from_points(block_points, block_edges)
+                block.chop(0,count=fid_rad)
+                block.chop(1,count=fid_rad)
+                block.chop(2,count=1)
+                if i == 0:
+                    block.set_patch("bottom", "inlet")
+                if i == len(p_list[0,0,:])-2:
+                    block.set_patch("top", "outlet")
+                block.set_patch(["back"], "wall")
                 mesh.add_block(block)
 
 
 
 
-
-        #     block.set_patch(["front"], "wall")
-
         for ax in axs:
 
-            ax.plot3D(p_list[:,0,i], p_list[:,1,i],p_list[:,2,i], color=col, lw=2,zorder=-1)
-            ax.plot3D(p_c_list[:,0,i], p_c_list[:,1,i],p_c_list[:,2,i], color=col, lw=2,zorder=-1)
+            ax.plot3D(p_list[:,0,i], p_list[:,1,i],p_list[:,2,i], color=col, lw=1,alpha=0.5,zorder=-1)
 
-            # if i != len(x_list)-1 and debug != True:
-            #         for j in np.linspace(0, len(x_list[i]) - 1, 10):
-            #             j = int(j)
-            #             ax.plot3D([x_list[i][j], x_list[i+1][j]],[y_list[i][j],y_list[i+1][j]],[z_list[i][j],z_list[i+1][j]], c=col, lw=0.5)
-
-        # calculate x y and z coordinates of inner circle from x y z 
-        # coordinates of outer circle
-        #     
-        
-
-
-        # div = 8
-        # l = np.linspace(0, len(x1), div + 1)[:div].astype(int)
-        # l = np.append(l, 0)
-
-        # c1 = np.mean(np.array([[x1[i], y1[i], z1[i]] for i in range(len(x1))]), axis=0)
-        # c2 = np.mean(np.array([[x2[i], y2[i], z2[i]] for i in range(len(x1))]), axis=0)
-
-        # fa = 0.8
-        # op1 = np.array([[x1[i], y1[i], z1[i]] for i in l])
-        # ip1 = np.array([(fa * op1[i] + (1 - fa) * c1) for i in range(len(l))])
-
-        # op2 = np.array([[x2[i], y2[i], z2[i]] for i in l])
-        # ip2 = np.array([(fa * op2[i] + (1 - fa) * c2) for i in range(len(l))])
-
-        # for i in range(len(l) - 1):
-        #     block_points = [
-        #         op1[i],
-        #         op1[i + 1],
-        #         ip1[i + 1],
-        #         ip1[i],
-        #     ] + [
-        #         op2[i],
-        #         op2[i + 1],
-        #         ip2[i + 1],
-        #         ip2[i],
-        #     ]
-
-        #     if i == len(l) - 2:
-        #         v = l[i] + (l[i] - l[i - 1])
-        #         a = int(l[i] + (v - l[i]) / 2)
-        #     else:
-        #         a = int(l[i] + (l[i + 1] - l[i]) / 2)
-
-        #     # add circular curves at top of cylindrical quadrant
-        #     block_edges = [
-        #         Edge(0, 1, [x1[a], y1[a], z1[a]]),  # arc edges
-        #         Edge(4, 5, [x2[a], y2[a], z2[a]]),
-        #         Edge(2, 3, (fa * np.array([x1[a], y1[a], z1[a]]) + (1 - fa) * c1)),
-        #         Edge(6, 7, (fa * np.array([x2[a], y2[a], z2[a]]) + (1 - fa) * c2)),
-        #     ]
-
-        #     block = Block.create_from_points(block_points, block_edges)
-
-        #     block.set_patch(["front"], "wall")
-
-        #     # partition block
-        #     if p == 1:
-        #         block.set_patch("top", "inlet")
-        #     if p == le - 3:
-        #         block.set_patch("bottom", "outlet")
-
-        #     block.chop(0, count=x["fid_radial"])
-        #     block.chop(1, count=x["fid_radial"])
-        #     block.chop(2, count=2)
-
-        #     mesh.add_block(block)
-
-        # fa_new = 0.6
-        # op1 = ip1
-        # ip1 = np.array([(fa_new * op1[i] + (1 - fa_new) * c1) for i in range(len(l))])
-
-        # op2 = ip2
-        # ip2 = np.array([(fa_new * op2[i] + (1 - fa_new) * c2) for i in range(len(l))])
-
-        # for i in range(len(l) - 1):
-        #     block_points = [
-        #         op1[i],
-        #         op1[i + 1],
-        #         ip1[i + 1],
-        #         ip1[i],
-        #     ] + [
-        #         op2[i],
-        #         op2[i + 1],
-        #         ip2[i + 1],
-        #         ip2[i],
-        #     ]
-
-        #     if i == len(l) - 2:
-        #         v = l[i] + (l[i] - l[i - 1])
-        #         a = int(l[i] + (v - l[i]) / 2)
-        #     else:
-        #         a = int(l[i] + (l[i + 1] - l[i]) / 2)
-
-        #     # add circular curves at top of cylindrical quadrant
-        #     block_edges = [
-        #         Edge(
-        #             0, 1, (fa * np.array([x1[a], y1[a], z1[a]]) + (1 - fa) * c1)
-        #         ),  # arc edges
-        #         Edge(4, 5, (fa * np.array([x2[a], y2[a], z2[a]]) + (1 - fa) * c2)),
-        #         Edge(2, 3, None),
-        #         Edge(6, 7, None),
-        #     ]
-
-        #     block = Block.create_from_points(block_points, block_edges)
-
-        #     # block.set_patch(["front"], "wall")
-
-        #     # partition block
-        #     if p == 1:
-        #         block.set_patch("top", "inlet")
-        #     if p == le - 3:
-        #         block.set_patch("bottom", "outlet")
-
-        #     block.chop(0, count=x["fid_radial"])
-        #     block.chop(1, count=x["fid_radial"])
-        #     block.chop(2, count=2)
-
-        #     mesh.add_block(block)
-
-        # i = 1
-        # for j in range(int(div / 2)):
-        #     # add centre rectangular block
-        #     block_points = [ip1[i - 1], ip1[i], ip1[i + 1], c1] + [
-        #         ip2[i - 1],
-        #         ip2[i],
-        #         ip2[i + 1],
-        #         c2,
-        #     ]
-        #     i += 2
-        #     block_edges = [
-        #         Edge(0, 1, None),  # arc edges
-        #         Edge(4, 5, None),
-        #         Edge(2, 3, None),  # spline edges
-        #         Edge(6, 7, None),
-        #     ]
-        #     block = Block.create_from_points(block_points, block_edges)
-        #     # partition block
-        #     if p == 1:
-        #         block.set_patch("top", "inlet")
-        #     if p == le - 3:
-        #         block.set_patch("bottom", "outlet")
-
-        #     block.chop(0, count=x["fid_radial"])
-        #     block.chop(1, count=x["fid_radial"])
-        #     block.chop(2, count=2)
-
-        #     mesh.add_block(block)
-        # # copy template folder
-
-    # plt.show()
+            if i != len(p_list[0,0,:])-1:
+                for k in np.linspace(0, len(p_list[:,0,i]) - 1, 8):
+                    k = int(k)
+                    ax.plot3D(
+                        [p_list[k,0,i], p_list[k,0,i+1]],
+                        [p_list[k,1,i], p_list[k,1,i+1]],
+                        [p_list[k,2,i], p_list[k,2,i+1]],
+                        c=col,
+                        alpha=0.5,
+                        lw=1,
+                    )
 
     for ax in axs:
         ax.set_box_aspect(
@@ -527,7 +450,7 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
         print("Folder already exists")
 
     plt.subplots_adjust(left=0.01, right=0.99, wspace=0.05, top=0.99, bottom=0.01)
-    plt.savefig(path+'pre_render.png', dpi=600)
+    plt.savefig(path+'/pre_render.png', dpi=600)
 
     # run script to create mesh
     print("Writing geometry")
@@ -560,11 +483,10 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 
 # -----------------------------
 
-n = 8
-n_cross_section = 8
-coil_data = {"radius_center":0.001,"length":0.0753,"pitch":0.0075,"coil_rad":0.0085,"fid_axial":10,"fid_radial":2}
-
-cross_section_points = [np.random.uniform(0.0015,0.0035,n_cross_section) for i in range(n)]
-# cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
-create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=True)
+# n = 6
+# n_cross_section = 6
+# coil_data = {"start_rad":0.00275,"radius_center":0.00125,"length":0.0753,"pitch":0.01,"coil_rad":0.0075,"fid_axial":8,"fid_radial":5}
+# cross_section_points = [np.random.uniform(0.0015,0.0035,n_cross_section) for i in range(n)]
+# # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
+# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=False)
 
