@@ -211,8 +211,8 @@ def calculate_N(value, time, path):
     # obtaining a smooth curve by taking peaks
     theta, etheta = val_to_rtd(time, value, path)
     # fitting value of N
-    s = 10000
-    n0_list = np.logspace(np.log(1), np.log(50), s)
+    s = 100000
+    n0_list = np.logspace(np.log(1), np.log(100), s)
 
     # forgo any optimisation here because this is more robust
     best = np.Inf

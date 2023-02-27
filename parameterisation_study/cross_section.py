@@ -46,7 +46,6 @@ def eval_cfd(x: dict):
 
         x_list.append(np.array(x_add))
 
-
     a = 0.001
     f = 2
     re = 50
@@ -58,11 +57,11 @@ def eval_cfd(x: dict):
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
     N = calculate_N(values, times, case)
-    for i in range(48):
+    for i in range(512):
         shutil.rmtree(case + "/processor" + str(i))
-    # shutil.rmtree(newcase)
+    #shutil.rmtree(newcase)
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=True)

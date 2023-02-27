@@ -4,9 +4,9 @@ import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
-from mesh_generation.classy_blocks.classes.primitives import Edge
-from mesh_generation.classy_blocks.classes.block import Block
-from mesh_generation.classy_blocks.classes.mesh import Mesh
+from classy_blocks.classes.primitives import Edge
+from classy_blocks.classes.block import Block
+from classy_blocks.classes.mesh import Mesh
 import shutil
 
 import matplotlib.pyplot as plt

@@ -16,3 +16,9 @@ visualisation/
 environment_old.yml
 mesh_generation/test
 !images/inversion_demo.png
+plot_data.py
+plot_data.sh
+plot.out
+delete.sh
+parameterisation_study/cylindrical_discrepancy 
+parameterisation_study/cross_section
