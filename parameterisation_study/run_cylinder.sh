@@ -3,7 +3,7 @@
 #PBS -j oe
 #PBS -o parameterisation_study/cylindrical_discrepancy/logs.out
 #PBS -e parameterisation_study/cylindrical_discrepancy/logs.err
-#PBS -lselect=1:ncpus=48:mem=48gb
+#PBS -lselect=1:ncpus=48:mem=64gb
 #PBS -lwalltime=72:00:00
 
 module load anaconda3/personal

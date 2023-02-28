@@ -3,7 +3,7 @@
 #PBS -j oe
 #PBS -o parameterisation_study/cross_section/logs.out
 #PBS -e parameterisation_study/cross_section/logs.err
-#PBS -lselect=16:ncpus=32:mem=64gb
+#PBS -lselect=1:ncpus=48:mem=64gb
 #PBS -lwalltime=72:00:00
 
 module load anaconda3/personal

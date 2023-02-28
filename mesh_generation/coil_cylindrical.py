@@ -4,6 +4,8 @@ import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, "mesh_generation/classy_blocks/src/")
+
 from classy_blocks.classes.primitives import Edge
 from classy_blocks.classes.block import Block
 from classy_blocks.classes.mesh import Mesh
@@ -291,10 +293,21 @@ def create_mesh(data, path, n_interp, nominal_data):
     # plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
     # plt.show()
     # copy existing base mesh folder
-    try:
-        os.mkdir("visualiation/website_gif/")
-    except:
-        print("file already exists...")
     plt.tight_layout()
-    plt.savefig(str(path) + "/single_img.png", dpi=600)
+
+    try:
+        shutil.copytree("mesh_generation/mesh", path)
+    except FileExistsError:
+        print("Folder already exists")
+
+
+    plt.savefig(path + "/pre-render.png", dpi=200)
+
+    # run script to create mesh
+    print("Writing geometry")
+    mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+    print("Running blockMesh")
+    os.system("chmod +x " + path + "/Allrun.mesh")
+    os.system(path + "/Allrun.mesh")
+
     return

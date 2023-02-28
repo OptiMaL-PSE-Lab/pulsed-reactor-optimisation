@@ -25,12 +25,10 @@ for i in range(n):
     nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
     nominal_data["rho_" + str(i)] = rho_vals[i]
 
-a = 0.001
-f = 2
-re = 50
+
 
 z_bounds = {}
-z_bounds["fid_axial"] = [5.51, 25.49]
+z_bounds["fid_axial"] = [9.51, 25.49]
 z_bounds["fid_radial"] = [0.51, 5.49]
 
 x_bounds = {}
@@ -61,14 +59,20 @@ def eval_cfd(x: dict):
         n,
         nominal_data,
     )
+    a = 0.001
+    f = 2
+    re = 50
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
     N = calculate_N(values, times, case)
-    for i in range(48):
-        shutil.rmtree(case + "/processor" + str(i))
+    for i in range(512):
+        try:
+            shutil.rmtree(case + "/processor" + str(i))
+        except:
+            print('no folder here')
     # shutil.rmtree(newcase)
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=True)
