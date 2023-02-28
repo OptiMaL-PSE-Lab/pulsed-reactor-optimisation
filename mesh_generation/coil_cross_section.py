@@ -245,9 +245,16 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     length = x['length']
     r_c = x['radius_center']
     s_rad = x['start_rad']
+    n_dupe = x['n_dupe']
 
-    interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))]))
+    interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
     interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
+
+    c = 0 
+    for i in range(len(interp_points)):
+        for j in range(n_dupe):
+            interp_points.insert(i+c,interp_points[i+c])
+            c += 1
 
     fid_rad = int(x["fid_radial"])
     fid_ax = int(x["fid_axial"])

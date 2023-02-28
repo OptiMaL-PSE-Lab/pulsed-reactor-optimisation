@@ -108,7 +108,7 @@ def interpolate(y, fac_interp, kind, name):
     y = y_new 
 
     fac = 2
-    cutoff = 0.1
+    cutoff = 0.05
     x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
     x_start_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
