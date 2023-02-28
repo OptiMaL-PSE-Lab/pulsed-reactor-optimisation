@@ -16,7 +16,7 @@ nominal_data = {}
 
 
 z_vals = np.linspace(0, h, n)
-theta_vals = np.linspace(0, N, n)
+theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
 rho_vals = [0.0035 for i in range(n)]
 tube_rad_vals = [0.0025 for i in range(n)]
 for i in range(n):
