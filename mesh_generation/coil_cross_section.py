@@ -247,14 +247,15 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     s_rad = x['start_rad']
     n_dupe = x['n_dupe']
 
-    interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
-    interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
 
     c = 0 
     for i in range(len(interp_points)):
         for j in range(n_dupe):
             interp_points.insert(i+c,interp_points[i+c])
             c += 1
+
+    interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
+    interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
 
     fid_rad = int(x["fid_radial"])
     fid_ax = int(x["fid_axial"])
@@ -311,8 +312,8 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     # [circle points, coordinates, number of circles]
 
     if debug == True:
-        p_list= p_list[:,:,:2]
-        p_c_list= p_c_list[:,:,:2]
+        p_list= p_list[:,:,:5]
+        p_c_list= p_c_list[:,:,:5]
 
 
     col = (212/255,41/255,144/255)
@@ -352,8 +353,6 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                 if i == len(p_list[0,0,:])-2:
                     block.set_patch("bottom", "outlet")
                 mesh.add_block(block)
-
-
 
                 p1_inner = [list(p_c_list[int(s),:,i]) for s in [s_indices[0],s_indices[1]]]
                 p1_outer = [list(p_list[int(s),:,i]) for s in [s_indices[1],s_indices[0]]]
@@ -490,10 +489,13 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 
 # -----------------------------
 
-# n = 6
-# n_cross_section = 6
-# coil_data = {"start_rad":0.00275,"radius_center":0.00125,"length":0.0753,"pitch":0.01,"coil_rad":0.0075,"fid_axial":8,"fid_radial":5}
-# cross_section_points = [np.random.uniform(0.0015,0.0035,n_cross_section) for i in range(n)]
+# n = 4
+# n_dupe = 4
+# n_cross_section = 8
+# coils = 2 
+# length = np.pi * 2 * 0.0125 * coils
+# coil_data = {"start_rad":0.0025,"radius_center":0.00075,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 2, "fid_radial": 6,"n_dupe":n_dupe}
+# cross_section_points = [np.random.uniform(0.001,0.004,n_cross_section) for i in range(n)]
 # # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
-# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=False)
+# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=True)
 

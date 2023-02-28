@@ -22,7 +22,7 @@ z_bounds["fid_radial"] = [0.51, 5.49]
 x_bounds = {}
 for i in range(n_circ):
     for j in range(n_cross_section):
-        x_bounds["r_" + str(i)+'_'+str(j)] = [0.001, 0.004]
+        x_bounds["r_" + str(i)+'_'+str(j)] = [0.0015, 0.004]
 
 try:
     data_path = str(sys.argv[1])
