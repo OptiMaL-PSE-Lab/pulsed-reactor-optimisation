@@ -135,17 +135,17 @@ def parse_inputs(NB, f, name):
     return x
 
 
-def create_mesh(data, path, n_interp, nominal_data):
+def create_mesh(data, path, n_interp, nominal_data_og):
     # factor to interpolate between control points
-    interpolation_factor = int(
-        np.rint(data["fid_axial"])
-    )  # interpolate x times the points between
-    fid_radial = int(np.rint(data["fid_radial"]))
+    interpolation_factor =int((data["fid_axial"]))
+    # interpolate x times the points between
+    fid_radial = int((data["fid_radial"]))
 
     keys = ["rho", "theta", "z", "tube_rad"]
 
     # do interpolation between points
     vals = {}
+    nominal_data = nominal_data_og.copy()
     # calculating real values from differences and initial conditions
     for i in range(n_interp):
         nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
@@ -230,7 +230,6 @@ def create_mesh(data, path, n_interp, nominal_data):
             # add to mesh
             block = Block.create_from_points(block_points, block_edges)
             # defined curved top as the wall
-            block.set_patch(["front"], "walls")
 
             # partition block
             block.chop(0, count=data["fid_radial"])
@@ -242,6 +241,7 @@ def create_mesh(data, path, n_interp, nominal_data):
                 block.set_patch("top", "inlet")
             if p == le - 2:
                 block.set_patch("bottom", "outlet")
+            block.set_patch(["front"], "wall")
 
             mesh.add_block(block)
 

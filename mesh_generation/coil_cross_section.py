@@ -223,7 +223,7 @@ def interpolate(y, fac_interp, kind):
     x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff)+1)],y_end_new))
 
     return y_new
 
@@ -239,7 +239,8 @@ def plot_block(block,ax):
     return 
 
 
-def create_mesh(interp_points,x: dict, path: str,debug: bool):
+def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
+    x = x_file.copy()
     coil_rad = x["coil_rad"]
     pitch = x["pitch"]
     length = x['length']

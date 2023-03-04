@@ -12,4 +12,4 @@ module load intel-suite
 
 cd $PBS_O_WORKDIR
 source activate mf_design_env
-python3 -B parameterisation_study/cross_section.py parameterisation_study/cross_section/data.json 1.5 2.5 2
+python3 -B parameterisation_study/cross_section.py parameterisation_study/cross_section/data.json 1.5 1.5 2
