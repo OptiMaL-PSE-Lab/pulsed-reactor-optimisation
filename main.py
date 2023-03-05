@@ -54,6 +54,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
             
             # create sample dict for evaluation
             sample_dict = sample_to_dict(sample, joint_bounds)
+
             # preliminary run info 
             run_info = {
                 "id": "running",
@@ -64,18 +65,21 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
             data["data"].append(run_info)
             save_json(data, data_path)
 
-            # perform function evaluation
-            res = f(sample_dict)
-            run_info = {
-                "id": res["id"],
-                "x": sample_dict,
-                "cost": res["cost"],
-                "obj": res["obj"],
-            }
-            data["data"][-1] = run_info
-            # save to file
-            save_json(data, data_path)
+            # # perform function evaluation
+            # res = f(sample_dict)
+            # run_info = {
+            #     "id": res["id"],
+            #     "x": sample_dict,
+            #     "cost": res["cost"],
+            #     "obj": res["obj"],
+            # }
+            # data["data"][-1] = run_info
+            # # save to file
+            # save_json(data, data_path)
 
+        for d in data['data']:
+            print(d['x']['fid_radial'])
+            print(d['x']['fid_axial'])
     data = read_json(data_path) 
     data['gamma'] = gamma
     data['beta'] = beta

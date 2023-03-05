@@ -135,17 +135,17 @@ def parse_inputs(NB, f, name):
     return x
 
 
-def create_mesh(data, path, n_interp, nominal_data):
+def create_mesh(data, path, n_interp, nominal_data_og):
     # factor to interpolate between control points
-    interpolation_factor = int(
-        np.rint(data["fid_axial"])
-    )  # interpolate x times the points between
-    fid_radial = int(np.rint(data["fid_radial"]))
+    interpolation_factor = data["fid_axial"]  
+    # interpolate x times the points between
+    fid_radial = data["fid_radial"]
 
     keys = ["rho", "theta", "z", "tube_rad"]
 
     # do interpolation between points
     vals = {}
+    nominal_data = nominal_data_og.copy()
     # calculating real values from differences and initial conditions
     for i in range(n_interp):
         nominal_data["rho_" + str(i)] += data["rho_" + str(i)]

@@ -34,6 +34,9 @@ import gpjax as gpx
 
 from PIL import Image
 import imageio
+from matplotlib import rc
+rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
+
 
 
 key = jr.PRNGKey(10)
@@ -169,11 +172,13 @@ def create_center_circle(d,r):
     x,y,z = rotate_xyz(x,y,z,t,t_x,c_x,c_y,c_z)
     return x,y,z
 
-def create_circle(d,radius):
+def create_circle(d,radius_og):
     # from a centre, radius, and z rotation,
     #  create the points of a circle
     c_x, c_y, t, t_x, c_z = d
-    angles = np.linspace(0,np.pi*2,len(radius),endpoint=False)
+    radius = radius_og.copy()
+    angles_og = np.linspace(0,np.pi*2,len(radius),endpoint=False)
+    angles = angles_og.copy()
     r_mean = np.mean(radius)
     r_std = np.std(radius)
     if r_std != 0:
@@ -190,12 +195,19 @@ def create_circle(d,radius):
 
     angles = angles[:,0]
 
-    z = radius * np.cos(angles) + c_z
-    x = radius * np.sin(angles) + c_x
-    y = [c_y for i in range(len(x))]
-    x,y,z = rotate_xyz(x,y,z,t,t_x,c_x,c_y,c_z)
+    z_n = radius * np.cos(angles) 
+    x_n = radius * np.sin(angles) 
+    y_n = [c_y for i in range(len(x_n))]
+    x,y,z = rotate_xyz(x_n+ c_x,y_n,z_n+c_z,t,t_x,c_x,c_y,c_z)
 
-    return x, y, z
+    # x = r × cos( θ )
+    # y = r × sin( θ )
+    x_p = [radius_og[i] * np.sin(angles_og[i]) + c_x for i in range(len(radius_og))] 
+    z_p = [radius_og[i] * np.cos(angles_og[i]) + c_z for i in range(len(radius_og))]
+    y_p = [c_y for i in range(len(radius_og))]
+
+    x_p,y_p,z_p = rotate_xyz(x_p,y_p,z_p,t,t_x,c_x,c_y,c_z)
+    return x, y, z,x_p,y_p,z_p,x_n,z_n
 
 
 def cylindrical_convert(r, theta, z):
@@ -206,36 +218,39 @@ def cylindrical_convert(r, theta, z):
     return x, y, z
 
 
-def interpolate(y, fac_interp, kind):
+def interpolate(y, fac_interp, kind, split_start ):
 
     x = np.linspace(0, len(y), len(y))
     x_new = np.linspace(0, len(y), len(y) * fac_interp)
     f = interp1d(x, y, kind=kind)
     y_new = f(x_new)
     y = y_new 
-    fac = 2
-    cutoff = 0.1
-    x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
-    x_start_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
-    f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
-    y_start_new = f(x_start_new)
-    x_end = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
-    x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
-    f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
-    y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+
+    if split_start == True:
+        fac = 2
+        cutoff = 0.2
+
+        x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
+        x_start_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
+        f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
+        y_start_new = f(x_start_new)
+        x_end = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
+        x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
+        f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
+        y_end_new = f(x_end_new)
+        y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff)+1)],y_end_new))
 
     return y_new
 
 def plot_block(block,ax):
     block = np.array(block)
     lines = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
-
     cols = ['k','tab:red','tab:blue','tab:green','tab:orange','tab:purple','tab:gray','tab:brown']
-    ax.scatter(block[:,0],block[:,1],block[:,2],c=cols,alpha=1)
-    # for i in range(len(lines)):
-    #     l = lines[i]
-    #     ax.plot([block[l[0],0],block[l[1],0]],[block[l[0],1],block[l[1],1]],[block[l[0],2],block[l[1],2]],c=cols[i],lw=1)
+    # ax.scatter(block[:,0],block[:,1],block[:,2],c='colks',alpha=1)
+    for i in range(len(lines)):
+        l = lines[i]
+        ax.plot([block[l[0],0],block[l[1],0]],[block[l[0],1],block[l[1],1]],[block[l[0],2],block[l[1],2]],c='tab:blue',lw=2,alpha=0.25)
+    
     return 
 
 
@@ -247,6 +262,7 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     s_rad = x['start_rad']
     n_dupe = x['n_dupe']
 
+    OG_n = len(interp_points)
 
     c = 0 
     for i in range(len(interp_points)):
@@ -285,39 +301,179 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
     
     mesh = Mesh()
 
-    fig, axs = plt.subplots(1, 3, figsize=(10, 4), subplot_kw=dict(projection="3d"))
+
+    fig, axs = plt.subplots(1, 3, figsize=(10, 3), subplot_kw=dict(projection="3d"))
     fig.tight_layout()
+
+
+
+    axs[0].view_init(0, 270)
+    axs[1].view_init(0, 180)
+    axs[2].view_init(270, 0)
+
+
+    try:
+        shutil.copytree("mesh_generation/mesh", path)
+    except FileExistsError:
+        print("Folder already exists")
+
+    plt.subplots_adjust(left=0.01, right=0.99, wspace=0.05, top=0.99, bottom=0.01)
 
     p_list = []
     p_c_list = []
+    p_interp = []
     for i in tqdm(range(n)):
-        x, y, z = create_circle(
+        x, y, z,x_p,y_p,z_p,x_n,z_n = create_circle(
             [data[keys[j]][i] for j in range(len(keys))],interp_points[i]
         )
+        for ax in axs:
+            ax.scatter(x_p, y_p, z_p, c="k", alpha=1,s=10)
+            
+
+
         x_c, y_c, z_c = create_center_circle(
             [data[keys[j]][i] for j in range(len(keys))],r_c
         )
         p_list.append([x,y,z])
+        p_interp.append([x_n,z_n])
         p_c_list.append([x_c,y_c,z_c])
 
+    for ax in axs:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.grid()
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+    plt.savefig(path+'/points.pdf', dpi=600)
     p_list = np.asarray(p_list)
     p_c_list = np.asarray(p_c_list)
+    p_interp = np.asarray(p_interp)
 
-    p_new_list= [([interpolate(p_list[:,j,i], fid_ax, "quadratic") for j in range(3)]) for i in range(len(p_list[0,0,:]))]
-    p_c_new_list= [([interpolate(p_c_list[:,j,i], fid_ax, "quadratic") for j in range(3)]) for i in range(len(p_c_list[0,0,:]))]
+    for i in range(n):
+        for ax in axs:
+            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=1,lw=1)
+    
+
+    figc,axsc = plt.subplots(1,OG_n,figsize=(14,4),subplot_kw=dict(projection='polar'),sharey=True)
+    figc.tight_layout()
+    gridspec = fig.add_gridspec(1, 1)
+    angles = np.linspace(0,2*np.pi,len(interp_points[0]),endpoint=False)
+    indices = [1+(n_dupe+1)*i for i in range(OG_n)]
+
+    for i in range(OG_n):
+        axsc[i].set_yticks([0,0.001,0.002,0.003,0.004],[])
+        axsc[i].set_xticks(np.linspace(0,2*np.pi,8,endpoint=False),[])
+
+        axsc[i].set_ylim(0,0.004)
+        axsc[i].scatter(angles, interp_points[indices[i]], alpha=1,c='k')
+        x = p_interp[indices[i],0,:] 
+        z = p_interp[indices[i],1,:] 
+        #convert x and z to polar coordinates
+        r = np.sqrt(x**2 + z**2)
+        theta = np.arctan2(x,z)
+
+        axsc[i].plot(theta, r, alpha=1,c='k',lw=2)
+
+    figc.savefig(path+'/points_short.pdf', dpi=600)
+
+    for ax in axs:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.grid()
+    fig.savefig(path+'/gp_slices.pdf', dpi=600)
+
+    p_new_list= [([interpolate(p_list[:,j,i], fid_ax, "quadratic",split_start=False) for j in range(3)]) for i in range(len(p_list[0,0,:]))]
+    p_c_new_list= [([interpolate(p_c_list[:,j,i], fid_ax, "quadratic",split_start=False) for j in range(3)]) for i in range(len(p_c_list[0,0,:]))]
 
     p_list = np.asarray(p_new_list)
     p_c_list = np.asarray(p_c_new_list)
 
+    for i in range(len(p_list[:,0,i])):
+        for ax in axs:
+            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.2,lw=1)
+
+    for ax in axs:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.grid()
+    fig.savefig(path+'/interpolated.pdf', dpi=600)
+
     # [circle points, coordinates, number of circles]
 
+    fig_i, axs_i = plt.subplots(1, 3, figsize=(10, 3), subplot_kw=dict(projection="3d"))
+    fig_i.tight_layout()
+
+    axs_i[0].view_init(0, 270)
+    axs_i[1].view_init(0, 180)
+    axs_i[2].view_init(270, 0)
+
+    for i in range(len(p_list[:,0,i])):
+        for ax in axs_i:
+            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.2,lw=1)
+
+
+    for ax in axs_i:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.grid()
+    plt.savefig(path+'/interpolated_clean.pdf', dpi=600)
+
     if debug == True:
-        p_list= p_list[:,:,:5]
-        p_c_list= p_c_list[:,:,:5]
+        p_list= p_list[:,:,:3]
+        p_c_list= p_c_list[:,:,:3]
 
 
     col = (212/255,41/255,144/255)
+    col = 'k'
+
+    fig, axs = plt.subplots(1, 3, figsize=(10, 3), subplot_kw=dict(projection="3d"))
+    fig.tight_layout()
+
+    axs[0].view_init(0, 270)
+    axs[1].view_init(0, 180)
+    axs[2].view_init(270, 0)
+
+    for ax in axs:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+
     for i in range(len(p_list[0,0,:])):
+        if i < 3:
+            for ax in axs:
+                ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c=col, alpha=1,lw=2)
 
         spacing = (len(p_list[:,0,i])+1)/8
         starts = np.append(np.linspace(0,(len(p_list[:,0,i])+1),4,endpoint=False),0)
@@ -334,6 +490,9 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                 p1.append(c1)
                 p2.append(c2)
                 block_points = p2+p1
+                if i < 2:
+                    for ax in axs:
+                        plot_block(block_points,ax)
 
                 # for ax in axs:
                 #     plot_block(block_points,ax)
@@ -360,6 +519,9 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                 p2_outer = [list(p_list[int(s),:,i+1]) for s in [s_indices[1],s_indices[0]]]
                 block_points = p1_inner+p1_outer+p2_inner+p2_outer
 
+                if i < 2:
+                    for ax in axs:
+                        plot_block(block_points,ax)
                 # for ax in axs:
                 #     plot_block(block_points,ax)
 
@@ -392,6 +554,9 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                 p2_outer = [list(p_list[int(s),:,i+1]) for s in [s_indices[2],s_indices[1]]]
                 block_points = p1_inner+p1_outer+p2_inner+p2_outer
 
+                if i < 2:
+                    for ax in axs:
+                        plot_block(block_points,ax)
                 # for ax in axs:
                 #     plot_block(block_points,ax)
 
@@ -418,45 +583,18 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
                     block.set_patch("top", "outlet")
                 block.set_patch(["back"], "wall")
                 mesh.add_block(block)
-
-
-
-
-        for ax in axs:
-
-            ax.plot3D(p_list[:,0,i], p_list[:,1,i],p_list[:,2,i], color=col, lw=1,alpha=0.5,zorder=-1)
-
-            if i != len(p_list[0,0,:])-1:
-                for k in np.linspace(0, len(p_list[:,0,i]) - 1, 8):
-                    k = int(k)
-                    ax.plot3D(
-                        [p_list[k,0,i], p_list[k,0,i+1]],
-                        [p_list[k,1,i], p_list[k,1,i+1]],
-                        [p_list[k,2,i], p_list[k,2,i+1]],
-                        c=col,
-                        alpha=0.5,
-                        lw=1,
-                    )
-
-    for ax in axs:
-        ax.set_box_aspect(
-            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
-        )
-        ax.set_axis_off()
-
-
-    axs[0].view_init(30, 310)
-    axs[1].view_init(0, 210)
-    axs[2].view_init(240, 0)
-
-
-    try:
-        shutil.copytree("mesh_generation/mesh", path)
-    except FileExistsError:
-        print("Folder already exists")
-
-    plt.subplots_adjust(left=0.01, right=0.99, wspace=0.05, top=0.99, bottom=0.01)
-    plt.savefig(path+'/pre_render.png', dpi=600)
+        if i == 2:
+            for ax in axs:
+                ax.set_box_aspect(
+                    [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+                )
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_zticks([])
+                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+            plt.savefig(path+'/blocks.pdf', dpi=600)
 
     # run script to create mesh
     print("Writing geometry")
@@ -475,15 +613,15 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 # a = np.linspace(0,1,30)
 # for i in range(30):
 #     combo = [(1-a[i])*cross_section[j][:] + a[i]*cross_section_points[j][:] for j in range(n)]
-#     create_mesh(combo,coil_data,'mesh_generation/test/'+str(i)+'.png')
+#     create_mesh(combo,coil_data,'mesh_generation/test/'+str(i)+'.pdf')
 
 
 
 # images = [] # creating image array
 # for i in range(30): # iterating over images
-#     im = Image.open('mesh_generation/test/'+str(i)+'.png')
+#     im = Image.open('mesh_generation/test/'+str(i)+'.pdf')
 #     images.append(im)
-#     os.remove('mesh_generation/test/'+str(i)+'.png') # this then deletes the image file from the folder
+#     os.remove('mesh_generation/test/'+str(i)+'.pdf') # this then deletes the image file from the folder
 # imageio.mimsave('mesh_generation/test/res.gif', images, format='GIF-PIL', quantizer=0) # this then saves the array of images as a gif
 
 
@@ -492,10 +630,11 @@ def create_mesh(interp_points,x: dict, path: str,debug: bool):
 # n = 4
 # n_dupe = 4
 # n_cross_section = 8
-# coils = 2 
+# coils = 1
 # length = np.pi * 2 * 0.0125 * coils
-# coil_data = {"start_rad":0.0025,"radius_center":0.00075,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 2, "fid_radial": 6,"n_dupe":n_dupe}
-# cross_section_points = [np.random.uniform(0.001,0.004,n_cross_section) for i in range(n)]
+# key = jr.PRNGKey(10)
+# coil_data = {"start_rad":0.0025,"radius_center":0.0015,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 8, "fid_radial": 4,"n_dupe":n_dupe}
+# cross_section_points = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n)]
 # # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
-# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=True)
+# create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=False)
 
