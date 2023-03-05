@@ -117,7 +117,7 @@ def interpolate(y, fac_interp, kind, name):
     x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff)+1)],y_end_new))
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff)+1)],y_end_new))
 
     # fig,ax = plt.subplots(1,1,figsize=(4,3))
     # fig.tight_layout()
