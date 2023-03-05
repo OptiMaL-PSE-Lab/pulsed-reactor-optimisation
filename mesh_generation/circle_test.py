@@ -6,6 +6,14 @@ import math
 
 
 def rotate_z(x0, y0, z0, r_z):
+    """
+    Rotate a point cloud about the z axis
+    :param x0: x coordinates
+    :param y0: y coordinates
+    :param z0: z coordinates
+    :param r_z: rotation angle
+    :return: rotated point cloud
+    """
     x = np.array(x0) - np.mean(x0)
     y = np.array(y0) - np.mean(y0)
     x_new = x * np.cos(r_z) - y * np.sin(r_z)
@@ -16,6 +24,14 @@ def rotate_z(x0, y0, z0, r_z):
 
 
 def rotate_x(x0, y0, z0, r_x):
+    """
+    Rotate a point cloud about the x axis
+    :param x0: x coordinates
+    :param y0: y coordinates
+    :param z0: z coordinates
+    :param r_x: rotation angle
+    :return: rotated point cloud
+    """
     y = np.array(y0) - np.mean(y0)
     z = np.array(z0) - np.mean(z0)
     y_new = y * np.cos(r_x) - z * np.sin(r_x)
@@ -26,6 +42,14 @@ def rotate_x(x0, y0, z0, r_x):
 
 
 def rotate_y(x0, y0, z0, r_y):
+    """
+    Rotate a point cloud about the y axis
+    :param x0: x coordinates
+    :param y0: y coordinates
+    :param z0: z coordinates
+    :param r_y: rotation angle
+    :return: rotated point cloud
+    """
     x = np.array(x0) - np.mean(x0)
     z = np.array(z0) - np.mean(z0)
     z_new = z * np.cos(r_y) - x * np.sin(r_y)
@@ -36,6 +60,13 @@ def rotate_y(x0, y0, z0, r_y):
 
 
 def cylindrical_convert(r, theta, z):
+    """
+    Convert cylindrical coordinates to cartesian coordinates
+    :param r: radius
+    :param theta: angle
+    :param z: z coordinate
+    :return: x, y, z coordinates
+    """
     x = r * np.cos(theta)
     y = r * np.sin(theta)
     z = z
@@ -43,7 +74,18 @@ def cylindrical_convert(r, theta, z):
 
 
 def create_circle(rho, theta, r, z):
+    """
+    Create a circle from cylindrical coordinates
+    :param rho: radius
+    :param theta: angle
+    :param r: radius of circle
+    :param z: z coordinate
+    :return: x, y, z coordinates
+    """
+
+    # Convert to cartesian coordinates
     c_x, c_y, c_z = cylindrical_convert(rho, theta, z)
+    # Create circle
     alpha = np.linspace(0, 2 * np.pi, 100)
     y = r * np.cos(alpha) + c_y
     x = r * np.sin(alpha) + c_x

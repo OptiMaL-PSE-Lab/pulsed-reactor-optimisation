@@ -12,6 +12,7 @@ time_gp_test.py
 todo 
 pulsed_flow_helical_tube/**/
 *data.json
+debug.vtk
 visualisation/
 environment_old.yml
 mesh_generation/test
