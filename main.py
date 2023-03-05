@@ -6,11 +6,27 @@ from utils_gp import *
 
 
 def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2, gp_ms=16,opt_ms=32,sample_initial=True,int_fidelities=False):
+
     """
-    1. TIME BUDGET DISREGARDS INITIAL SAMPLES 
+    # Multi-fidelity Bayesian Optimisation with stopping criteria and cost adjustment
+    ## Inputs
+    - f: function to be optimised
+    - data_path: path to json file to save data to
+    - x_bounds: bounds for the input space as a dictionary 
+        - e.g. {"x1": [0, 1], "x2": [0, 1]}
+    - z_bounds: bounds for the fidelity space
+        - e.g. {"z1": [0, 1], "z2": [0, 1]}
+    - time_budget: time budget for the optimisation in seconds 
+    - gamma: gamma parameter for the cost-adjusted acquisition function
+    - beta: beta parameter for the cost-adjusted acquisition function
+    - p_c: p_c parameter for deciding termination
+    - gp_ms: number of multi-starts to use when maximising NLL of GP
+    - opt_ms: number of multi-starts to use when maximising acquisition function
+    - sample_initial: number of initial samples to take, if False then will carry on from file
+    - int_fidelities: whether to round fidelity values to nearest integer
     """
 
-    
+
     # if carrying on from file
     if sample_initial == False:
         # read file

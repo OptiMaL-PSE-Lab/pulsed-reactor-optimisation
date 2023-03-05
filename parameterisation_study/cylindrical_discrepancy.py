@@ -28,13 +28,13 @@ for i in range(n):
 
 
 z_bounds = {}
-z_bounds["fid_axial"] = [9.51, 20.49]
-z_bounds["fid_radial"] = [1.75, 5.49]
+z_bounds["fid_axial"] = [9.55, 20.45]
+z_bounds["fid_radial"] = [3.55, 7.45]
 
 x_bounds = {}
 for i in range(n):
     x_bounds["rho_" + str(i)] = [-0.0075, 0.0025]
-    x_bounds["z_" + str(i)] = [-0.0025, 0.0025]
+    x_bounds["z_" + str(i)] = [-0.002, 0.002]
 
 try:
     data_path = str(sys.argv[1])
@@ -67,18 +67,15 @@ def eval_cfd(x: dict):
     a = 0.001
     f = 2
     re = 50
-    #parse_conditions_given(case, a, f, re)
-    #times, values = run_cfd(case)
-    #N = calculate_N(values, times, case)
-    for i in range(512):
-        try:
-            shutil.rmtree(case + "/processor" + str(i))
-        except:
-            print('no folder here')
+    parse_conditions_given(case, a, f, re)
+    times, values = run_cfd(case)
+    N = calculate_N(values, times, case)
+    for i in range(48):
+        shutil.rmtree(case + "/processor" + str(i))
     # shutil.rmtree(newcase)
     end = time.time()
     return {"obj": 0, "cost": end - start, "id": ID}
     #return {"obj": N, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=True)

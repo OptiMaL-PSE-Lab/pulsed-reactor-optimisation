@@ -108,7 +108,7 @@ def interpolate(y, fac_interp, kind, name):
     y = y_new 
 
     fac = 2
-    cutoff = 0.05
+    cutoff = 0.2
     x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
     x_start_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
@@ -117,7 +117,7 @@ def interpolate(y, fac_interp, kind, name):
     x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff))],y_end_new))
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff)+1)],y_end_new))
 
     # fig,ax = plt.subplots(1,1,figsize=(4,3))
     # fig.tight_layout()
@@ -137,9 +137,9 @@ def parse_inputs(NB, f, name):
 
 def create_mesh(data, path, n_interp, nominal_data_og):
     # factor to interpolate between control points
-    interpolation_factor = data["fid_axial"]  
+    interpolation_factor =int((data["fid_axial"]))
     # interpolate x times the points between
-    fid_radial = data["fid_radial"]
+    fid_radial = int((data["fid_radial"]))
 
     keys = ["rho", "theta", "z", "tube_rad"]
 
@@ -230,7 +230,6 @@ def create_mesh(data, path, n_interp, nominal_data_og):
             # add to mesh
             block = Block.create_from_points(block_points, block_edges)
             # defined curved top as the wall
-            block.set_patch(["front"], "walls")
 
             # partition block
             block.chop(0, count=data["fid_radial"])
@@ -242,6 +241,7 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                 block.set_patch("top", "inlet")
             if p == le - 2:
                 block.set_patch("bottom", "outlet")
+            block.set_patch(["front"], "wall")
 
             mesh.add_block(block)
 

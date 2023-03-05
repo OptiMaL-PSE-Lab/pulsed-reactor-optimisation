@@ -254,7 +254,8 @@ def plot_block(block,ax):
     return 
 
 
-def create_mesh(interp_points,x: dict, path: str,debug: bool):
+def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
+    x = x_file.copy()
     coil_rad = x["coil_rad"]
     pitch = x["pitch"]
     length = x['length']

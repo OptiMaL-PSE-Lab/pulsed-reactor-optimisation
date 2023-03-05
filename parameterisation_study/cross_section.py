@@ -13,16 +13,16 @@ n_dupe = 4
 n_cross_section = 8
 coils = 2 
 length = np.pi * 2 * 0.0125 * coils
-coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5,"n_dupe":n_dupe}
+coil_data = {"start_rad":0.0025,"radius_center":0.0015,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5,"n_dupe":n_dupe}
 z_bounds = {}
-z_bounds["fid_axial"] = [2.51, 8.49]
-z_bounds["fid_radial"] = [0.51, 5.49]
+z_bounds["fid_axial"] = [4.55, 12.45]
+z_bounds["fid_radial"] = [2.55, 6.45]
 
 
 x_bounds = {}
 for i in range(n_circ):
     for j in range(n_cross_section):
-        x_bounds["r_" + str(i)+'_'+str(j)] = [0.0015, 0.004]
+        x_bounds["r_" + str(i)+'_'+str(j)] = [0.002, 0.003]
 
 try:
     data_path = str(sys.argv[1])
@@ -74,14 +74,11 @@ def eval_cfd(x: dict):
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
     N = calculate_N(values, times, case)
-    for i in range(512):
-        try:
-            shutil.rmtree(case + "/processor" + str(i))
-        except:
-            print('no folder here')
+    for i in range(48):
+        shutil.rmtree(case + "/processor" + str(i))
     #shutil.rmtree(newcase)
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=False)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=True)
