@@ -13,6 +13,8 @@ import shutil
 
 import matplotlib.pyplot as plt
 import math
+from matplotlib import rc
+rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
 
 
 def rotate_z(x0, y0, z0, r_z):
@@ -117,14 +119,7 @@ def interpolate(y, fac_interp, kind, name):
     x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff)+1)],y_end_new))
-
-    # fig,ax = plt.subplots(1,1,figsize=(4,3))
-    # fig.tight_layout()
-    # ax.scatter(x,y,c='k')
-    # ax.set_ylabel(name)
-    # ax.plot(x_new,y_new,c='k')
-    # plt.savefig('outputs/'+name+'.png')
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
 
 
     return y_new
@@ -136,6 +131,11 @@ def parse_inputs(NB, f, name):
 
 
 def create_mesh(data, path, n_interp, nominal_data_og):
+
+    try:
+        shutil.copytree("mesh_generation/mesh", path)
+    except FileExistsError:
+        print("Folder already exists")
     # factor to interpolate between control points
     interpolation_factor =int((data["fid_axial"]))
     # interpolate x times the points between
@@ -147,21 +147,71 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     vals = {}
     nominal_data = nominal_data_og.copy()
     # calculating real values from differences and initial conditions
+
+    fig = plt.figure(figsize=(12,7))
+    axs = []
+    for i in range(3):
+        axs.append(fig.add_subplot(2, 3, i+1))
+
+    for i in range(3):
+        axs.append(fig.add_subplot(2, 3, i+4, projection='3d'))
+    
+    fig.tight_layout()
+    plt.subplots_adjust(left=0.075,bottom=0.05,wspace=0.3,hspace=0.3)
+    x_ax = np.linspace(0,1,n_interp) * 100 
+
+    for ax in axs[:3]:
+        ax.set_xlabel('Coil Length (%)',fontsize=14)
+    
+    axs[0].set_ylabel('z',fontsize=14)
+    axs[1].set_ylabel(r'$\rho$',fontsize=14)
+    axs[2].set_ylabel(r'$\theta$',fontsize=14)
+
+    axs[0].plot(x_ax,[nominal_data['z_'+str(i)] for i in range(n_interp)],c='k')
+    axs[1].plot(x_ax,[nominal_data['rho_'+str(i)] for i in range(n_interp)],c='k')
+    axs[2].plot(x_ax,[nominal_data['theta_'+str(i)] for i in range(n_interp)],c='r')
+
+
+    axs[0].scatter(x_ax,[nominal_data['z_'+str(i)]+data['z_'+str(i)] for i in range(n_interp)],c='k',lw=2)
+    axs[1].scatter(x_ax,[nominal_data['rho_'+str(i)]+data['rho_'+str(i)] for i in range(n_interp)],c='k',lw=2)
+    for i in range(n_interp):
+        axs[0].plot([x_ax[i],x_ax[i]],[nominal_data['z_'+str(i)],nominal_data['z_'+str(i)]+data['z_'+str(i)]],c='k',ls='dashed')
+        axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
+
+    
+
     for i in range(n_interp):
         nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
         nominal_data["z_" + str(i)] += data["z_" + str(i)]
 
     data = nominal_data
-
+    data_og = nominal_data_og
+    vals_og = {}
     for k in keys:
         data[k] = [data[k + "_" + str(i)] for i in range(n_interp)]
         vals[k] = parse_inputs(data[k], interpolation_factor, k)
+        data_og[k] = [data_og[k + "_" + str(i)] for i in range(n_interp)]
+        vals_og[k] = parse_inputs(nominal_data_og[k],interpolation_factor,k)
 
+    len_v = int(len(vals['z']))
+    start_x = np.linspace(0,20,int(np.rint((len_v/1.4)*0.4)),endpoint=False)
+    end_x = np.linspace(80,100,int((len_v/1.4)*0.4))
+    mid_x = np.linspace(20,80,int((len_v/1.4)*0.6),endpoint=False)
+    x_ax = np.concatenate((start_x,mid_x,end_x))
+    axs[0].plot(x_ax,vals['z'],c='tab:red')
+    axs[1].plot(x_ax,vals['rho'],c='tab:red')
+
+    x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
+    for ax in axs[3:]:
+        ax.plot(x,y,z,c='k',lw=1)
+
+
+    #plt.savefig(path+'/interp.pdf')
     le = len(vals["z"])
     data = vals
     data["fid_radial"] = fid_radial
     mesh = Mesh()
-    fig, axs = plt.subplots(1, 3, figsize=(9, 4), subplot_kw=dict(projection="3d"))
+    fig_p, axs_p = plt.subplots(1, 3, figsize=(9, 4), subplot_kw=dict(projection="3d"))
 
     for p in range(1, le - 1):
         # get proceeding circle (as x,y,z samples)
@@ -176,7 +226,7 @@ def create_mesh(data, path, n_interp, nominal_data_og):
             [data[keys[i]][p + 1] for i in range(len(keys))],
         )
         # plot for reference
-        for ax in axs:
+        for ax in axs_p:
             ax.plot3D(x2, y2, z2, c="k", lw=0.5)
             ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
             for i in np.linspace(0, len(x1) - 1, 10):
@@ -190,10 +240,14 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         centre1 = np.mean(
             np.array([[x1[i], y1[i], z1[i]] for i in range(len(x1))]), axis=0
         )
+
         # centre of circle 2
         centre2 = np.mean(
             np.array([[x2[i], y2[i], z2[i]] for i in range(len(x1))]), axis=0
         )
+
+        for ax in axs[3:]:
+            ax.plot([centre1[0],centre2[0]],[centre1[1],centre2[1]],[centre1[2],centre2[2]],c='tab:red',lw=2)
 
         b = [0, 1, 2, 3, 0]
 
@@ -269,39 +323,51 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         mesh.add_block(block)
 
     # save matlpotlib plot for easy debugging
-    for ax in axs:
+    for ax in axs_p:
         ax.set_box_aspect(
             [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
         )
         ax.set_xticks([])
         ax.set_yticks([])
         ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
-    # axs[0].set_xlabel("x")
-    # axs[0].set_zlabel("z")
+    for ax in axs[3:]:
+        ax.set_box_aspect(
+            [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
-    # axs[1].set_ylabel("y")
-    # axs[1].set_zlabel("z")
+    axs[3].set_xlabel("x",fontsize=14)
+    axs[3].set_zlabel("z",fontsize=14)
 
-    # axs[2].set_ylabel("y")
-    # axs[2].set_xlabel("x")
+    axs[4].set_ylabel("y",fontsize=14)
+    axs[4].set_zlabel("z",fontsize=14)
 
-    axs[0].view_init(0, 270)
-    axs[1].view_init(0, 180)
-    axs[2].view_init(270, 0)
+    axs[5].set_ylabel("y",fontsize=14)
+    axs[5].set_xlabel("x",fontsize=14)
 
+    axs[3].view_init(0, 270)
+    axs[4].view_init(0, 180)
+    axs[5].view_init(270, 0)
+
+    axs_p[0].view_init(0, 270)
+    axs_p[1].view_init(0, 180)
+    axs_p[2].view_init(270, 0)
     # plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
     # plt.show()
     # copy existing base mesh folder
-    plt.tight_layout()
+    fig.tight_layout()
 
-    try:
-        shutil.copytree("mesh_generation/mesh", path)
-    except FileExistsError:
-        print("Folder already exists")
-
-
-    plt.savefig(path + "/pre-render.png", dpi=200)
+    fig_p.savefig(path + "/pre-render.pdf", dpi=200)
+    fig.savefig(path + "/interp.pdf", dpi=200)
 
     # run script to create mesh
     print("Writing geometry")
@@ -311,3 +377,28 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     os.system(path + "/Allrun.mesh")
 
     return
+
+coils = 2  # number of coils
+h = coils * 0.0103  # max height
+N = 2 * np.pi * coils  # angular turns (radians)
+n = 8  # points to use
+
+data = {}
+nominal_data = {}
+
+
+z_vals = np.linspace(0, h, n)
+theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
+rho_vals = [0.0125 for i in range(n)]
+tube_rad_vals = [0.0025 for i in range(n)]
+data['fid_radial'] = 4
+data['fid_axial'] = 10
+for i in range(n):
+    nominal_data["z_" + str(i)] = z_vals[i]
+    data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+    data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
+    nominal_data["theta_" + str(i)] = theta_vals[i]
+    nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+    nominal_data["rho_" + str(i)] = rho_vals[i]
+
+create_mesh(data,'mesh_generation/test',n,nominal_data)
