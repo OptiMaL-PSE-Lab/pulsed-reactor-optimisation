@@ -66,7 +66,8 @@ def eval_cfd(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     case = data_path.split("data.json")[0] + "simulations/" + ID
-    create_mesh(x_list,coil_data,case,debug=False)
+
+    create_mesh(x_list,coil_data.copy(),case,debug=False)
 
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)

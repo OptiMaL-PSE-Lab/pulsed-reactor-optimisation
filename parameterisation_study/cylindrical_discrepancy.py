@@ -62,7 +62,7 @@ def eval_cfd(x: dict):
         x,
         case,
         n,
-        nominal_data,
+        nominal_data.copy(),
     )
     a = 0.001
     f = 2

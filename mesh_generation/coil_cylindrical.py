@@ -120,14 +120,15 @@ def interpolate(y, fac_interp, kind, name):
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
     y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+    x_new = np.concatenate((x_start_new,x[int(len(y)*cutoff):int(len(y)*(1-cutoff))],x_end_new))
 
 
-    return y_new
+    return y_new,x_new
 
 
 def parse_inputs(NB, f, name):
-    x = interpolate(NB, f, "quadratic", name)
-    return x
+    y,x = interpolate(NB, f, "quadratic", name)
+    return y,x
 
 
 def create_mesh(data, path, n_interp, nominal_data_og):
@@ -189,15 +190,10 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     vals_og = {}
     for k in keys:
         data[k] = [data[k + "_" + str(i)] for i in range(n_interp)]
-        vals[k] = parse_inputs(data[k], interpolation_factor, k)
+        vals[k],x_ax = parse_inputs(data[k], interpolation_factor, k)
         data_og[k] = [data_og[k + "_" + str(i)] for i in range(n_interp)]
-        vals_og[k] = parse_inputs(nominal_data_og[k],interpolation_factor,k)
+        vals_og[k],x_ax = parse_inputs(nominal_data_og[k],interpolation_factor,k)
 
-    len_v = int(len(vals['z']))
-    start_x = np.linspace(0,20,int(np.rint((len_v/1.4)*0.4)),endpoint=False)
-    end_x = np.linspace(80,100,int((len_v/1.4)*0.4))
-    mid_x = np.linspace(20,80,int((len_v/1.4)*0.6),endpoint=False)
-    x_ax = np.concatenate((start_x,mid_x,end_x))
     axs[0].plot(x_ax,vals['z'],c='tab:red')
     axs[1].plot(x_ax,vals['rho'],c='tab:red')
 
@@ -378,27 +374,27 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
     return
 
-coils = 2  # number of coils
-h = coils * 0.0103  # max height
-N = 2 * np.pi * coils  # angular turns (radians)
-n = 8  # points to use
+# coils = 2  # number of coils
+# h = coils * 0.0103  # max height
+# N = 2 * np.pi * coils  # angular turns (radians)
+# n = 8  # points to use
 
-data = {}
-nominal_data = {}
+# data = {}
+# nominal_data = {}
 
 
-z_vals = np.linspace(0, h, n)
-theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
-rho_vals = [0.0125 for i in range(n)]
-tube_rad_vals = [0.0025 for i in range(n)]
-data['fid_radial'] = 4
-data['fid_axial'] = 10
-for i in range(n):
-    nominal_data["z_" + str(i)] = z_vals[i]
-    data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
-    data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
-    nominal_data["theta_" + str(i)] = theta_vals[i]
-    nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-    nominal_data["rho_" + str(i)] = rho_vals[i]
+# z_vals = np.linspace(0, h, n)
+# theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
+# rho_vals = [0.0125 for i in range(n)]
+# tube_rad_vals = [0.0025 for i in range(n)]
+# data['fid_radial'] = 4
+# data['fid_axial'] = 10
+# for i in range(n):
+#     nominal_data["z_" + str(i)] = z_vals[i]
+#     data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+#     data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
+#     nominal_data["theta_" + str(i)] = theta_vals[i]
+#     nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+#     nominal_data["rho_" + str(i)] = rho_vals[i]
 
-create_mesh(data,'mesh_generation/test',n,nominal_data)
+# create_mesh(data,'mesh_generation/test',n,nominal_data)
