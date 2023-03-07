@@ -120,7 +120,7 @@ def interpolate(y, fac_interp, kind, name):
     x_end_new = np.linspace(x_end[0],x_end[-1],len(x_end)*2)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff)+1)],y_end_new))
     x_new = np.concatenate((x_start_new,x_mid,x_end_new))
 
 
@@ -194,9 +194,14 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         vals[k],x_ax = parse_inputs(data[k], interpolation_factor, k)
         data_og[k] = [data_og[k + "_" + str(i)] for i in range(n_interp)]
         vals_og[k],x_ax = parse_inputs(nominal_data_og[k],interpolation_factor,k)
+
     x_ax = 100*x_ax/x_ax[-1]
-    axs[0].plot(x_ax,vals['z'],c='tab:red')
-    axs[1].plot(x_ax,vals['rho'],c='tab:red')
+    
+    try:
+        axs[0].plot(x_ax,vals['z'],c='tab:red')
+        axs[1].plot(x_ax,vals['rho'],c='tab:red')
+    except:
+        print('Printing do be broken doe')
 
     x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
     for ax in axs[3:]:
