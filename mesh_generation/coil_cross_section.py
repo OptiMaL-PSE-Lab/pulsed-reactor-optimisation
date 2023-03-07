@@ -249,7 +249,7 @@ def interpolate(y, fac_interp, kind, split_start ):
         x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
         f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
         y_end_new = f(x_end_new)
-        y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff)+1)],y_end_new))
+        y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
 
 
     return y_new
@@ -461,7 +461,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
     for i in range(len(p_list[:,0,0])):
         for ax in axs:
-            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.2,lw=1)
+            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.5,lw=0.5)
 
     for ax in axs:
         ax.set_box_aspect(
@@ -495,8 +495,11 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
     for i in range(len(p_list[:,0,i])):
         for ax in axs_i:
-            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.2,lw=1)
+            ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.5,lw=0.5)
 
+    for i in range(len(p_list[i,0,:])):
+        for ax in axs_i:
+            ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.5,lw=0.5)
 
     for ax in axs_i:
         ax.set_box_aspect(
@@ -714,13 +717,13 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
 # -----------------------------
 
-# n = 4
-# n_cross_section = 8
-# coils = 1
+# n_circ = 4
+# n_cross_section = 6
+# coils = 2 
 # length = np.pi * 2 * 0.0125 * coils
 # key = jr.PRNGKey(10)
-# coil_data = {"start_rad":0.0025,"radius_center":0.0015,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 16, "fid_radial": 4}
-# cross_section_points = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n)]
-# # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
+# coil_data = {"start_rad":0.0025,"radius_center":0.0015,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 10, "fid_radial": 3}
+# cross_section_points = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n_circ)]
+# # cross_section_points = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
 # create_mesh(cross_section_points,coil_data,'mesh_generation/test/',debug=False)
 

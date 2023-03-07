@@ -120,7 +120,7 @@ def interpolate(y, fac_interp, kind, name):
     x_end_new = np.linspace(x_end[0],x_end[-1],len(x_end)*2)
     f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
     y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff-1):int(len(y)*(1-cutoff)+1)],y_end_new))
+    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
     x_new = np.concatenate((x_start_new,x_mid,x_end_new))
 
 
@@ -380,27 +380,27 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
     return
 
-# coils = 2  # number of coils
-# h = coils * 0.0103  # max height
-# N = 2 * np.pi * coils  # angular turns (radians)
-# n = 8  # points to use
+coils = 2  # number of coils
+h = coils * 0.0103  # max height
+N = 2 * np.pi * coils  # angular turns (radians)
+n = 8  # points to use
 
-# data = {}
-# nominal_data = {}
+data = {}
+nominal_data = {}
 
 
-# z_vals = np.linspace(0, h, n)
-# theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
-# rho_vals = [0.0125 for i in range(n)]
-# tube_rad_vals = [0.0025 for i in range(n)]
-# data['fid_radial'] = 4
-# data['fid_axial'] = 10
-# for i in range(n):
-#     nominal_data["z_" + str(i)] = z_vals[i]
-#     data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
-#     data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
-#     nominal_data["theta_" + str(i)] = theta_vals[i]
-#     nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-#     nominal_data["rho_" + str(i)] = rho_vals[i]
+z_vals = np.linspace(0, h, n)
+theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
+rho_vals = [0.0125 for i in range(n)]
+tube_rad_vals = [0.0025 for i in range(n)]
+data['fid_radial'] = 4
+data['fid_axial'] = 10
+for i in range(n):
+    nominal_data["z_" + str(i)] = z_vals[i]
+    data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+    data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
+    nominal_data["theta_" + str(i)] = theta_vals[i]
+    nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+    nominal_data["rho_" + str(i)] = rho_vals[i]
 
-# create_mesh(data,'mesh_generation/test',n,nominal_data)
+create_mesh(data,'mesh_generation/test',n,nominal_data)
