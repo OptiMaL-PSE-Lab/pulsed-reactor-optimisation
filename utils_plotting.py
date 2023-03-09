@@ -1,4 +1,5 @@
 from utils import *
+import matplotlib as mpl 
 rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
 
 def plot_fidelities(path):
@@ -24,31 +25,54 @@ def plot_fidelities(path):
         print('Only 2 fidelities can be plotted...')
         return 
 
+
     c_vals = c_vals[n_init:]
     z_vals = z_vals[n_init:, :]
-    color = cm.viridis(c_vals)
-    fig, axs = plt.subplots(1, 1, figsize=(5.5, 4))
-    divider = make_axes_locatable(axs)
+
+
+    color = cm.Spectral_r(c_vals)
+    fig, axs = plt.subplots(2, 1, figsize=(10, 5))
+    fig.subplots_adjust(hspace=0.05)
+
+
+    min_z = np.min(z_vals, axis=0)
+    max_z = np.max(z_vals, axis=0)+1
+
+    grid = np.zeros((int(max_z[0]-min_z[0]),int(max_z[1]-min_z[1])))
+
+    ind_z = z_vals-min_z
+
+    g_count = np.zeros_like(grid)
+    for i in range(len(ind_z[:,0])):
+        grid[int(ind_z[i,0]),int(ind_z[i,1])] += c_vals[i]
+        g_count[int(ind_z[i,0]),int(ind_z[i,1])] += 1
+    
+    for i in range(len(grid[:,0])):
+        for j in range(len(grid[0,:])):
+            if g_count[i,j] > 0:
+                grid[i,j] = grid[i,j]/g_count[i,j]
+            else:
+                grid[i,j] = np.nan
+
+    divider = make_axes_locatable(axs[0])
     cax = divider.append_axes("right", size="3%", pad=0.05)
-
-    sc = axs.scatter(
-        z_vals[:, 0],
-        z_vals[:, 1],
-        c=c_vals,
-        marker="o",
-        lw=0,
-        s=120,
-        alpha=0.8,
-        norm=colors.LogNorm(vmin=np.min(c_vals), vmax=np.max(c_vals)),
-    )
-
+    sc = axs[0].imshow(grid.T, cmap='Spectral_r', norm=colors.LogNorm(vmin=np.min(c_vals), vmax=np.max(c_vals)),origin='lower',aspect='auto')
     cb = fig.colorbar(sc, cax=cax, orientation="vertical")
     cax.tick_params(labelsize=14)
     cb.set_label(label="Simulation Cost (s)", size=14)
 
-    axs.set_ylabel("Radial Fidelity", fontsize=12)
-    axs.set_xlabel("Axial Fidelity", fontsize=12)
-    axs.set_yticks([1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
+    divider = make_axes_locatable(axs[1])
+    cax = divider.append_axes("right", size="3%", pad=0.05)
+    sc_count = axs[1].imshow(g_count.T, cmap='Spectral_r',origin='lower',aspect='auto')
+    cb = fig.colorbar(sc_count, cax=cax, orientation="vertical")
+    cax.tick_params(labelsize=14)
+    cb.set_label(label="Evaluations", size=14)
+
+    for ax in axs:
+        ax.set_ylabel("Radial Fidelity", fontsize=14)
+        ax.set_xlabel("Axial Fidelity", fontsize=14)
+        ax.set_yticks([0,1,2,3,4], [1, 2, 3, 4, 5])
+        ax.set_xticks(np.array([1,11,21,31]), np.array([1,11,21,31])+min_z[0])
     fig.tight_layout()
     # fig.subplots_adjust(right=1.05, left=0.075, top=0.95, bottom=0.15)
     # for i, c in zip(range(len(z_vals)-1), color):
@@ -58,7 +82,7 @@ def plot_fidelities(path):
 
 
 def plot_data_file(path):
-    fig, ax = plt.subplots(1, 2, figsize=(8, 3))
+    fig, ax = plt.subplots(1, 2, figsize=(10, 3))
 
     all_data = read_json(path)["data"]
     data = []
@@ -140,45 +164,48 @@ def plot_data_file(path):
     plt.tight_layout()
     plt.savefig(path.split("data.json")[0] + "/predicted_values.png", dpi=800)
 
-    fig, ax = plt.subplots(1, 2, figsize=(8, 3))
-
+    fig, ax = plt.subplots(1,2, figsize=(10, 3))
     max_s = np.array(max_s)
     max_g = np.array(max_g)
     time = np.cumsum(cost)
 
-    ax[0].plot(np.arange(n), time_left, c="tab:red", lw=3, label="Remaining")
-    ax[0].plot(np.arange(n), max_s, c="k", lw=3, label="Max Predicted: Standard")
-    ax[0].scatter(np.arange(n), cost, c="k", s=20, label="Actual")
+    lw = 2
+    ms = 10
+    ax[0].plot(np.arange(n), time_left, c="tab:red", lw=lw, label="Remaining")
+    ax[0].plot(np.arange(n), max_s, c="k", lw=lw, label="Max Predicted: Standard")
+    ax[0].scatter(np.arange(n), cost, c="k", s=ms, label="Actual")
     ax[0].plot(
         np.arange(n),
         max_s + max_g,
         c="tab:blue",
-        lw=3,
+        lw=lw,
         label="Max Predicted: Standard + Greedy",
     )
 
-    ax[1].plot(time, time_left, c="tab:red", lw=3, label="Remaining")
-    ax[1].plot(time, max_s, c="k", lw=3, label="Max Predicted: Standard")
-    ax[1].scatter(time, cost, c="k", s=20, label="Actual")
+    ax[1].plot(time, time_left, c="tab:red", lw=lw, label="Remaining")
+    ax[1].plot(time, max_s, c="k", lw=lw, label="Max Predicted: Standard")
+    ax[1].scatter(time, cost, c="k", s=ms, label="Actual")
     ax[1].plot(
         time,
         max_s + max_g,
         c="tab:blue",
-        lw=3,
+        lw=lw,
         label="Max Predicted: Standard + Greedy",
     )
 
     for a in ax:
         a.set_yscale("log")
-    ax[0].set_xlabel("Iteration")
-    ax[0].set_ylabel("Time (s)")
+    ax[0].set_xlabel("Iteration",size=14)
+    ax[0].set_ylabel("Time (s)",size=14)
     handles, labels = ax[0].get_legend_handles_labels()
     # fig.legend(handles,labels,frameon=False,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",ncol=4)
     fig.legend(handles, labels, loc="upper center", frameon=False, ncol=4)
-    fig.subplots_adjust(top=0.875, bottom=0.15, left=0.075, right=0.975)
-    ax[1].set_xlabel("Wall-clock time (s)")
-    ax[1].set_ylabel("Time (s)")
+    #fig.subplots_adjust(top=0.875, bottom=0.15, left=0.075, right=0.975)
+    ax[1].set_xlabel("Wall-clock time (s)",size=14)
+    ax[1].set_ylabel("Time (s)",size=14)
     # plt.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(wspace=0.2,top = 0.9)
     plt.savefig(path.split("data.json")[0] + "/time_remaining.png", dpi=800)
 
     return
@@ -249,9 +276,9 @@ def plot_results(path):
     m_alpha = 1
     mar = "o"
     grid_alpha = 0.0
-    font_size = 15
+    font_size = 14
 
-    fig, ax = plt.subplots(2, 2, figsize=(10, 6))
+    fig, ax = plt.subplots(2,1, figsize=(10, 5))
 
     for a in ax.ravel():
         # a.spines["right"].set_visible(False)
@@ -263,9 +290,8 @@ def plot_results(path):
 
     norm = colors.LogNorm(vmin=np.min(cost), vmax=np.max(cost))
 
-    rgba_color = [np.array(cm.viridis(norm(c), bytes=True)) / 255 for c in cost]
-    print(rgba_color)
-    im1 = ax[0, 0].scatter(
+    rgba_color = [np.array(cm.Spectral_r(norm(c), bytes=True)) / 255 for c in cost]
+    im1 = ax[0].scatter(
         full_it,
         obj,
         c=cost,
@@ -276,56 +302,58 @@ def plot_results(path):
         norm=norm,
         alpha=m_alpha,
     )
-    ax[0, 0].plot(full_it, best_obj, c="k", lw=2, zorder=-1, label="Best")
+    ax[0].plot(full_it, best_obj, c="k", lw=2, zorder=-1, label="Best")
     # ax[0,0].legend(frameon=False,fontsize=14)
-    ax[0, 0].set_xlabel(r"Iteration", fontsize=font_size)
-    ax[0, 0].set_ylabel(
+    ax[0].set_xlabel(r"Iteration", fontsize=font_size)
+    ax[0].set_ylabel(
         "Objective",
         fontsize=font_size,
     )
-    divider = make_axes_locatable(ax[0, 0])
+    divider = make_axes_locatable(ax[0])
     cax = divider.append_axes("right", size="3%", pad=0.05)
-    cb = fig.colorbar(im1, cax=cax, orientation="vertical")
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.Spectral_r), cax=cax, orientation="vertical")
+
     cax.tick_params(labelsize=14)
     cb.set_label(label="Simulation Cost (s)", size=14)
     for i in range(len(full_it) - 1):
-        ax[0, 0].fill_between(
+        ax[0].fill_between(
             [full_it[i], full_it[i + 1]],
             [obj[i], obj[i + 1]],
             [0, 0],
-            alpha=0.5,
+            alpha=1,
             color=rgba_color[i + 1],
+            linewidth=0,
             zorder=-1,
         )
-        ax[0, 0].fill_between(
+        ax[0].fill_between(
             [full_it[i], full_it[i + 1]],
             [best_obj[i], best_obj[i + 1]],
             [obj[i], obj[i + 1]],
-            color="k",
-            alpha=0.1,
+            fc='k',
             lw=0,
+            alpha=0.05,
             zorder=-1,
         )
 
-    ax[0, 1].scatter(
-        np.arange(len(crit)), crit, c="k", marker=mar, s=ms, lw=0, alpha=m_alpha
-    )
-    ax[0, 1].plot(np.arange(len(crit)), best_crit, c="k", zorder=-1, lw=2, label="Best")
-    # ax[0,1].legend(frameon=False,fontsize=14)
-    ax[0, 1].set_xlabel(r"Iteration", fontsize=font_size)
-    ax[0, 1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
-    for i in range(len(it) - 1):
-        ax[0, 1].fill_between(
-            [it[i], it[i + 1]],
-            [best_crit[i], best_crit[i + 1]],
-            [0, 0],
-            color="k",
-            alpha=0.1,
-            lw=0,
-            zorder=-1,
-        )
+    # ax[0, 1].scatter(
+    #     np.arange(len(crit)), crit, c="k", marker=mar, s=ms, lw=0, alpha=m_alpha
+    # )
+    # ax[0, 1].plot(np.arange(len(crit)), best_crit, c="k", zorder=-1, lw=2, label="Best")
+    # # ax[0,1].legend(frameon=False,fontsize=14)
+    # ax[0, 1].set_xlabel(r"Iteration", fontsize=font_size)
+    # ax[0, 1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
+    # for i in range(len(it) - 1):
+    #     ax[0, 1].fill_between(
+    #         [it[i], it[i + 1]],
+    #         [best_crit[i], best_crit[i + 1]],
+    #         [0, 0],
+    #         color="k",
+    #         alpha=0.1,
+    #         lw=0,
+    #         zorder=-1,
+    #     )
 
-    im2 = ax[1, 0].scatter(
+    im2 = ax[1].scatter(
         full_time,
         obj,
         c=cost,
@@ -336,59 +364,61 @@ def plot_results(path):
         norm=norm,
         alpha=m_alpha,
     )
-    ax[1, 0].plot(full_time, best_obj, c="k", zorder=-1, lw=2, label="Best")
+    ax[1].plot(full_time, best_obj, c="k", zorder=-1, lw=2, label="Best")
     # ax[1,0].legend(frameon=False,fontsize=14)
-    ax[1, 0].ticklabel_format(style="sci", axis="x", scilimits=(0, 4))
+    ax[1].ticklabel_format(style="sci", axis="x", scilimits=(0, 4))
 
-    ax[1, 0].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
-    ax[1, 0].set_ylabel(
+    ax[1].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
+    ax[1].set_ylabel(
         "Objective",
         fontsize=font_size,
     )
     for i in range(len(full_it) - 1):
-        ax[1, 0].fill_between(
+        ax[1].fill_between(
             [full_time[i], full_time[i + 1]],
             [obj[i], obj[i + 1]],
             [0, 0],
-            alpha=0.5,
+            alpha=1,
             color=rgba_color[i + 1],
             zorder=-1,
+            linewidth=0,
         )
-        ax[1, 0].fill_between(
+        ax[1].fill_between(
             [full_time[i], full_time[i + 1]],
             [best_obj[i], best_obj[i + 1]],
             [obj[i], obj[i + 1]],
-            color="k",
-            alpha=0.1,
+            fc='k',
             lw=0,
+            alpha=0.05,
             zorder=-1,
         )
 
-    divider = make_axes_locatable(ax[1, 0])
+    divider = make_axes_locatable(ax[1])
     cax = divider.append_axes("right", size="3%", pad=0.05)
-    cb = fig.colorbar(im2, cax=cax, orientation="vertical")
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.Spectral_r), cax=cax, orientation="vertical")
     cax.tick_params(labelsize=14)
     cb.set_label(label="Simulation Cost (s)", size=14)
 
-    ax[1, 1].scatter(time, crit, c="k", marker=mar, s=ms, lw=0, alpha=m_alpha)
-    ax[1, 1].plot(time, best_crit, c="k", zorder=-1, lw=2, label="Best")
-    # ax[1,1].legend(frameon=False,fontsize=14)
-    ax[1, 1].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
-    ax[1, 1].ticklabel_format(style="sci", axis="x", scilimits=(0, 4))
-    ax[1, 1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
-    for i in range(len(it) - 1):
-        ax[1, 1].fill_between(
-            [time[i], time[i + 1]],
-            [best_crit[i], best_crit[i + 1]],
-            [0, 0],
-            color="k",
-            alpha=0.1,
-            lw=0,
-            zorder=-1,
-        )
+    # ax[1, 1].scatter(time, crit, c="k", marker=mar, s=ms, lw=0, alpha=m_alpha)
+    # ax[1, 1].plot(time, best_crit, c="k", zorder=-1, lw=2, label="Best")
+    # # ax[1,1].legend(frameon=False,fontsize=14)
+    # ax[1, 1].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
+    # ax[1, 1].ticklabel_format(style="sci", axis="x", scilimits=(0, 4))
+    # ax[1, 1].set_ylabel(r"$\max_x \quad \mu_t(x,z^\bullet)$", fontsize=font_size)
+    # for i in range(len(it) - 1):
+    #     ax[1, 1].fill_between(
+    #         [time[i], time[i + 1]],
+    #         [best_crit[i], best_crit[i + 1]],
+    #         [0, 0],
+    #         color="k",
+    #         alpha=0.1,
+    #         lw=0,
+    #         zorder=-1,
+    #     )
 
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.4)
     plt.savefig(path.split("data.json")[0] + "/res.png", dpi=800)
 
     return
+

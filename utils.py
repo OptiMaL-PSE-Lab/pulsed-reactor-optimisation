@@ -206,6 +206,23 @@ def val_to_rtd(time, value, path):
     theta = times_peaks / tau
     return theta, etheta
 
+def val_to_rtd_clean(time, value):
+    # convert measured values of concentration and time
+    # to dimensionless concentration and time
+
+    value = np.array(value)
+    time = np.array(time)
+    # periodic output so find only the peaks, tol can be changed
+    # difference between time values
+    dt = np.diff(time)[0]
+
+    # getting lists of interest (theta, e_sheta)
+    et = value / (sum(value * dt))
+    tau = (sum(time * value * dt)) / sum(value * dt)
+    etheta = tau * et
+    theta = time / tau
+    return theta, etheta
+
 
 def calculate_N(value, time, path):
     # obtaining a smooth curve by taking peaks
