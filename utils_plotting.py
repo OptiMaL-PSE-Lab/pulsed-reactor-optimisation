@@ -294,7 +294,7 @@ def plot_results(path):
     im1 = ax[0].scatter(
         full_it,
         obj,
-        c=cost,
+        c=rgba_color,
         marker=mar,
         s=ms,
         lw=0,
@@ -356,7 +356,7 @@ def plot_results(path):
     im2 = ax[1].scatter(
         full_time,
         obj,
-        c=cost,
+        c=rgba_color,
         marker=mar,
         s=ms,
         lw=0,
