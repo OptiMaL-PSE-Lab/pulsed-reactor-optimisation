@@ -6,10 +6,10 @@ from main import mfbo
 from mesh_generation.coil_cylindrical import create_mesh
 
 
-coils = 2  # number of coils
+coils = 3  # number of coils
 h = coils * 0.0103  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
-n = 8  # points to use
+n = 12  # points to use
 
 data = {}
 nominal_data = {}
@@ -64,8 +64,8 @@ def eval_cfd(x: dict):
         n,
         nominal_data.copy(),
     )
-    a = 0.001
-    f = 2
+    a = 0
+    f = 0
     re = 50
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
@@ -78,4 +78,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=True)

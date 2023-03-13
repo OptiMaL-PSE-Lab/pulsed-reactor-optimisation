@@ -8,7 +8,7 @@ from mesh_generation.coil_cross_section import create_mesh
 
 n_circ = 4
 n_cross_section = 6
-coils = 2 
+coils = 3
 length = np.pi * 2 * 0.0125 * coils
 coil_data = {"start_rad":0.0025,"radius_center":0.0015,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5}
 z_bounds = {}
@@ -60,9 +60,9 @@ def eval_cfd(x: dict):
 
         x_list.append(np.array(x_add))
 
-    a = coil_data['a']
-    f = coil_data['f']
-    re = coil_data['re']
+    a = 0
+    f = 0
+    re = 50
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     case = data_path.split("data.json")[0] + "simulations/" + ID
@@ -79,4 +79,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=True)

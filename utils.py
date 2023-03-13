@@ -251,7 +251,7 @@ def calculate_N(value, time, path):
         plt.savefig(path + "/dimensionless_conversion.png")
         return N
 
-def val_to_rtd_clean(time, value,path):
+def val_to_rtd_clean(time, value):
     # convert measured values of concentration and time
     # to dimensionless concentration and time
 
@@ -266,18 +266,14 @@ def val_to_rtd_clean(time, value,path):
     tau = (sum(time * value * dt)) / sum(value * dt)
     etheta = tau * et
     theta = time / tau
-    plt.figure()
-    plt.scatter(theta, etheta, c="k", alpha=0.4, label="dimensionless")
-    plt.legend()
-    plt.savefig(path + "/preprocessed_plot.png")
     return theta, etheta
 
 
 def calculate_N_clean(value, time, path):
 
-    theta, etheta = val_to_rtd_clean(time, value,path)
-    s = 500
-    n0_list = np.logspace(np.log(1), np.log(75), s)
+    theta, etheta = val_to_rtd_clean(time, value)
+    s = 10000
+    n0_list = np.logspace(np.log(1), np.log(100), s)
 
     # forgo any optimisation here because this is more robust
     best = np.Inf
