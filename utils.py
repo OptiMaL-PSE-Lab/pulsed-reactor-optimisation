@@ -158,6 +158,17 @@ def loss(N: list, theta: list, etheta: list) -> float:
     error_sq = (max(etheta) - max(et)) ** 2
     return error_sq
 
+def loss_sq(N: list, theta: list, etheta: list) -> float:
+    # quantifies the difference between true dimensionless concentration
+    # and predicted values from a equivalent tanks-in-series
+    et = []
+    for i in range(len(etheta)):
+        et.append(calc_etheta(N, theta[i]))
+
+    # I found this is most robust by quantifying the loss as: 
+    error_sq = sum((etheta[i] - et[i]) ** 2 for i in range(len(etheta)))/len(etheta)
+    return error_sq
+
 
 class CompactAnalyzer(BoundingLogAnalyzer):
     def __init__(self):
@@ -206,30 +217,14 @@ def val_to_rtd(time, value, path):
     theta = times_peaks / tau
     return theta, etheta
 
-def val_to_rtd_clean(time, value):
-    # convert measured values of concentration and time
-    # to dimensionless concentration and time
-
-    value = np.array(value)
-    time = np.array(time)
-    # periodic output so find only the peaks, tol can be changed
-    # difference between time values
-    dt = np.diff(time)[0]
-
-    # getting lists of interest (theta, e_sheta)
-    et = value / (sum(value * dt))
-    tau = (sum(time * value * dt)) / sum(value * dt)
-    etheta = tau * et
-    theta = time / tau
-    return theta, etheta
 
 
 def calculate_N(value, time, path):
     # obtaining a smooth curve by taking peaks
     theta, etheta = val_to_rtd(time, value, path)
     # fitting value of N
-    s = 100000
-    n0_list = np.logspace(np.log(1), np.log(100), s)
+    s = 5000
+    n0_list = np.logspace(np.log(1), np.log(50), s)
 
     # forgo any optimisation here because this is more robust
     best = np.Inf
@@ -239,6 +234,7 @@ def calculate_N(value, time, path):
             best = l
             N = n0
 
+    print(best)
     # plot this is you want 
     if path == None:
         return N
@@ -254,6 +250,56 @@ def calculate_N(value, time, path):
         plt.ylim(0, 2.5)
         plt.savefig(path + "/dimensionless_conversion.png")
         return N
+
+def val_to_rtd_clean(time, value,path):
+    # convert measured values of concentration and time
+    # to dimensionless concentration and time
+
+    value = np.array(value)
+    time = np.array(time)
+    # periodic output so find only the peaks, tol can be changed
+    # difference between time values
+    dt = np.diff(time)[0]
+
+    # getting lists of interest (theta, e_sheta)
+    et = value / (sum(value * dt))
+    tau = (sum(time * value * dt)) / sum(value * dt)
+    etheta = tau * et
+    theta = time / tau
+    plt.figure()
+    plt.scatter(theta, etheta, c="k", alpha=0.4, label="dimensionless")
+    plt.legend()
+    plt.savefig(path + "/preprocessed_plot.png")
+    return theta, etheta
+
+
+def calculate_N_clean(value, time, path):
+
+    theta, etheta = val_to_rtd_clean(time, value,path)
+    s = 500
+    n0_list = np.logspace(np.log(1), np.log(75), s)
+
+    # forgo any optimisation here because this is more robust
+    best = np.Inf
+    for n0 in n0_list:
+        l = loss_sq(n0, theta, etheta)
+        if l < best:
+            best = l
+            N = n0
+    best = best * 100
+    # plot this is you want 
+    if path == None:
+        return N, best
+    else:
+        plt.figure()
+        plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
+        etheta_calc = []
+        for t in theta:
+            etheta_calc.append(calc_etheta(N, t))
+        plt.plot(theta, etheta_calc, c="k", ls="dashed", label="Dimensionless")
+        plt.legend()
+        plt.savefig(path + "/dimensionless_conversion.png")
+        return N, best
 
 def parse_conditions(case, x):
     # append operating conditions to correct location in case file

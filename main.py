@@ -287,9 +287,8 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
 
         # perform evaluation
         res = f(sample)
-        run_info["id"] = res["id"]
-        run_info["cost"] = res["cost"]
-        run_info["obj"] = res["obj"]
+        for k,v in res.items():
+            run_info[k] = v
 
         time_left = time_left - run_info["cost"] - other_time
         run_info["time_left_at_end_of_iteration"] = time_left
