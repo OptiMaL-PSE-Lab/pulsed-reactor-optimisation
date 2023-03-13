@@ -246,10 +246,10 @@ def interpolate(y, fac_interp, kind, split_start ):
         f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
         y_start_new = f(x_start_new)
         x_end = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff))
-        x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac)
+        x_end_new = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff)*fac+1)
         f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
         y_end_new = f(x_end_new)
-        y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
+        y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))+1],y_end_new))
 
 
     return y_new
