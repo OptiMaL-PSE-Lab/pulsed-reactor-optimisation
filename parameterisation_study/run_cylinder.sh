@@ -12,4 +12,4 @@ module load intel-suite
 
 cd $PBS_O_WORKDIR
 source activate mf_design_env
-python3 -B parameterisation_study/cylindrical_discrepancy.py parameterisation_study/cylindrical_discrepancy/data.json 1.5 1.5 2
+python3 -B parameterisation_study/cylindrical_discrepancy.py parameterisation_study/cylindrical_discrepancy/data.json 1.5 1.5 2 $cpus

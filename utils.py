@@ -14,6 +14,7 @@ import matplotlib.colors as colors
 from uuid import uuid4
 import pickle
 import time
+import fileinput
 import jax.numpy as jnp
 from distutils.dir_util import copy_tree
 from scipy.signal import find_peaks
@@ -259,8 +260,7 @@ def val_to_rtd_clean(time, value):
     time = np.array(time)
     # periodic output so find only the peaks, tol can be changed
     # difference between time values
-    dt = np.diff(time)[0]
-
+    dt = np.mean(np.diff(time))
     # getting lists of interest (theta, e_sheta)
     et = value / (sum(value * dt))
     tau = (sum(time * value * dt)) / sum(value * dt)
@@ -271,14 +271,14 @@ def val_to_rtd_clean(time, value):
 
 def calculate_N_clean(value, time, path):
 
-    theta, etheta = val_to_rtd_clean(time, value)
+    t_d, et_d = val_to_rtd_clean(time, value)
     s = 10000
     n0_list = np.logspace(np.log(1), np.log(100), s)
 
     # forgo any optimisation here because this is more robust
     best = np.Inf
     for n0 in n0_list:
-        l = loss_sq(n0, theta, etheta)
+        l = loss_sq(n0, t_d, et_d)
         if l < best:
             best = l
             N = n0
@@ -288,11 +288,11 @@ def calculate_N_clean(value, time, path):
         return N, best
     else:
         plt.figure()
-        plt.scatter(theta, etheta, c="k", alpha=0.4, label="CFD")
+        plt.plot(t_d, et_d, c="k", label="CFD")
         etheta_calc = []
-        for t in theta:
+        for t in t_d:
             etheta_calc.append(calc_etheta(N, t))
-        plt.plot(theta, etheta_calc, c="k", ls="dashed", label="Dimensionless")
+        plt.plot(t_d, etheta_calc, c="k", ls="dashed", label="Tanks-in-series")
         plt.legend()
         plt.savefig(path + "/dimensionless_conversion.png")
         return N, best
@@ -370,3 +370,49 @@ def list_from_dict(list_of_dicts, key):
         except KeyError:
             l.append([np.nan])
     return l
+
+
+def is_prime(x):
+    if x < 2:
+        return False
+    for i in range(2, x):
+        if x % i == 0:
+            return False
+    return True
+
+def is_divisible_by(x,n):
+    return x % n == 0
+
+def derive_cpu_split(x):
+    splits = [x,1,1]
+
+    for v in np.flip([2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]):
+        while True: 
+            if is_divisible_by(splits[0],v):
+                splits[0] = int(splits[0] / v)
+                splits[1] *= v
+            else:
+                break 
+
+        while True: 
+            if is_divisible_by(splits[1],v) and splits[1] > splits[2]:
+                splits[1] = int(splits[1] / v)
+                splits[2] *= v
+            else:
+                break 
+
+    for v in np.flip([2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]):
+        if is_divisible_by(splits[-1],v) and splits[0] == 1:
+            splits[-1] = int(splits[-1] / v)
+            splits[0] *= v
+
+    for i in range(len(splits)):
+        splits[i] = int(splits[i])
+    return splits
+
+
+def replaceAll(file,searchExp,replaceExp):
+    for line in fileinput.input(file, inplace=1):
+        if searchExp in line:
+            line = line.replace(searchExp,replaceExp)
+        sys.stdout.write(line)

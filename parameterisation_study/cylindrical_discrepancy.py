@@ -41,11 +41,20 @@ try:
     gamma = float(sys.argv[2])
     beta = float(sys.argv[3])
     p_c = float(sys.argv[4])
+    cpus = int(sys.argv[5])
 except IndexError:
     data_path = 'parameterisation_study/cylindrical_discrepancy/data.json'
     gamma = 2.5 
     beta = 1.5 
     p_c = 2
+    cpus = 1
+
+cpu_vals = derive_cpu_split(cpus)
+
+shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","numberOfSubdomains 48;","numberOfSubdomains "+str(cpus)+";")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","    n               (4 4 3);","    n               ("+str(cpu_vals[0])+" "+str(cpu_vals[1])+" "+str(cpu_vals[2])+");")
+
 
 try:
     print('Building simulation folder')
@@ -70,7 +79,7 @@ def eval_cfd(x: dict):
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
     N,penalty = calculate_N_clean(values, times, case)
-    for i in range(48):
+    for i in range(cpus):
         shutil.rmtree(case + "/processor" + str(i))
     # shutil.rmtree(newcase)
     end = time.time()
@@ -78,4 +87,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma,gp_ms=4,opt_ms=8, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)

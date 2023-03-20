@@ -18,12 +18,25 @@ z_bounds["fid_axial"] = [19.51, 50.49]
 z_bounds["fid_radial"] = [1.51, 5.49]
 
 
+try:
+    data_path = str(sys.argv[1])
+    gamma = float(sys.argv[2])
+    beta = float(sys.argv[3])
+    p_c = float(sys.argv[4])
+    cpus = int(sys.argv[5])
+except IndexError:
+    data_path = 'parameterisation_study/cross_section/data.json'
+    gamma = 2.5 
+    beta = 1.5 
+    p_c = 2
+    cpus = 2
 
-print(sys.argv)
-data_path = str(sys.argv[1])
-gamma = float(sys.argv[2])
-beta = float(sys.argv[3])
-p_c = float(sys.argv[4])
+cpu_vals = derive_cpu_split(cpus)
+
+shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","numberOfSubdomains 48;","numberOfSubdomains "+str(cpus)+";")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","    n               (4 4 3);","    n               ("+str(cpu_vals[0])+" "+str(cpu_vals[1])+" "+str(cpu_vals[2])+");")
+
 
 try:
     print('Building simulation folder')
@@ -45,7 +58,7 @@ def eval_cfd(x: dict):
     parse_conditions(case, x)
     times, values = run_cfd(case)
     N = calculate_N(values, times, case)
-    for i in range(48):
+    for i in range(cpus):
         shutil.rmtree(case + "/processor" + str(i))
     # shutil.rmtree(newcase)
     end = time.time()

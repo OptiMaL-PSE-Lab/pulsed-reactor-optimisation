@@ -6,7 +6,7 @@ from main import mfbo
 from mesh_generation.coil_cross_section import create_mesh
 
 
-n_circ = 4
+n_circ = 6
 n_cross_section = 6
 coils = 3
 length = np.pi * 2 * 0.0125 * coils
@@ -19,18 +19,27 @@ z_bounds["fid_radial"] = [2.55, 6.45]
 x_bounds = {}
 for i in range(n_circ):
     for j in range(n_cross_section):
-        x_bounds["r_" + str(i)+'_'+str(j)] = [0.002, 0.0035]
+        x_bounds["r_" + str(i)+'_'+str(j)] = [0.002, 0.004]
 
 try:
     data_path = str(sys.argv[1])
     gamma = float(sys.argv[2])
     beta = float(sys.argv[3])
     p_c = float(sys.argv[4])
+    cpus = int(sys.argv[5])
 except IndexError:
     data_path = 'parameterisation_study/cross_section/data.json'
     gamma = 2.5 
     beta = 1.5 
     p_c = 2
+    cpus = 1
+
+cpu_vals = derive_cpu_split(cpus)
+
+shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","numberOfSubdomains 48;","numberOfSubdomains "+str(int(cpus))+";")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","    n               (4 4 3);","    n               ("+str(cpu_vals[0])+" "+str(cpu_vals[1])+" "+str(cpu_vals[2])+");")
+
 
 # cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
 
@@ -72,11 +81,11 @@ def eval_cfd(x: dict):
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
     N,penalty = calculate_N_clean(values, times, case)
-    for i in range(48):
+    for i in range(cpus):
         shutil.rmtree(case + "/processor" + str(i))
     #shutil.rmtree(newcase)
     end = time.time()
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=64,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)

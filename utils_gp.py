@@ -52,7 +52,7 @@ def train_gp(inputs, outputs, ms):
         parameter_state.params["kernel"]["lengthscale"] = p
 
         # run optimiser
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=150000)
         # get last NLL value
         nll = float(inference_state.history[-1])
         # if this is the best, then store this 
