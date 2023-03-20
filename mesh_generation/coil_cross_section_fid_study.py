@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import os
 
+
 from jax.nn import softplus
 from gpjax.config import add_parameter
 
@@ -31,7 +32,7 @@ from typing import Dict
 from jaxutils import Dataset
 import jaxkern as jk
 import gpjax as gpx
-
+import fileinput
 from PIL import Image
 import imageio
 from matplotlib import rc
@@ -42,6 +43,12 @@ rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
 key = jr.PRNGKey(10)
 # Enable Float64 for more stable matrix inversions.
 config.update("jax_enable_x64", True)
+
+def replaceAll(file,searchExp,replaceExp):
+    for line in fileinput.input(file, inplace=1):
+        if searchExp in line:
+            line = line.replace(searchExp,replaceExp)
+        sys.stdout.write(line)
 
 
 def angular_distance(x, y, c):
@@ -283,6 +290,8 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
     fid_rad = int(x["fid_radial"])
     fid_ax = int(x["fid_axial"])
+    fid_dt = (x["fid_deltaT"])
+    fid_co = (x["fid_maxCo"])
 
     coils = length / (2 * np.pi * coil_rad)
     h = coils * pitch
@@ -688,7 +697,12 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
     plt.savefig(path+'/blocks.pdf', dpi=600)
 
-    # run script to create mesh
+
+    # adding deltaT to controlDict
+    replaceAll(path+"/system/controlDict","deltaT          0.000001;","deltaT          "+str(fid_dt)+";")
+    replaceAll(path+"/system/controlDict","maxCo           5.0;","maxCo          "+str(fid_co)+";")
+
+
     print("Writing geometry")
     mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
     print("Running blockMesh")

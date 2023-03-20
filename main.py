@@ -64,9 +64,9 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         data = {"data": []}
         for sample in samples:
             # for each fidelity value make this an int
-            if int_fidelities == True:
-                for i in range(n_fid):
-                    sample[-(i + 1)] = np.rint(sample[-(i + 1)])
+            for i in range(n_fid):
+                if int_fidelities[i] == True:
+                    sample[len(x_bounds)+i] = np.rint(sample[len(x_bounds)+i])
             
             # create sample dict for evaluation
             sample_dict = sample_to_dict(sample, joint_bounds)
@@ -104,6 +104,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
     data['opt_ms'] = opt_ms
     save_json(data,data_path)
     
+
     while True:
 
         start_time = time.time()
@@ -246,9 +247,9 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
         x_opt = [np.float64(xi) for xi in x_opt]
         print("unnormalised res:", x_opt)
 
-        if int_fidelities == True:
-            for i in range(n_fid):
-                x_opt[-(i + 1)] = int(x_opt[-(i + 1)])
+        for i in range(n_fid):
+            if int_fidelities[i] == True:
+                x_opt[len(x_bounds)+i] = int(x_opt[len(x_bounds)+i])
 
         sample = sample_to_dict(x_opt, joint_bounds)
 
