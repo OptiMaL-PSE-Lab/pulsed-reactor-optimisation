@@ -64,4 +64,4 @@ def eval_cfd(x: dict):
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,64*48*48,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=[True,True])

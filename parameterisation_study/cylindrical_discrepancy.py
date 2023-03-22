@@ -87,4 +87,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma,gp_ms=4,opt_ms=8, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma,gp_ms=4,opt_ms=8, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=[True,True])
