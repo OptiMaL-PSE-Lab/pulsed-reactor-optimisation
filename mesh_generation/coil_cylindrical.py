@@ -57,6 +57,13 @@ def cylindrical_convert(r, theta, z):
     z = z
     return x, y, z
 
+def cartesian_convert(x, y, z):
+    # conversion to cartesian coordinates
+    r = np.sqrt(x ** 2 + y ** 2)
+    theta = np.arctan2(y, x)
+    z = z
+    return r, theta, z
+
 
 def unit_vector(vector):
     # returns a unit vector
@@ -105,31 +112,28 @@ def interpolate(y, fac_interp, kind, name):
 
     x = np.linspace(0, len(y), len(y))
     x_new = np.linspace(0, len(y), len(y) * fac_interp)
+    if len(y) == 2:
+        kind = 'linear'
     f = interp1d(x, y, kind=kind)
     y_new = f(x_new)
     y = y_new 
 
-    fac = 2
-    cutoff = 0.2
-    x_start = np.linspace(0,int(len(y)*cutoff),int(len(y)*cutoff),endpoint=False)
-    x_end = np.linspace(int(len(y)*(1-cutoff)),len(y),int(len(y)*cutoff))
-    x_mid = np.linspace(int(len(y)*cutoff),int(len(y)*(1-cutoff)),len(y)-2*int(len(y)*cutoff),endpoint=False)
-    x_start_new = np.linspace(x_start[0],x_start[-1],len(x_start)*2)
-    f = interp1d(x_start, y[:int(len(y)*cutoff)], kind=kind)
-    y_start_new = f(x_start_new)
-    x_end_new = np.linspace(x_end[0],x_end[-1],len(x_end)*2)
-    f = interp1d(x_end, y[len(y)-int(len(y)*cutoff):], kind=kind)
-    y_end_new = f(x_end_new)
-    y_new = np.concatenate((y_start_new,y[int(len(y)*cutoff):int(len(y)*(1-cutoff))],y_end_new))
-    x_new = np.concatenate((x_start_new,x_mid,x_end_new))
-
-
     return y_new,x_new
 
+def interpolate_num(y, num, kind):
+    x = np.linspace(0, len(y), len(y))
+    x_new = np.linspace(0, len(y), num)
+    if len(y) == 2:
+        kind = 'linear'
+    f = interp1d(x, y, kind=kind)
+    y_new = f(x_new)
+    y = y_new 
+    return y_new,x_new
 
 def parse_inputs(NB, f, name):
     y,x = interpolate(NB, f, "quadratic", name)
     return y,x
+
 
 
 def create_mesh(data, path, n_interp, nominal_data_og):
@@ -147,8 +151,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
     # do interpolation between points
     vals = {}
-    nominal_data = nominal_data_og.copy()
-    # calculating real values from differences and initial conditions
+
+
 
     fig = plt.figure(figsize=(12,7))
     axs = []
@@ -169,6 +173,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     axs[1].set_ylabel(r'$\rho$',fontsize=14)
     axs[2].set_ylabel(r'$\theta$',fontsize=14)
 
+    nominal_data = nominal_data_og.copy()
+
     axs[0].plot(x_ax,[nominal_data['z_'+str(i)] for i in range(n_interp)],c='k')
     axs[1].plot(x_ax,[nominal_data['rho_'+str(i)] for i in range(n_interp)],c='k')
     axs[2].plot(x_ax,[nominal_data['theta_'+str(i)] for i in range(n_interp)],c='r')
@@ -180,21 +186,162 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         axs[0].plot([x_ax[i],x_ax[i]],[nominal_data['z_'+str(i)],nominal_data['z_'+str(i)]+data['z_'+str(i)]],c='k',ls='dashed')
         axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
 
-    
-
     for i in range(n_interp):
         nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
         nominal_data["z_" + str(i)] += data["z_" + str(i)]
 
     data = nominal_data
-    data_og = nominal_data_og
-    vals_og = {}
-    for k in keys:
-        data[k] = [data[k + "_" + str(i)] for i in range(n_interp)]
-        vals[k],x_ax = parse_inputs(data[k], interpolation_factor, k)
-        data_og[k] = [data_og[k + "_" + str(i)] for i in range(n_interp)]
-        vals_og[k],x_ax = parse_inputs(nominal_data_og[k],interpolation_factor,k)
+    data_og = nominal_data_og 
 
+
+    # calculating real values from differences and initial conditions
+    rho = data["rho_0"]
+    theta = data["theta_0"]
+    n = 2
+    L = rho * n
+    rho_two = np.sqrt(rho**2+L**2)
+    theta_two = theta - np.arctan(L/rho)
+
+    data["theta_s"] = data["theta_0"]
+    data["rho_s"] = 0
+    data["z_s"] = -0.01
+    data['tube_rad_s'] = data['tube_rad_0']
+
+    rho = data["rho_"+str(n_interp-1)]
+    theta = data["theta_"+str(n_interp-1)]
+    n = 2
+    #L = rho * n
+    rho_two = np.sqrt(rho**2+L**2)
+    theta_two = theta + np.arctan(L/rho)
+
+    data["theta_e"] = theta_two
+    data["rho_e"] = rho_two
+    data["z_e"] = data["z_"+str(n_interp-1)]
+    data['tube_rad_e'] = data['tube_rad_'+str(n_interp-1)]
+
+
+    nominal_data = nominal_data_og.copy()
+
+
+    vals_og = {}
+    end = {}
+
+    start = {}
+    for k in keys:
+        start[k] = [data[k+"_s"],data[k+"_0"]]
+    end = {}
+    for k in keys:
+        end[k] = [data[k+"_"+str(n_interp-1)],data[k+"_e"]]
+    
+
+    x,y,z = cylindrical_convert(start['rho'],start['theta'],start['z'])
+    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*4) 
+    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*4) 
+    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*4) 
+    r,theta,z = cartesian_convert(x_interp,y_interp,z_interp)
+    start['rho'] = r
+    start['theta'] = theta
+    start['z'] = z
+    start['tube_rad'] = np.array([data['tube_rad_s'] for i in range(len(z))])
+    l_s = len(z)
+
+    x,y,z = cylindrical_convert(end['rho'],end['theta'],end['z'])
+    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*4) 
+    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*4) 
+    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*4) 
+    r,theta,z = cartesian_convert(x_interp,y_interp,z_interp)
+    end['rho'] = r
+    end['theta'] = theta
+    end['z'] = z
+    end['tube_rad'] = np.array([data['tube_rad_e'] for i in range(len(z))])
+    for k in keys:
+        data[k] = [data[k+"_s"]]+[data[k + "_" + str(i)] for i in list(range(n_interp))]
+        #data[k] = [data[k + "_" + str(i)] for i in list(range(n_interp))]
+        vals[k],x_ax = parse_inputs(data[k], interpolation_factor, k)
+        # vals[k] = np.append(np.append(start[k][:-1],vals[k]),end[k][1:])
+        # data_og[k] = [data_og[k + "_" + str(i)] for i in list(range(n_interp))+['e']]
+        # vals_og[k],x_ax = parse_inputs(nominal_data_og[k],interpolation_factor,k)
+
+    x,y,z = cylindrical_convert(vals['rho'],vals['theta'],vals['z'])
+
+
+
+    # n_curve = 3
+    # w = 2
+    # s_curve = int(l_s-n_curve)
+    # e_curve = int(l_s+n_curve)
+    # x_curve = x[s_curve:e_curve]
+    # y_curve = y[s_curve:e_curve]
+    # z_curve = z[s_curve:e_curve]
+
+    # # fig,axs = plt.subplots(3,1,figsize=(6,6))
+    # # axs[0].plot(np.arange(len(x)),x)
+    # # axs[1].plot(np.arange(len(y)),y)
+    # # axs[2].plot(np.arange(len(z)),z)
+
+    # z_mid = z_curve[int(len(z_curve)/2)] 
+    # z_line = (z_curve[0] + z_curve[-1])/2
+    # z_mid = ((w*z_mid) + z_line)/(w+1)
+    # z_interp = [z_curve[0],z_mid,z_curve[-1]]
+    # z_curve_new,z_n = interpolate_num(z_interp,len(z_curve),'quadratic')
+    # z[s_curve:e_curve] = z_curve_new
+
+    # y_mid = y_curve[int(len(y_curve)/2)] 
+    # y_line = (y_curve[0] + y_curve[-1])/2
+    # y_mid = ((w*y_mid) + y_line)/(w+1)
+    # y_mid = y_curve[int(len(y_curve)/2)]
+    # y_interp = [y_curve[0],y_mid,y_curve[-1]]
+    # y_curve_new,y_n = interpolate_num(y_interp,len(y_curve),'quadratic')
+    # y[s_curve:e_curve] = y_curve_new
+
+    # x_mid = x_curve[int(len(x_curve)/2)] 
+    # x_line = (x_curve[0] + x_curve[-1])/2
+    # x_mid = ((w*x_mid) + x_line)/(w+1)
+    # x_mid = x_curve[int(len(x_curve)/2)]
+    # x_interp = [x_curve[0],x_mid,x_curve[-1]]
+    # x_curve_new,x_n = interpolate_num(x_interp,len(x_curve),'quadratic')
+    # x[s_curve:e_curve] = x_curve_new
+
+
+    # s_curve = len(x) - int(l_s+n_curve) 
+    # e_curve = len(x) - int(l_s-n_curve)
+    # x_curve = x[s_curve:e_curve]
+    # y_curve = y[s_curve:e_curve]
+    # z_curve = z[s_curve:e_curve]
+
+    # z_mid = z_curve[int(len(z_curve)/2)] 
+    # z_line = (z_curve[0] + z_curve[-1])/2
+    # z_mid = ((z_mid) + w*z_line)/(w+1)
+    # z_interp = [z_curve[0],z_mid,z_curve[-1]]
+    # z_curve_new,z_n = interpolate_num(z_interp,len(z_curve),'quadratic')
+    # z[s_curve:e_curve] = z_curve_new
+
+    # y_mid = y_curve[int(len(y_curve)/2)] 
+    # y_line = (y_curve[0] + y_curve[-1])/2
+    # y_mid = ((y_mid) + w*y_line)/(w+1)
+    # y_mid = y_curve[int(len(y_curve)/2)]
+    # y_interp = [y_curve[0],y_mid,y_curve[-1]]
+    # y_curve_new,y_n = interpolate_num(y_interp,len(y_curve),'quadratic')
+    # y[s_curve:e_curve] = y_curve_new
+
+    # x_mid = x_curve[int(len(x_curve)/2)] 
+    # x_line = (x_curve[0] + x_curve[-1])/2
+    # x_mid = ((x_mid) + w*x_line)/(w+1)
+    # x_mid = x_curve[int(len(x_curve)/2)]
+    # x_interp = [x_curve[0],x_mid,x_curve[-1]]
+    # x_curve_new,x_n = interpolate_num(x_interp,len(x_curve),'quadratic')
+    # x[s_curve:e_curve] = x_curve_new
+
+    # # axs[0].plot(np.arange(len(x)),x)
+    # # axs[1].plot(np.arange(len(y)),y)
+    # # axs[2].plot(np.arange(len(z)),z)
+
+    # # plt.savefig(path+'/smooth.png')
+
+    # vals['rho'],vals['theta'],vals['z'] = cartesian_convert(x,y,z)
+
+    #n_start = interpolation_factor * n
+    n_start = 0
     x_ax = 100*x_ax/x_ax[-1]
     
     try:
@@ -203,9 +350,9 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     except:
         print('Printing do be broken doe')
 
-    x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
-    for ax in axs[3:]:
-        ax.plot(x,y,z,c='k',lw=1)
+    # x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
+    # for ax in axs[3:]:
+    #     ax.plot(x,y,z,c='k',lw=1)
 
 
     #plt.savefig(path+'/interp.pdf')
@@ -219,21 +366,22 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         # get proceeding circle (as x,y,z samples)
         x2, y2, z2 = create_circle(
             [data[keys[i]][p - 1] for i in range(len(keys))],
-            [data[keys[i]][p] for i in range(len(keys))],
+            [data[keys[i]][p] for i in range(len(keys))]
         )
         # get next circle (as x,y,z samples)
 
         x1, y1, z1 = create_circle(
             [data[keys[i]][p] for i in range(len(keys))],
-            [data[keys[i]][p + 1] for i in range(len(keys))],
+            [data[keys[i]][p + 1] for i in range(len(keys))]
         )
         # plot for reference
+        col = 'k'
         for ax in axs_p:
-            ax.plot3D(x2, y2, z2, c="k", lw=0.5)
-            ax.plot3D(x1, y1, z1, c="k", alpha=0.75, lw=0.25)
+            ax.plot3D(x2, y2, z2, c=col, lw=0.5)
+            ax.plot3D(x1, y1, z1, c=col, alpha=0.75, lw=0.25)
             for i in np.linspace(0, len(x1) - 1, 10):
                 i = int(i)
-                ax.plot3D([x1[i], x2[i]], [y1[i], y2[i]], [z1[i], z2[i]], c="k", lw=0.5)
+                ax.plot3D([x1[i], x2[i]], [y1[i], y2[i]], [z1[i], z2[i]], c=col, lw=0.5)
 
         # l defines the indices of 4 equally spaced points on circle
         l = np.linspace(0, len(x1), 5)[:4].astype(int)
@@ -368,7 +516,7 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     # copy existing base mesh folder
     fig.tight_layout()
 
-    fig_p.savefig(path + "/pre-render.pdf", dpi=200)
+    fig_p.savefig(path + "/pre-render.png", dpi=200)
     fig.savefig(path + "/interp.pdf", dpi=200)
 
     # run script to create mesh
@@ -380,27 +528,30 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
     return
 
-# coils = 2  # number of coils
-# h = coils * 0.0103  # max height
-# N = 2 * np.pi * coils  # angular turns (radians)
-# n = 8  # points to use
 
-# data = {}
-# nominal_data = {}
+coils = 3  # number of coils
+h = coils * 0.0103  # max height
+N = 2 * np.pi * coils  # angular turns (radians)
+n = 12  # points to use
+
+data = {}
+nominal_data = {}
 
 
-# z_vals = np.linspace(0, h, n)
-# theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
-# rho_vals = [0.0125 for i in range(n)]
-# tube_rad_vals = [0.0025 for i in range(n)]
-# data['fid_radial'] = 4
-# data['fid_axial'] = 10
-# for i in range(n):
-#     nominal_data["z_" + str(i)] = z_vals[i]
-#     data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
-#     data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
-#     nominal_data["theta_" + str(i)] = theta_vals[i]
-#     nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-#     nominal_data["rho_" + str(i)] = rho_vals[i]
+z_vals = np.linspace(0, h, n)
+theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
+rho_vals = [0.0125 for i in range(n)]
+tube_rad_vals = [0.0025 for i in range(n)]
+data['fid_radial'] = 4
+data['fid_axial'] = 8
+for i in range(n):
+    nominal_data["z_" + str(i)] = z_vals[i]
+    # data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+    # data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
+    data['z_'+str(i)] = 0
+    data['rho_'+str(i)] = 0
+    nominal_data["theta_" + str(i)] = theta_vals[i]
+    nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+    nominal_data["rho_" + str(i)] = rho_vals[i]
 
-# create_mesh(data,'mesh_generation/test',n,nominal_data)
+create_mesh(data,'mesh_generation/test',n,nominal_data)
