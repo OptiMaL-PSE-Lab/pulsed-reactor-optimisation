@@ -21,6 +21,9 @@ plot_data.py
 plot_data.sh
 plot.out
 delete.sh
+
 plotting.py
 parameterisation_study/cylindrical_discrepancy 
 parameterisation_study/cross_section
+parameterisation_study/standard_simulation
+parameterisation_study/standard_pulsed_flow

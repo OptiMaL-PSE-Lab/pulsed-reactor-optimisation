@@ -136,8 +136,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
     try:
         shutil.copytree("mesh_generation/mesh", path)
-    except FileExistsError:
-        print("Folder already exists")
+    except:
+        print('file already exists')
     # factor to interpolate between control points
     interpolation_factor =int((data["fid_axial"]))
     # interpolate x times the points between

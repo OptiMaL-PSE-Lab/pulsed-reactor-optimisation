@@ -1,11 +1,12 @@
 #!/bin/bash
-#PBS -N cylindrical_discrepancy
+#PBS -N cylinder
 #PBS -j oe
 #PBS -o parameterisation_study/cylindrical_discrepancy/logs.out
 #PBS -e parameterisation_study/cylindrical_discrepancy/logs.err
-#PBS -lselect=1:ncpus=48:mem=64gb
-#PBS -lwalltime=71:00:00
+#PBS -lselect=1:ncpus=1:mem=64gb
+#PBS -lwalltime=01:00:00
 
+echo $cpus
 module load anaconda3/personal
 module load openfoam/1906
 module load intel-suite

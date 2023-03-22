@@ -15,12 +15,10 @@ z_bounds = {}
 z_bounds["fid_axial"] = [10.55, 30.55]
 z_bounds["fid_radial"] = [2.55, 6.45]
 
-
 x_bounds = {}
-for i in range(n_circ):
-    for j in range(n_cross_section):
-        x_bounds["r_" + str(i)+'_'+str(j)] = [0.002, 0.004]
-
+x_bounds["a"] = [0.001, 0.008]
+x_bounds["f"] = [2, 8]
+x_bounds["re"] = [10, 50]
 try:
     data_path = str(sys.argv[1])
     gamma = float(sys.argv[2])
@@ -65,13 +63,13 @@ def eval_cfd(x: dict):
     for i in range(n_circ):
         x_add = []
         for j in range(n_cross_section):
-            x_add.append(x['r_' + str(i) + '_' + str(j)])
+            x_add.append(0.0025)
 
         x_list.append(np.array(x_add))
 
-    a = 0
-    f = 0
-    re = 50
+    a = x['a']
+    f = x['f']
+    re = x['re']
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     case = data_path.split("data.json")[0] + "simulations/" + ID
@@ -80,7 +78,7 @@ def eval_cfd(x: dict):
 
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
-    N,penalty = calculate_N_clean(values, times, case)
+    N,penalty = calculate_N(values, times, case)
     for i in range(cpus):
         shutil.rmtree(case + "/processor" + str(i))
     #shutil.rmtree(newcase)
@@ -88,4 +86,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,72*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=True)
