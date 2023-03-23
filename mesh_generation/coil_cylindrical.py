@@ -235,9 +235,9 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     
 
     x,y,z = cylindrical_convert(start['rho'],start['theta'],start['z'])
-    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*4) 
-    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*4) 
-    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*4) 
+    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*2) 
+    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*2) 
+    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*2) 
     r,theta,z = cartesian_convert(x_interp,y_interp,z_interp)
     start['rho'] = r
     start['theta'] = theta
@@ -246,9 +246,9 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     l_s = len(z)
 
     x,y,z = cylindrical_convert(end['rho'],end['theta'],end['z'])
-    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*4) 
-    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*4) 
-    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*4) 
+    x_interp,x_ax = parse_inputs(x, interpolation_factor, k*2) 
+    y_interp,x_ax = parse_inputs(y, interpolation_factor, k*2) 
+    z_interp,x_ax = parse_inputs(z, interpolation_factor, k*2) 
     r,theta,z = cartesian_convert(x_interp,y_interp,z_interp)
     end['rho'] = r
     end['theta'] = theta
@@ -265,83 +265,6 @@ def create_mesh(data, path, n_interp, nominal_data_og):
     x,y,z = cylindrical_convert(vals['rho'],vals['theta'],vals['z'])
 
 
-
-    # n_curve = 3
-    # w = 2
-    # s_curve = int(l_s-n_curve)
-    # e_curve = int(l_s+n_curve)
-    # x_curve = x[s_curve:e_curve]
-    # y_curve = y[s_curve:e_curve]
-    # z_curve = z[s_curve:e_curve]
-
-    # # fig,axs = plt.subplots(3,1,figsize=(6,6))
-    # # axs[0].plot(np.arange(len(x)),x)
-    # # axs[1].plot(np.arange(len(y)),y)
-    # # axs[2].plot(np.arange(len(z)),z)
-
-    # z_mid = z_curve[int(len(z_curve)/2)] 
-    # z_line = (z_curve[0] + z_curve[-1])/2
-    # z_mid = ((w*z_mid) + z_line)/(w+1)
-    # z_interp = [z_curve[0],z_mid,z_curve[-1]]
-    # z_curve_new,z_n = interpolate_num(z_interp,len(z_curve),'quadratic')
-    # z[s_curve:e_curve] = z_curve_new
-
-    # y_mid = y_curve[int(len(y_curve)/2)] 
-    # y_line = (y_curve[0] + y_curve[-1])/2
-    # y_mid = ((w*y_mid) + y_line)/(w+1)
-    # y_mid = y_curve[int(len(y_curve)/2)]
-    # y_interp = [y_curve[0],y_mid,y_curve[-1]]
-    # y_curve_new,y_n = interpolate_num(y_interp,len(y_curve),'quadratic')
-    # y[s_curve:e_curve] = y_curve_new
-
-    # x_mid = x_curve[int(len(x_curve)/2)] 
-    # x_line = (x_curve[0] + x_curve[-1])/2
-    # x_mid = ((w*x_mid) + x_line)/(w+1)
-    # x_mid = x_curve[int(len(x_curve)/2)]
-    # x_interp = [x_curve[0],x_mid,x_curve[-1]]
-    # x_curve_new,x_n = interpolate_num(x_interp,len(x_curve),'quadratic')
-    # x[s_curve:e_curve] = x_curve_new
-
-
-    # s_curve = len(x) - int(l_s+n_curve) 
-    # e_curve = len(x) - int(l_s-n_curve)
-    # x_curve = x[s_curve:e_curve]
-    # y_curve = y[s_curve:e_curve]
-    # z_curve = z[s_curve:e_curve]
-
-    # z_mid = z_curve[int(len(z_curve)/2)] 
-    # z_line = (z_curve[0] + z_curve[-1])/2
-    # z_mid = ((z_mid) + w*z_line)/(w+1)
-    # z_interp = [z_curve[0],z_mid,z_curve[-1]]
-    # z_curve_new,z_n = interpolate_num(z_interp,len(z_curve),'quadratic')
-    # z[s_curve:e_curve] = z_curve_new
-
-    # y_mid = y_curve[int(len(y_curve)/2)] 
-    # y_line = (y_curve[0] + y_curve[-1])/2
-    # y_mid = ((y_mid) + w*y_line)/(w+1)
-    # y_mid = y_curve[int(len(y_curve)/2)]
-    # y_interp = [y_curve[0],y_mid,y_curve[-1]]
-    # y_curve_new,y_n = interpolate_num(y_interp,len(y_curve),'quadratic')
-    # y[s_curve:e_curve] = y_curve_new
-
-    # x_mid = x_curve[int(len(x_curve)/2)] 
-    # x_line = (x_curve[0] + x_curve[-1])/2
-    # x_mid = ((x_mid) + w*x_line)/(w+1)
-    # x_mid = x_curve[int(len(x_curve)/2)]
-    # x_interp = [x_curve[0],x_mid,x_curve[-1]]
-    # x_curve_new,x_n = interpolate_num(x_interp,len(x_curve),'quadratic')
-    # x[s_curve:e_curve] = x_curve_new
-
-    # # axs[0].plot(np.arange(len(x)),x)
-    # # axs[1].plot(np.arange(len(y)),y)
-    # # axs[2].plot(np.arange(len(z)),z)
-
-    # # plt.savefig(path+'/smooth.png')
-
-    # vals['rho'],vals['theta'],vals['z'] = cartesian_convert(x,y,z)
-
-    #n_start = interpolation_factor * n
-    n_start = 0
     x_ax = 100*x_ax/x_ax[-1]
     
     try:
