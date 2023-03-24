@@ -763,7 +763,8 @@ n_cross_section = 6
 coils = 3
 length = np.pi * 2 * 0.0125 * coils
 coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5}
-x = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n_circ)]
+#x = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n_circ)]
+x = [[0.0025 for i in range(n_cross_section)] for j in range(n_circ)]
 coil_data['fid_radial'] = 1
 coil_data['fid_axial'] = 15 # min = 15 max 40
 
