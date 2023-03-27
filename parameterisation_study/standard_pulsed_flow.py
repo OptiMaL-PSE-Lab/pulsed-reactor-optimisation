@@ -3,16 +3,12 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from utils import *
 from main import mfbo
-from mesh_generation.coil_cross_section import create_mesh
+from mesh_generation.coil_cylindrical import create_mesh
 
 
-n_circ = 6
-n_cross_section = 6
-coils = 3
-length = np.pi * 2 * 0.0125 * coils
-coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5}
+
 z_bounds = {}
-z_bounds["fid_axial"] = [10.55, 30.55]
+z_bounds["fid_axial"] = [15.55, 40.55]
 z_bounds["fid_radial"] = [2.55, 6.45]
 
 x_bounds = {}
@@ -54,18 +50,28 @@ except FileExistsError:
     print('Simulation folder already exists')
 
 
+
 def eval_cfd(x: dict):
 
-    coil_data['fid_radial'] = x['fid_radial']
-    coil_data['fid_axial'] = x['fid_axial']
+    coils = 3  # number of coils
+    h = coils * 0.0103  # max height
+    N = 2 * np.pi * coils  # angular turns (radians)
+    n = 6  # points to use
 
-    x_list = []
-    for i in range(n_circ):
-        x_add = []
-        for j in range(n_cross_section):
-            x_add.append(0.0025)
+    data = {}
+    nominal_data = {}
 
-        x_list.append(np.array(x_add))
+    z_vals = np.linspace(0, h, n)
+    theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+    rho_vals = [0.0125 for i in range(n)]
+    tube_rad_vals = [0.0025 for i in range(n)]
+    for i in range(n):
+        nominal_data["z_" + str(i)] = z_vals[i]
+        nominal_data["theta_" + str(i)] = theta_vals[i]
+        nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+        nominal_data["rho_" + str(i)] = rho_vals[i]
+        x['rho_' + str(i)] = 0
+        x['z_' + str(i)] = 0
 
     a = x['a']
     f = x['f']
@@ -74,7 +80,8 @@ def eval_cfd(x: dict):
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     case = data_path.split("data.json")[0] + "simulations/" + ID
 
-    create_mesh(x_list,coil_data.copy(),case,debug=False)
+    # create_mesh(x_list,coil_data.copy(),case,debug=False)
+    create_mesh(x,case,n,nominal_data)
 
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
@@ -86,4 +93,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,72*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=True)
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,72*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=16,int_fidelities=[True,True])

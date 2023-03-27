@@ -6,32 +6,33 @@ from main import mfbo
 from mesh_generation.coil_cylindrical import create_mesh
 
 
-coils = 3  # number of coils
-h = coils * 0.0103  # max height
+coils = 4  # number of coils
+h = coils * 0.010391  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
-n = 12  # points to use
+n = 6  # points to use
 
-x_data = {}
+data = {}
 nominal_data = {}
 
+data['rho_0'] = 0
+data['z_0'] = 0
+for i in range(1,n):
+	data['z_'+str(i)] = 0
+	data['rho_'+str(i)] = 0
 z_vals = np.linspace(0, h, n)
-theta_vals = np.linspace(0+np.pi/2, N+np.pi/2, n)
+theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
 rho_vals = [0.0125 for i in range(n)]
 tube_rad_vals = [0.0025 for i in range(n)]
 for i in range(n):
+	nominal_data["z_" + str(i)] = z_vals[i]
+	nominal_data["theta_" + str(i)] = theta_vals[i]
+	nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+	nominal_data["rho_" + str(i)] = rho_vals[i]
 
-    nominal_data["z_" + str(i)] = z_vals[i]
-    x_data["z_" + str(i)] = 0
-    nominal_data["theta_" + str(i)] = theta_vals[i]
-    x_data["theta_" + str(i)] = 0
-    nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-    x_data["tube_rad_" + str(i)] = 0
-    nominal_data["rho_" + str(i)] = rho_vals[i]
-    x_data["rho_" + str(i)] = 0
+z_high = {'fid_axial': 40, 'fid_radial': 7}
 
-z_high = {'fid_axial': 20.45, 'fid_radial': 7}
 
-standard_input = x_data | z_high
+standard_input = data | z_high
 
 cpus = int(sys.argv[1])
 cpu_vals = derive_cpu_split(cpus)

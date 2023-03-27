@@ -267,8 +267,14 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 		axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
 
 	for i in range(n_interp):
-		nominal_data["rho_" + str(i+1)] += data["rho_" + str(i)]
-		nominal_data["z_" + str(i+1)] += data["z_" + str(i)]
+		try:
+			nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
+		except:
+			nominal_data["rho_" + str(i)] += 0 
+		try:
+			nominal_data["z_" + str(i)] += data["z_" + str(i)]
+		except:
+			nominal_data["z_" + str(i)] += 0
 
 	data = nominal_data
 	data_og = nominal_data_og 
@@ -539,33 +545,33 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 	return
 
 
-coils = 4  # number of coils
-h = coils * 0.010391  # max height
-N = 2 * np.pi * coils  # angular turns (radians)
-n = 6  # points to use
+# coils = 4  # number of coils
+# h = coils * 0.010391  # max height
+# N = 2 * np.pi * coils  # angular turns (radians)
+# n = 6  # points to use
 
-data = {}
-nominal_data = {}
+# data = {}
+# nominal_data = {}
 
 
-data['fid_radial'] = 2
-data['fid_axial'] = 40
+# data['fid_radial'] = 2
+# data['fid_axial'] = 40
 
-data['rho_0'] = 0
-data['z_0'] = np.random.uniform(-0.002,0.002)
-for i in range(1,n):
-	data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
-	data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
-	# data['z_'+str(i)] = 0
-	# data['rho_'+str(i)] = 0
-z_vals = np.linspace(0, h, n+1)
-theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n+1))
-rho_vals = [0.0125 for i in range(n+1)]
-tube_rad_vals = [0.0025 for i in range(n+1)]
-for i in range(n+1):
-	nominal_data["z_" + str(i)] = z_vals[i]
-	nominal_data["theta_" + str(i)] = theta_vals[i]
-	nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-	nominal_data["rho_" + str(i)] = rho_vals[i]
+# data['rho_0'] = 0
+# data['z_0'] = np.random.uniform(-0.002,0.002)
+# for i in range(1,n):
+# 	data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+# 	data['rho_'+str(i)] = np.random.uniform(-0.0075,0.0025)
+# 	# data['z_'+str(i)] = 0
+# 	# data['rho_'+str(i)] = 0
+# z_vals = np.linspace(0, h, n+1)
+# theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n+1))
+# rho_vals = [0.0125 for i in range(n+1)]
+# tube_rad_vals = [0.0025 for i in range(n+1)]
+# for i in range(n+1):
+# 	nominal_data["z_" + str(i)] = z_vals[i]
+# 	nominal_data["theta_" + str(i)] = theta_vals[i]
+# 	nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+# 	nominal_data["rho_" + str(i)] = rho_vals[i]
 
-create_mesh(data,'mesh_generation/test',n,nominal_data)
+# create_mesh(data,'mesh_generation/test',n,nominal_data)
