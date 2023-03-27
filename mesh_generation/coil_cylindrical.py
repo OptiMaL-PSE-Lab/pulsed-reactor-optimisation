@@ -166,8 +166,6 @@ def interpolate_path(rho,theta,z,f):
 
 	d_start = np.sqrt((x_start[0]-x_start[-1])**2 + (y_start[0]-y_start[-1])**2 + (z_start[0]-z_start[-1])**2)
 
-	print(d_start)
-
 	rho_mid,_ = parse_inputs(rho[1:-1], f, "rho")
 	theta_mid,_ = parse_inputs(theta[1:-1], f, "theta")
 	z_mid,_ = parse_inputs(z[1:-1], f, "z")
@@ -176,7 +174,6 @@ def interpolate_path(rho,theta,z,f):
 	dy = y_m[-1] - y_m[-2]
 	dz = z_m[-1] - z_m[-2]
 
- 
 
 	d_end = np.sqrt(dx**2+dy**2+dz**2)
 	factor = d_start / d_end
