@@ -106,7 +106,7 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
     h = coils * pitch
     keys = ["x", "y", "t", "t_x", "r", "z"]
     data = {}
-    points = 20 + x["fid_axial"]
+    points = 20 + coils * x["fid_axial"]
 
     t_x = -np.arctan(h / length)
     if inversion_loc < 0.05 or inversion_loc > 0.95:
@@ -173,7 +173,7 @@ def create_mesh(x: dict, length: float, tube_rad: float, path: str):
         end_dy = data["y"][-1] + port_len * np.cos(end_theta)
 
     print("Adding start and end ports")
-    n_x = int(points / 6)
+    n_x = int(points/(6*coils))
 
     inlet_x = np.linspace(start_dx, data["x"][0], n_x + 1)[:-1]
     inlet_y = np.linspace(start_dy, data["y"][0], n_x + 1)[:-1]

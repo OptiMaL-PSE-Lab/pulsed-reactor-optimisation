@@ -92,7 +92,7 @@ if flag == 'standard':
     data["inversion_loc"] = 0
 
     z_high = {}
-    z_high["fid_axial"] = 100
+    z_high["fid_axial"] = 60
     z_high["fid_radial"] = 5
 
     f = eval_cfd_basic
