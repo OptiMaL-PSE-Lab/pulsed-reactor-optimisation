@@ -110,6 +110,8 @@ functions
        factor 1.0;
        outputControl timeStep;
        outputInterval 1;
+       writeControl    adjustableRunTime;
+       writeInterval   0.5;
     }
 	
 	velocity1
@@ -129,6 +131,8 @@ functions
        factor 1.0;
        outputControl timeStep;
        outputInterval 1;
+       writeControl    adjustableRunTime;
+       writeInterval   0.5;
     }
 
    surfaceFieldValue1

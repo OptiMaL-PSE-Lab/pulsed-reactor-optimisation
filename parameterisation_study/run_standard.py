@@ -3,50 +3,43 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from utils import *
 from main import mfbo
-from mesh_generation.coil_cylindrical import create_mesh
+from mesh_generation.coil_cylindrical import create_mesh as create_mesh_cylinder
+from mesh_generation.coil_basic import create_mesh as create_mesh_basic
 
 
+flag = 'standard'
 coils = 4  # number of coils
-h = coils * 0.010391  # max height
+pitch = 0.010391
+rad = 0.0125
+h = coils * pitch  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
 n = 6  # points to use
 
-data = {}
-nominal_data = {}
 
-data['rho_0'] = 0
-data['z_0'] = 0
-for i in range(1,n):
-	data['z_'+str(i)] = 0
-	data['rho_'+str(i)] = 0
-z_vals = np.linspace(0, h, n)
-theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
-rho_vals = [0.0125 for i in range(n)]
-tube_rad_vals = [0.0025 for i in range(n)]
-for i in range(n):
-	nominal_data["z_" + str(i)] = z_vals[i]
-	nominal_data["theta_" + str(i)] = theta_vals[i]
-	nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-	nominal_data["rho_" + str(i)] = rho_vals[i]
-
-z_high = {'fid_axial': 40, 'fid_radial': 7}
-
-
-standard_input = data | z_high
-
-cpus = int(sys.argv[1])
-cpu_vals = derive_cpu_split(cpus)
-
-shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")
-replaceAll("mesh_generation/mesh/system/decomposeParDict","numberOfSubdomains 48;","numberOfSubdomains "+str(cpus)+";")
-replaceAll("mesh_generation/mesh/system/decomposeParDict","    n               (4 4 3);","    n               ("+str(cpu_vals[0])+" "+str(cpu_vals[1])+" "+str(cpu_vals[2])+");")
-
-
-def eval_cfd(x: dict):
+def eval_cfd_basic(x: dict):
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    case = "parameterisation_study/standard_simulation"
-    create_mesh(
+    case = "parameterisation_study/basic_standard_simulation"
+    create_mesh_basic(
+        x,
+        length=pitch*2*np.pi*coils,
+        tube_rad=0.0025,
+        path=case,
+    )
+    parse_conditions(case, x)
+    times, values = run_cfd(case)
+    N = calculate_N(values, times, case)
+    for i in range(cpus):
+        shutil.rmtree(case + "/processor" + str(i))
+    # shutil.rmtree(newcase)
+    end = time.time()
+    return {"obj": N, "cost": end - start, "id": ID}
+
+def eval_cfd_cylinder(x: dict):
+    start = time.time()
+    ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    case = "parameterisation_study/cylinder_standard_simulation"
+    create_mesh_cylinder(
         x,
         case,
         n,
@@ -66,4 +59,53 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-eval_cfd(standard_input)
+
+if flag == 'cylinder':
+    data = {}
+    nominal_data = {}
+
+    data['rho_0'] = 0
+    data['z_0'] = 0
+    for i in range(1,n):
+        data['z_'+str(i)] = 0
+        data['rho_'+str(i)] = 0
+    z_vals = np.linspace(0, h, n)
+    theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+    rho_vals = [rad for i in range(n)]
+    tube_rad_vals = [0.0025 for i in range(n)]
+    for i in range(n):
+        nominal_data["z_" + str(i)] = z_vals[i]
+        nominal_data["theta_" + str(i)] = theta_vals[i]
+        nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+        nominal_data["rho_" + str(i)] = rho_vals[i]
+
+    z_high = {'fid_axial': 40, 'fid_radial': 7}
+    f = eval_cfd_cylinder
+
+if flag == 'standard':
+    data = {}
+    data["a"] = 0
+    data["f"] = 0
+    data["re"] = 50
+    data["pitch"] = pitch
+    data["coil_rad"] = rad
+    data["inversion_loc"] = 0
+
+    z_high = {}
+    z_high["fid_axial"] = 100
+    z_high["fid_radial"] = 5
+
+    f = eval_cfd_basic
+    
+standard_input = data | z_high
+
+cpus = int(sys.argv[1])
+cpu_vals = derive_cpu_split(cpus)
+
+shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","numberOfSubdomains 48;","numberOfSubdomains "+str(cpus)+";")
+replaceAll("mesh_generation/mesh/system/decomposeParDict","    n               (4 4 3);","    n               ("+str(cpu_vals[0])+" "+str(cpu_vals[1])+" "+str(cpu_vals[2])+");")
+
+
+
+f(standard_input)

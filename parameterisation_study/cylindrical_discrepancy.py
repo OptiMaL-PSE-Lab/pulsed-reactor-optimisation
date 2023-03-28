@@ -13,15 +13,16 @@ n = 6  # points to use
 
 nominal_data = {}
 
-z_vals = np.linspace(0, h, n+1)
-theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n+1))
-rho_vals = [0.0125 for i in range(n+1)]
-tube_rad_vals = [0.0025 for i in range(n+1)]
-for i in range(n+1):
+z_vals = np.linspace(0, h, n)
+theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+rho_vals = [0.0125 for i in range(n)]
+tube_rad_vals = [0.0025 for i in range(n)]
+for i in range(n):
 	nominal_data["z_" + str(i)] = z_vals[i]
 	nominal_data["theta_" + str(i)] = theta_vals[i]
 	nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
 	nominal_data["rho_" + str(i)] = rho_vals[i]
+
 
 x_bounds = {}
 x_bounds['z_0'] = np.random.uniform(-0.002,0.002)
