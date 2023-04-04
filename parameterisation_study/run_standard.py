@@ -6,14 +6,16 @@ from main import mfbo
 from mesh_generation.coil_cylindrical import create_mesh as create_mesh_cylinder
 from mesh_generation.coil_basic import create_mesh as create_mesh_basic
 
-
-flag = 'standard'
-coils = 4  # number of coils
+try: 
+    flag = sys.argv[2]
+except:
+    flag = 'standard'
+coils = 3  # number of coils
 pitch = 0.010391
 rad = 0.0125
 h = coils * pitch  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
-n = 6  # points to use
+n = 8  # points to use
 
 
 def eval_cfd_basic(x: dict):
@@ -66,7 +68,9 @@ if flag == 'cylinder':
 
     data['rho_0'] = 0
     data['z_0'] = 0
-    for i in range(1,n):
+    data['z_1'] = 0
+    data['rho_1'] = 0
+    for i in range(2,n):
         data['z_'+str(i)] = 0
         data['rho_'+str(i)] = 0
     z_vals = np.linspace(0, h, n)
@@ -79,7 +83,7 @@ if flag == 'cylinder':
         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
         nominal_data["rho_" + str(i)] = rho_vals[i]
 
-    z_high = {'fid_axial': 40, 'fid_radial': 7}
+    z_high = {'fid_axial': 20, 'fid_radial': 5}
     f = eval_cfd_cylinder
 
 if flag == 'standard':
@@ -92,7 +96,7 @@ if flag == 'standard':
     data["inversion_loc"] = 0
 
     z_high = {}
-    z_high["fid_axial"] = 60
+    z_high["fid_axial"] = 50
     z_high["fid_radial"] = 5
 
     f = eval_cfd_basic

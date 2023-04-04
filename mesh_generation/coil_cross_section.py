@@ -122,8 +122,6 @@ def rotate_xyz(x,y,z,t,t_x,c_x,c_y,c_z):
         x, y, z = rotate_z(x, y, z, 3 * np.pi / 2)
         return x,y,z
 
-
-
 def gp_interpolate_polar(X,y,n_interp):
         # Simulate data
         angles = jnp.linspace(0, 2 * jnp.pi, num=n_interp).reshape(-1, 1)
@@ -182,17 +180,20 @@ def create_circle(d,radius_og):
         r_std = np.std(radius)
         if r_std != 0:
                 radius = (radius - r_mean)/r_std
+                # angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),63)
+                # angles = angles[:,0]
+                # angles = np.append(angles,2*np.pi)
+                # radius = np.append(radius,radius[0])
                 angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),64)
+                angles = angles[:,0]
                 radius  = radius * r_std + r_mean
         else:
-                angles = np.linspace(0,np.pi*2,64,endpoint=False).reshape(-1,1)
+                angles = np.linspace(0,np.pi*2,64)
                 radius = np.array([r_mean for i in range(64)])
 
         for i in range(len(radius)):
                 if radius[i] != radius[i]:
                         radius = radius.at[i].set(r_mean)
-
-        angles = angles[:,0]
 
         z_n = radius * np.cos(angles) 
         x_n = radius * np.sin(angles) 
@@ -288,32 +289,15 @@ def interpolate_split(r,theta,z,fid_ax):
         x_start = interpolate([x[0],x[1]], int(fid_ax/2), "linear")
         y_start = interpolate([y[0],y[1]], int(fid_ax/2), "linear")
         z_start = interpolate([z[0],z[1]], int(fid_ax/2), "linear")
+        x_start = x_start[:-1]
+        y_start = y_start[:-1]
+        z_start = z_start[:-1]
 
         d_start = np.sqrt((x_start[0]-x_start[-1])**2 + (y_start[0]-y_start[-1])**2 + (z_start[0]-z_start[-1])**2)
 
-        dx = x_m[-1] - x_m[-2]
-        dy = y_m[-1] - y_m[-2]
-        dz = z_m[-1] - z_m[-2]
-
-
-        d_end = np.sqrt(dx**2+dy**2+dz**2)
-        factor = d_start / d_end
-        
-        x_e = x_m[-1] + dx * factor
-        y_e = y_m[-1] + dy * factor
-        z_e = z_m[-1] + dz * factor
-
-        x_end = interpolate([x_m[-1],x_e], int(fid_ax/2), "linear")
-        y_end = interpolate([y_m[-1],y_e], int(fid_ax/2), "linear")
-        z_end = interpolate([z_m[-1],z_e], int(fid_ax/2), "linear")
-
-        # x_end = x_end[1:]
-        # y_end = y_end[1:]
-        # z_end = z_end[1:]
-
-        x = np.append(np.append(x_start,x_m),x_end)
-        y = np.append(np.append(y_start,y_m),y_end)
-        z = np.append(np.append(z_start,z_m),z_end)
+        x = np.append(x_start,x_m)
+        y = np.append(y_start,y_m)
+        z = np.append(z_start,z_m)
 
         len_s = len(x_start)
 
@@ -334,13 +318,34 @@ def interpolate_split(r,theta,z,fid_ax):
         for i in range(s,e):
                 z[i] = z_new[i-s]
 
-        r,theta,z_c = cartesian_convert(x,y,z)
         # r = np.append(r_start,r)
         # theta = np.append(theta_start,theta)
         # z_c = np.append(z_start,z_c)
 
-        return r,theta,z_c
+        return x,y,z,d_start
 
+def add_end(x,y,z,dx,dy,dz,d_start,fid_ax):
+
+        d_end = np.sqrt(dx**2+dy**2+dz**2)
+        factor = d_start / d_end
+        
+        x_e = x[-1] + dx * factor
+        y_e = y[-1] + dy * factor
+        z_e = z[-1] + dz * factor
+
+        x_end = interpolate([x[-1],x_e], int(fid_ax/2), "linear")
+        y_end = interpolate([y[-1],y_e], int(fid_ax/2), "linear")
+        z_end = interpolate([z[-1],z_e], int(fid_ax/2), "linear")
+
+        x_end = x_end[1:]
+        y_end = y_end[1:]
+        z_end = z_end[1:]
+
+        x = np.append(x,x_end)
+        y = np.append(y,y_end)
+        z = np.append(z,z_end)
+
+        return x,y,z
 
 def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         x = x_file.copy()
@@ -351,8 +356,6 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         s_rad = x['start_rad']
 
         interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
-        interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
-        interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
         interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
         interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
 
@@ -412,6 +415,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
                 x, y, z,x_p,y_p,z_p,x_n,z_n = create_circle(
                         [data[keys[j]][i] for j in range(len(keys))],interp_points[i]
                 )
+                
                 p_list.append([x,y,z])
                 p_interp.append([x_n,z_n])
                 if i > 0:
@@ -439,7 +443,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs[2].set_ylabel("y",fontsize=14)
         axs[2].set_xlabel("x",fontsize=14)
         plt.savefig(path+'/points.pdf', dpi=600)
-        p_list = np.asarray(p_list)
+        p_list = np.asarray(np.array(p_list))
         p_c_list = np.asarray(p_c_list)
         p_interp = np.asarray(p_interp)
 
@@ -468,7 +472,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs[2].set_xlabel("x",fontsize=14)
         fig.savefig(path+'/gp_slices.pdf', dpi=600)
 
-        figc,axsc = plt.subplots(2,int((len(interp_points)-5)/2),figsize=(10,6),subplot_kw=dict(projection='polar'),sharey=True)
+        figc,axsc = plt.subplots(2,int((len(interp_points)-3)/2),figsize=(10,6),subplot_kw=dict(projection='polar'),sharey=True)
         figc.tight_layout()
         gridspec = fig.add_gridspec(1, 1)
         angles = np.linspace(0,2*np.pi,len(interp_points[0]),endpoint=False)
@@ -502,15 +506,21 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         p_new_list = [] 
         for i in range(len(p_cylindrical_list[:,0,0])):
 
-                r,theta,z = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
-                p_new_list.append([r,theta,z])
+                x,y,z,d_start = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
+                p_new_list.append([x,y,z])
 
         p_new_list = np.asarray(p_new_list)
 
+        m_x = np.mean(p_new_list[:,0,:],axis=0)
+        m_y = np.mean(p_new_list[:,1,:],axis=0)
+        m_z = np.mean(p_new_list[:,2,:],axis=0)
+        dx = m_x[-1] - m_x[-2]
+        dy = m_y[-1] - m_y[-2]
+        dz = m_z[-1] - m_z[-2]
+
         p_list = []
-        for i in np.linspace(0,len(p_new_list[:,0,0])-1,10):
-                i = int(i)
-                x,y,z = cylindrical_convert(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:])
+        for i in range(len(p_new_list[:,0,0])):
+                x,y,z = add_end(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:], dx,dy,dz,d_start,fid_ax)
                 p_list.append([x,y,z])
 
         p_list = np.asarray(p_list)
@@ -548,14 +558,15 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs_i[1].view_init(0, 180)
         axs_i[2].view_init(270, 0)
 
-        for i in np.linspace(0,len(p_list[:,0,i])-1,10):
+
+        for i in np.linspace(0,len(p_list[:,0,0])-1,10):
                 i = int(i)
                 for ax in axs_i:
-                        ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.5,lw=0.5)
+                        ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.25,lw=0.5)
 
-        for i in range(len(p_list[i,0,:])):
+        for i in range(len(p_list[0,0,:])):
                 for ax in axs_i:
-                        ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.5,lw=0.5)
+                        ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.25,lw=0.5)
 
         for ax in axs_i:
                 ax.set_box_aspect(
@@ -579,7 +590,6 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         if debug == True:
                 p_list= p_list[:,:,:3]
                 p_c_list= p_c_list[:,:,:3]
-
 
         col = (212/255,41/255,144/255)
         col = 'k'
@@ -674,12 +684,12 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
                         for k in range(len(quart[:,0,0])-1):
                                 curve_76 = inner_quart[0,:,m_in:m_out].T
                                 curve_76_u = quart[0,:,m_in:m_out].T
-                                curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,data['fid_radial'])])
-                                curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,data['fid_radial'])])
+                                curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
+                                curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
                                 curve_45 = inner_quart[k+1,:,m_in:m_out].T
                                 curve_45_u = quart[k+1,:,m_in:m_out].T
-                                curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,data['fid_radial'])])
-                                curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,data['fid_radial'])])
+                                curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
+                                curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
 
 
                                 block_points = [list(p_30_[k+1,:]),list(p_21_[k+1,:]),list(p_21_[k,:]),list(p_30_[k,:]),list(p_74_[k+1,:]),list(p_65_[k+1,:]),list(p_65_[k,:]),list(p_74_[k,:])]
@@ -736,48 +746,200 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
         plt.savefig(path+'/blocks.pdf', dpi=600)
 
-        # run script to create mesh
-        print("Writing geometry")
-        mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-        print("Running blockMesh")
-        os.system("chmod +x " + path + "/Allrun.mesh")
-        os.system(path + "/Allrun.mesh")
+        # # run script to create mesh
+        # print("Writing geometry")
+        # mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+        # print("Running blockMesh")
+        # os.system("chmod +x " + path + "/Allrun.mesh")
+        # os.system(path + "/Allrun.mesh")
         return
 
-# n = 10
-# n_cross_section = 8
-# coil_data = {"length":0.0753,"pitch":0.0075,"coil_rad":0.0085,"fid_axial":5,"fid_radial":2}
+def create_mesh_gif(interp_points,x_file: dict,path, pic_num):
+        x = x_file.copy()
+        coil_rad = x["coil_rad"]
+        pitch = x["pitch"]
+        length = x['length']
+        r_c = x['radius_center']
+        s_rad = x['start_rad']
 
-# cross_section_points = [np.random.uniform(0.001,0.004,n_cross_section) for i in range(n)]
-# cross_section = [np.array([0.0025 for i in range(n_cross_section)]) for i in range(n)]
-# a = np.linspace(0,1,30)
+        interp_points.append(np.array([s_rad for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
+        interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
+        interp_points.insert(0,np.array([s_rad for i in range(len(interp_points[0]))]))
+
+        fid_rad = int(x["fid_radial"])
+        fid_ax = int(x["fid_axial"])
+
+        coils = length / (2 * np.pi * coil_rad)
+        h = coils * pitch
+        keys = ["x", "y", "t", "t_x", "z"]
+        data = {}
+
+        n = len(interp_points)-1
+        t_x = -np.arctan(h / length)
+
+        print("No inversion location specified")
+
+        coil_vals = np.linspace(0, 2 * coils * np.pi, n)
+
+        # x and y values around a circle
+        data["x"] = [(coil_rad * np.cos(x_y)) for x_y in coil_vals] 
+        data['x'] = data['x'] 
+        data["y"] = [(coil_rad * np.sin(x_y)) for x_y in coil_vals]
+        data['y'] = data['y']
+        # rotations around z are defined by number of coils
+        data["t"] = list(coil_vals)
+        data["t_x"] = [0]+[t_x for i in range(n-1)]
+        # height is linear
+        data["z"] = list(np.linspace(0, h , n))
+
+        L = coil_rad
+        data['x'],data['y'],data['z'],data['t'],data['t_x'] = add_start(data['x'],data['y'],data['z'],data['t'],data['t_x'],L)
+
+        try:
+                shutil.copytree("mesh_generation/mesh", path)
+        except FileExistsError:
+                print("Folder already exists")
+
+
+        n = len(data['x'])
+        p_list = []
+        p_c_list = []
+        p_interp = []
+
+        for i in tqdm(range(n)):
+                x, y, z,x_p,y_p,z_p,x_n,z_n = create_circle(
+                        [data[keys[j]][i] for j in range(len(keys))],interp_points[i]
+                )
+                
+                p_list.append([x,y,z])
+                p_interp.append([x_n,z_n])
+
+        p_list = np.asarray(np.array(p_list))
+        p_c_list = np.asarray(p_c_list)
+        p_interp = np.asarray(p_interp)
+
+        p_cylindrical_list = []
+
+        for i in range(len(p_list[0,0,:])):
+                r,theta,z = cartesian_convert(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i])
+                p_cylindrical_list.append([r,theta,z])
+
+        p_cylindrical_list = np.asarray(p_cylindrical_list)
+        p_new_list = [] 
+        for i in range(len(p_cylindrical_list[:,0,0])):
+
+                x,y,z,d_start = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
+                p_new_list.append([x,y,z])
+
+        p_new_list = np.asarray(p_new_list)
+
+        m_x = np.mean(p_new_list[:,0,:],axis=0)
+        m_y = np.mean(p_new_list[:,1,:],axis=0)
+        m_z = np.mean(p_new_list[:,2,:],axis=0)
+        dx = m_x[-1] - m_x[-2]
+        dy = m_y[-1] - m_y[-2]
+        dz = m_z[-1] - m_z[-2]
+
+        p_list = []
+        for i in range(len(p_new_list[:,0,0])):
+                x,y,z = add_end(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:], dx,dy,dz,d_start,fid_ax)
+                p_list.append([x,y,z])
+
+        p_list = np.asarray(p_list)
+
+        fig_i, axs_i = plt.subplots(1, 3, figsize=(10, 3), subplot_kw=dict(projection="3d"))
+        fig_i.tight_layout()
+
+        axs_i[0].view_init(0, 270)
+        axs_i[1].view_init(0, 180)
+        axs_i[2].view_init(270, 0)
+
+
+        for i in np.linspace(0,len(p_list[:,0,0])-1,10):
+                i = int(i)
+                for ax in axs_i:
+                        ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.5,lw=0.5)
+
+        for i in range(len(p_list[0,0,:])):
+                for ax in axs_i:
+                        ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.5,lw=0.5)
+
+        for ax in axs_i:
+                ax.set_box_aspect(
+                        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+                )
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_zticks([])
+                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.grid()
+        axs_i[0].set_xlabel("x",fontsize=14)
+        axs_i[0].set_zlabel("z",fontsize=14)
+        axs_i[1].set_ylabel("y",fontsize=14)
+        axs_i[1].set_zlabel("z",fontsize=14)
+        axs_i[2].set_ylabel("y",fontsize=14)
+        axs_i[2].set_xlabel("x",fontsize=14)
+        plt.savefig(path+'/'+str(pic_num)+'.png', dpi=600)
+
+        return
+
+
+# n_circ = 6
+# n_cross_section = 6
+# coils = 3
+# length = np.pi * 2 * 0.010391 * coils
+
+# coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.001, "f": 2.0, "re": 50.0, "pitch": 0.0104, "coil_rad": 0.0125}
+# coil_data['fid_radial'] = 2 # min = 2 max 5
+# coil_data['fid_axial'] = 25 # min = 15 max 40
+# p1 = [np.random.uniform(0.001,0.004,n_cross_section) for i in range(n_cross_section)]
+# p2 = [np.random.uniform(0.001,0.004,n_cross_section) for i in range(n_cross_section)]
+# combos = []
+# a = np.linspace(0,1,30,endpoint=False)
 # for i in range(30):
-#     combo = [(1-a[i])*cross_section[j][:] + a[i]*cross_section_points[j][:] for j in range(n)]
-#     create_mesh(combo,coil_data,'mesh_generation/test/'+str(i)+'.pdf')
+#         combos.append([(1-a[i])*p1[j][:] + a[i]*p2[j][:] for j in range(n_cross_section)])
+
+# for i in range(30):
+#     create_mesh_gif(combos[i],coil_data,"mesh_generation/gif",i)
 
 
 
 # images = [] # creating image array
 # for i in range(30): # iterating over images
-#     im = Image.open('mesh_generation/test/'+str(i)+'.pdf')
+#     im = Image.open("mesh_generation/gif/"+str(i)+'.png')
 #     images.append(im)
-#     os.remove('mesh_generation/test/'+str(i)+'.pdf') # this then deletes the image file from the folder
-# imageio.mimsave('mesh_generation/test/res.gif', images, format='GIF-PIL', quantizer=0) # this then saves the array of images as a gif
+#     os.remove('mesh_generation/gif/'+str(i)+'.png') # this then deletes the image file from the folder
+# imageio.mimsave('mesh_generation/gif/res.gif', images, format='GIF-PIL', quantizer=0) # this then saves the array of images as a gif
 
 
 # -----------------------------
 
-# n_circ = 6
-# n_cross_section = 6
-# coils = 4
-# length = np.pi * 2 * 0.010391 * coils
+n_circ = 6
+n_cross_section = 6
+coils = 2
+length = np.pi * 2 * 0.010391 * coils
 
-# coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.001, "f": 2.0, "re": 50.0, "pitch": 0.0104, "coil_rad": 0.0125}
-# x = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n_circ)]
-# # x = [[0.0025 for i in range(n_cross_section)] for j in range(n_circ)]
-# coil_data['fid_radial'] = 2 # min = 2 max 5
-# coil_data['fid_axial'] = 15 # min = 15 max 40
+coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.001, "f": 2.0, "re": 50.0, "pitch": 0.0104, "coil_rad": 0.0125}
+x = [np.random.uniform(0.002,0.004,n_cross_section) for i in range(n_circ)]
+# x = [[0.0025 for i in range(n_cross_section)] for j in range(n_circ)]
+coil_data['fid_radial'] = 4 # min = 2 max 5
+coil_data['fid_axial'] = 40 # min = 15 max 40
 
-# case = 'mesh_generation/test'
+case = 'mesh_generation/test'
 
-# create_mesh(x,coil_data.copy(),case,debug=False)
+x = {"r_0_0": 0.0026451612903225807, "r_0_1": 0.0023870967741935487, "r_0_2": 0.0035483870967741938, "r_0_3": 0.00232258064516129, "r_0_4": 0.0032258064516129032, "r_0_5": 0.002903225806451613, "r_1_0": 0.0021290322580645163, "r_1_1": 0.002, "r_1_2": 0.0032903225806451613, "r_1_3": 0.0036129032258064514, "r_1_4": 0.002838709677419355, "r_1_5": 0.0037419354838709677, "r_2_0": 0.0032258064516129032, "r_2_1": 0.002903225806451613, "r_2_2": 0.0035483870967741938, "r_2_3": 0.0035483870967741938, "r_2_4": 0.004, "r_2_5": 0.0030967741935483874, "r_3_0": 0.0025806451612903226, "r_3_1": 0.0021935483870967744, "r_3_2": 0.0033548387096774194, "r_3_3": 0.0029677419354838712, "r_3_4": 0.0025806451612903226, "r_3_5": 0.0032258064516129032, "r_4_0": 0.003935483870967742, "r_4_1": 0.0035483870967741938, "r_4_2": 0.0029677419354838712, "r_4_3": 0.003161290322580645, "r_4_4": 0.0025161290322580645, "r_4_5": 0.002838709677419355, "r_5_0": 0.003032258064516129, "r_5_1": 0.0037419354838709677, "r_5_2": 0.0021290322580645163, "r_5_3": 0.003161290322580645, "r_5_4": 0.003806451612903226, "r_5_5": 0.0030967741935483874, "fid_axial": 17.0, "fid_radial": 3.0}
+x['fid_radial'] = coil_data['fid_radial']
+x['fid_axial'] = coil_data['fid_axial']
+
+x_list = []
+for i in range(n_circ):
+        x_add = []
+        for j in range(n_cross_section):
+                x_add.append(x['r_' + str(i) + '_' + str(j)])
+                # x_add.append(0.0025)
+
+        x_list.append(np.array(x_add))
+
+create_mesh(x_list,coil_data.copy(),case,debug=False)

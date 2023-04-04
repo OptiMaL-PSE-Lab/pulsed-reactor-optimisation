@@ -8,11 +8,65 @@ sys.path.insert(1, "mesh_generation/classy_blocks/src/")
 
 from classy_blocks.classes.primitives import Edge
 from classy_blocks.classes.block import Block
+from jax.nn import softplus
+from gpjax.config import add_parameter
 from classy_blocks.classes.mesh import Mesh
 import shutil
 import matplotlib.pyplot as plt
 import math
 from matplotlib import rc
+import numpy as np 
+import matplotlib.pyplot as plt 
+import distrax as dx
+import jax.numpy as jnp
+import jax.random as jr
+import matplotlib.pyplot as plt
+from jax import jit
+from jax.config import config
+from jaxtyping import Array, Float
+from optax import adam
+from typing import Dict
+from jaxutils import Dataset
+import jaxkern as jk
+import gpjax as gpx
+
+key = jr.PRNGKey(10)
+# Enable Float64 for more stable matrix inversions.
+config.update("jax_enable_x64", True)
+
+
+def angular_distance(x, y, c):
+        return jnp.abs((x - y + c) % (c * 2) - c)
+
+
+class Polar(jk.base.AbstractKernel):
+        def __init__(self) -> None:
+                super().__init__()
+                self.period: float = 2 * jnp.pi
+                self.c = self.period / 2.0  # in [0, \pi]
+
+        def __call__(
+                self, params: Dict, x: Float[Array, "1 D"], y: Float[Array, "1 D"]
+        ) -> Float[Array, "1"]:
+                tau = params["tau"]
+                t = angular_distance(x, y, self.c)
+                K = (1 + tau * t / self.c) * jnp.clip(1 - t / self.c, 0, jnp.inf) ** tau
+                return K.squeeze()
+
+        def init_params(self, key: jr.KeyArray) -> dict:
+                return {"tau": jnp.array([4.0])}
+
+        # This is depreciated. Can be removed once JaxKern is updated.
+        def _initialise_params(self, key: jr.KeyArray) -> Dict:
+                return self.init_params(key)
+
+
+bij_fn = lambda x: softplus(x + jnp.array(4.0))
+bij = dx.Lambda(
+        forward=bij_fn, inverse=lambda y: -jnp.log(-jnp.expm1(-y - 4.0)) + y - 4.0
+)
+
+add_parameter("tau", bij)
 
 
 def rotate_z(x0, y0, z0, r_z):
@@ -60,8 +114,13 @@ def cartesian_convert(x, y, z):
         # conversion to cartesian coordinates
         r = np.sqrt(x ** 2 + y ** 2)
         theta = np.arctan2(y, x)
+        for i in range(1,len(theta)):
+                if theta[i] < theta[i-1]:
+                        while theta[i] < theta[i-1]:
+                                theta[i] = theta[i] + 2 * np.pi
         z = z
         return r, theta, z
+
 
 
 def unit_vector(vector):
@@ -162,71 +221,247 @@ def smooth_path(start,end,x,d):
                 x[insert[i]] = x_new[i]
         return x
 
-def interpolate_path(rho,theta,z,f):
+def interpolate_path(r,theta,z,f):
 
-        x,y,z = cylindrical_convert(rho,theta,z)
-        x_start,_ = interpolate([x[0],x[1]], int(f/2), "linear", "x")
-        y_start,_ = interpolate([y[0],y[1]], int(f/2), "linear", "y")
-        z_start,_ = interpolate([z[0],z[1]], int(f/2), "linear", "z")
+        x,y,z = cylindrical_convert(r,theta,z)
+        rho_mid = interpolate_s(r[1:], f, "quadratic")
+        theta_mid = interpolate_s(theta[1:], f, "quadratic")
+        z_mid = interpolate_s(z[1:], f, "quadratic")
+        x_m,y_m,z_m = cylindrical_convert(rho_mid,theta_mid,z_mid)
 
+        x_start = interpolate_s([x[0],x[1]], int(f/2), "linear")
+        y_start = interpolate_s([y[0],y[1]], int(f/2), "linear")
+        z_start = interpolate_s([z[0],z[1]], int(f/2), "linear")
+        x_start = x_start[:-1]
+        y_start = y_start[:-1]
+        z_start = z_start[:-1]
 
         d_start = np.sqrt((x_start[0]-x_start[-1])**2 + (y_start[0]-y_start[-1])**2 + (z_start[0]-z_start[-1])**2)
 
-        rho_mid,_ = parse_inputs(rho[1:-1], f, "rho")
-        theta_mid,_ = parse_inputs(theta[1:-1], f, "theta")
-        z_mid,_ = parse_inputs(z[1:-1], f, "z")
-        x_m,y_m,z_m = cylindrical_convert(rho_mid,theta_mid,z_mid)
-        dx = x_m[-1] - x_m[-2]
-        dy = y_m[-1] - y_m[-2]
-        dz = z_m[-1] - z_m[-2]
+        x = np.append(x_start,x_m)
+        y = np.append(y_start,y_m)
+        z = np.append(z_start,z_m)
 
+        len_s = len(x_start)
+
+        d_store = [0]
+        for i in range(1,len(x)):
+                d = np.sqrt((x[i-1]-x[i])**2 + (y[i-1]-y[i])**2 + (z[i-1]-z[i])**2)
+                d_store.append(d)
+        d_store = np.cumsum(d_store)
+
+        s = len_s - int(f/2) 
+        e = len_s + int(f/2)
+
+        d_int = [d_store[s+0],d_store[s+1],d_store[e-2],d_store[e-1]]
+        z_int = [z[s+0],z[s+1],z[e-2],z[e-1]]
+        
+        z_new,_ = interpolate_num_same(d_int,d_store[s:e],z_int,"quadratic")
+
+        for i in range(s,e):
+                z[i] = z_new[i-s]
+        rho,theta,z = cartesian_convert(x,y,z)
+        return rho,theta,z
+
+# start do from parralel
+# end do from dx dy method 
+
+def interpolate_s(y, fac_interp, kind):
+
+        x = np.linspace(0, len(y), len(y))
+        x_new = np.linspace(0, len(y), len(y) * fac_interp)
+        f = interp1d(x, y, kind=kind)
+        y_new = f(x_new)
+        y = y_new 
+
+        return y
+
+def gp_interpolate_polar(X,y,n_interp):
+        # Simulate data
+        angles = jnp.linspace(0, 2 * jnp.pi, num=n_interp).reshape(-1, 1)
+
+        D = Dataset(X=X, y=y)
+
+        # Define polar Gaussian process 
+        PKern = Polar()
+        likelihood = gpx.Gaussian(num_datapoints=len(X))
+        circlular_posterior = gpx.Prior(kernel=PKern) * likelihood
+
+        # Initialise parameter state:
+        parameter_state = gpx.initialise(circlular_posterior, key)
+        parameter_state.params['likelihood']['obs_noise'] = 0 
+        parameter_state.trainables['likelihood']['obs_noise'] = False
+
+        # Optimise GP's marginal log-likelihood using Adam
+        negative_mll = jit(circlular_posterior.marginal_log_likelihood(D, negative=True))
+        optimiser = adam(learning_rate=0.05)
+
+
+        inference_state = gpx.fit(
+                objective=negative_mll,
+                parameter_state=parameter_state,
+                optax_optim=optimiser,
+                num_iters=1000,
+        )
+
+        learned_params, training_history = inference_state.unpack()
+
+        posterior_rv = likelihood(
+                learned_params, circlular_posterior(learned_params, D)(angles)
+        )
+        mu = posterior_rv.mean()
+        return angles, mu 
+
+
+def rotate_xyz(x,y,z,t,t_x,c_x,c_y,c_z):
+        x -= c_x
+        y -= c_y
+        (
+                x,
+                y,
+                z,
+        ) = rotate_x(x, y, z, t_x)
+        x, y, z = rotate_z(x, y, z, t)
+        x += c_x
+        y += c_y
+        x, y, z = rotate_z(x, y, z, 3 * np.pi / 2)
+        return x,y,z
+
+
+
+def create_gp_circle(d,radius_og,rot_x,rot_z):
+        # from a centre, radius, and z rotation,
+        #  create the points of a circle
+        c_x, c_y, c_z = d
+        radius = radius_og.copy()
+        angles_og = np.linspace(0,np.pi*2,len(radius),endpoint=False)
+        angles = angles_og.copy()
+        r_mean = np.mean(radius)
+        r_std = np.std(radius)
+        if r_std != 0:
+                radius = (radius - r_mean)/r_std
+                angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),64)
+                angles = angles[:,0]
+                radius  = radius * r_std + r_mean
+        else:
+                angles = np.linspace(0,np.pi*2,64)
+                radius = np.array([r_mean for i in range(64)])
+
+        for i in range(len(radius)):
+                if radius[i] != radius[i]:
+                        radius = radius.at[i].set(r_mean)
+
+        y_n = radius * np.cos(angles) +c_y
+        x_n = radius * np.sin(angles) + c_x
+        z_n =  np.array([c_z for i in range(len(x_n))])
+        x, y, z = rotate_x(x_n, y_n, z_n, rot_x)
+        x, y, z = rotate_z(x, y, z, rot_z)
+
+        return x, y, z
+
+
+def add_start(rho,theta,z,L):
+        rho_start = np.sqrt(rho[0]**2 + L**2)
+        theta_start = theta[0] - np.arctan(L/rho[0])
+        z_start = z[0]
+
+        z = np.append(z_start,z)
+        rho = np.append(rho_start,rho)
+        theta = np.append(theta_start,theta)
+
+        return rho,theta,z
+
+def interpolate_num_same(x,x_new,y, kind):
+        f = interp1d(x, y, kind=kind)
+        y_new = f(x_new)
+        y = y_new 
+        return y_new,x_new
+
+def interpolate_split(r,theta,z,fid_ax):
+        #z[1] = (z[0]+z[2])/2
+        x,y,z = cylindrical_convert(r,theta,z)
+        rho_mid = interpolate_s(r[1:], fid_ax, "quadratic")
+        theta_mid = interpolate_s(theta[1:], fid_ax, "quadratic")
+        z_mid = interpolate_s(z[1:], fid_ax, "quadratic")
+        x_m,y_m,z_m = cylindrical_convert(rho_mid,theta_mid,z_mid)
+
+        x_start = interpolate_s([x[0],x[1]], int(fid_ax/2), "linear")
+        y_start = interpolate_s([y[0],y[1]], int(fid_ax/2), "linear")
+        z_start = interpolate_s([z[0],z[1]], int(fid_ax/2), "linear")
+        x_start = x_start[:-1]
+        y_start = y_start[:-1]
+        z_start = z_start[:-1]
+
+        d_start = np.sqrt((x_start[0]-x_start[-1])**2 + (y_start[0]-y_start[-1])**2 + (z_start[0]-z_start[-1])**2)
+
+        x = np.append(x_start,x_m)
+        y = np.append(y_start,y_m)
+        z = np.append(z_start,z_m)
+
+        len_s = len(x_start)
+
+        d_store = [0]
+        for i in range(1,len(x)):
+                d = np.sqrt((x[i-1]-x[i])**2 + (y[i-1]-y[i])**2 + (z[i-1]-z[i])**2)
+                d_store.append(d)
+        d_store = np.cumsum(d_store)
+
+        s = len_s - int(fid_ax/2) 
+        e = len_s + int(fid_ax/2)
+
+        d_int = [d_store[s+0],d_store[s+1],d_store[e-2],d_store[e-1]]
+        z_int = [z[s+0],z[s+1],z[e-2],z[e-1]]
+        
+        z_new,_ = interpolate_num_same(d_int,d_store[s:e],z_int,"quadratic")
+
+        for i in range(s,e):
+                z[i] = z_new[i-s]
+
+        # r = np.append(r_start,r)
+        # theta = np.append(theta_start,theta)
+        # z_c = np.append(z_start,z_c)
+
+        return x,y,z,d_start
+
+def add_end(x,y,z,dx,dy,dz,d_start,fid_ax):
 
         d_end = np.sqrt(dx**2+dy**2+dz**2)
         factor = d_start / d_end
         
-        x_e = x_m[-1] + dx * factor
-        y_e = y_m[-1] + dy * factor
-        z_e = z_m[-1] + dz * factor
+        x_e = x[-1] + dx * factor
+        y_e = y[-1] + dy * factor
+        z_e = z[-1] + dz * factor
 
-        x_end,_ = interpolate([x_m[-1],x_e], int(f/2), "linear", "x")
-        y_end,_ = interpolate([y_m[-1],y_e], int(f/2), "linear", "y")
-        z_end,_ = interpolate([z_m[-1],z_e], int(f/2), "linear", "z")
+        x_end = interpolate_s([x[-1],x_e], int(fid_ax/2), "linear")
+        y_end = interpolate_s([y[-1],y_e], int(fid_ax/2), "linear")
+        z_end = interpolate_s([z[-1],z_e], int(fid_ax/2), "linear")
 
         x_end = x_end[1:]
         y_end = y_end[1:]
         z_end = z_end[1:]
 
+        x = np.append(x,x_end)
+        y = np.append(y,y_end)
+        z = np.append(z,z_end)
+
+        return x,y,z
 
 
-        rho_start,theta_start,z_start = cartesian_convert(x_start,y_start,z_start)
-        rho_end,theta_end,z_end = cartesian_convert(x_end,y_end,z_end)
+def create_mesh(data,interp_points, path, n_interp, nominal_data_og):
 
-
-        rho = np.append(np.append(rho_start,rho_mid[1:]),rho_end)
-        theta = np.append(np.append(theta_start,theta_mid[1:]),theta_end)
-        z = np.append(np.append(z_start,z_mid[1:]),z_end)
-
-
-        x,y,z = cylindrical_convert(rho,theta,z)
-        len_s = len(rho_start) 
-        y = -y 
-
-        rho,theta,z = cartesian_convert(x,y,z)
-        
-
-        return rho,theta,z,len(x_start),len(z_mid)
-
-# start do from parralel
-# end do from dx dy method 
-
-def create_mesh(data, path, n_interp, nominal_data_og):
-
+        nominal_data = nominal_data_og.copy()
         try:
                 shutil.copytree("mesh_generation/mesh", path)
         except:
                 print('file already exists')
         # factor to interpolate between control points
+
+        interp_points.append(np.array([nominal_data['tube_rad_0'] for i in range(len(interp_points[0]))])) # adding start and end inlet to be correct
+        interp_points.insert(0,np.array([nominal_data['tube_rad_0'] for i in range(len(interp_points[0]))]))
+        interp_points.insert(0,np.array([nominal_data['tube_rad_0'] for i in range(len(interp_points[0]))]))
+
         interpolation_factor =int((data["fid_axial"]))
+        fid_ax = int((data["fid_axial"]))
         # interpolate x times the points between
         fid_radial = int((data["fid_radial"]))
         fid_rad = int((data["fid_radial"]))
@@ -235,40 +470,6 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
         # do interpolation between points
         vals = {}
-
-
-
-        fig = plt.figure(figsize=(12,7))
-        axs = []
-        for i in range(3):
-                axs.append(fig.add_subplot(2, 3, i+1))
-
-        for i in range(3):
-                axs.append(fig.add_subplot(2, 3, i+4, projection='3d'))
-        
-        fig.tight_layout()
-        plt.subplots_adjust(left=0.075,bottom=0.05,wspace=0.3,hspace=0.3)
-        x_ax = np.linspace(0,1,n_interp) * 100 
-
-        for ax in axs[:3]:
-                ax.set_xlabel('Coil Length (%)',fontsize=14)
-        
-        axs[0].set_ylabel('z',fontsize=14)
-        axs[1].set_ylabel(r'$\rho$',fontsize=14)
-        axs[2].set_ylabel(r'$\theta$',fontsize=14)
-
-        nominal_data = nominal_data_og.copy()
-
-        axs[0].plot(x_ax,[nominal_data['z_'+str(i)] for i in range(n_interp)],c='k')
-        axs[1].plot(x_ax,[nominal_data['rho_'+str(i)] for i in range(n_interp)],c='k')
-        axs[2].plot(x_ax,[nominal_data['theta_'+str(i)] for i in range(n_interp)],c='r')
-
-
-        axs[0].scatter(x_ax,[nominal_data['z_'+str(i)]+data['z_'+str(i)] for i in range(n_interp)],c='k',lw=2)
-        axs[1].scatter(x_ax,[nominal_data['rho_'+str(i)]+data['rho_'+str(i)] for i in range(n_interp)],c='k',lw=2)
-        for i in range(n_interp):
-                axs[0].plot([x_ax[i],x_ax[i]],[nominal_data['z_'+str(i)],nominal_data['z_'+str(i)]+data['z_'+str(i)]],c='k',ls='dashed')
-                axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
 
         for i in range(n_interp):
                 try:
@@ -284,19 +485,6 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         data_og = nominal_data_og 
 
 
-        # calculating real values from differences and initial conditions
-        rho = data["rho_0"]
-        theta = data["theta_0"]
-
-        L = rho 
-        rho_two = np.sqrt(rho**2+L**2)
-        theta_two = theta + np.arctan(L/rho)
-
-        data["theta_s"] = theta_two
-        data["rho_s"] = rho_two
-        data["z_s"] = data["z_0"]
-        data['tube_rad_s'] = data['tube_rad_0']
-
         rho = data["rho_"+str(n_interp-1)]
         theta = data["theta_"+str(n_interp-1)]
 
@@ -306,57 +494,27 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
         vals = {}
         for k in keys:
-                vals[k] = [data[k+"_s"]]+[data[k + "_" + str(i)] for i in list(range(n_interp))]
-        data = {}
+                vals[k] = [data[k + "_" + str(i)] for i in list(range(n_interp))]
 
-        data['rho'],data['theta'],data['z'],len_s,len_mid = interpolate_path(vals['rho'],vals['theta'],vals['z'],interpolation_factor)
+        data = vals 
+
+
+        x,y,z = cylindrical_convert(vals['rho'],vals['theta'],vals['z'])
+        y = -y 
+        vals['rho'],vals['theta'],vals['z'] = cartesian_convert(x,y,z)
+        vals['rho'],vals['theta'],vals['z'] = add_start(vals['rho'],vals['theta'],vals['z'],rho)
+        data['rho'],data['theta'],data['z'] = interpolate_path(vals['rho'],vals['theta'],vals['z'],interpolation_factor)
         data['tube_rad'] = [nominal_data['tube_rad_0'] for i in range(len(data['rho']))]
-        # for k in keys:
-        #     vals[k],x_ax = parse_inputs(data[k], interpolation_factor, k)
-        #vals = data.copy()
-        x,y,z = cylindrical_convert(data['rho'],data['theta'],data['z'])
-
-
-        x_ax = 100*x_ax/x_ax[-1]
-        
-        try:
-                axs[0].plot(x_ax,vals['z'],c='tab:red')
-                axs[1].plot(x_ax,vals['rho'],c='tab:red')
-        except:
-                print('Printing do be broken doe')
-
-        # x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
-        # for ax in axs[3:]:
-        #     ax.plot(x,y,z,c='k',lw=1)
-
-
-        #plt.savefig(path+'/interp.pdf')
         le = len(data['z'])
 
         data["fid_radial"] = fid_radial
+
         mesh = Mesh()
 
         rot_x_store = []
         rot_z_store = []
 
-        d_store = [0]
-        for i in range(1,len(x)):
-                d = np.sqrt((x[i-1]-x[i])**2 + (y[i-1]-y[i])**2 + (z[i-1]-z[i])**2)
-                d_store.append(d)
-        d_store = np.cumsum(d_store)
-
-        s = len_s - int(interpolation_factor/2) 
-        e = len_s + int(interpolation_factor/2)
-
-        d_int = [d_store[s+0],d_store[s+1],d_store[e-2],d_store[e-1]]
-        z_int = [z[s+0],z[s+1],z[e-2],z[e-1]]
-        
-        z_new,_ = interpolate_num_same(d_int,d_store[s:e],z_int,"quadratic")
-
-        for i in range(s,e):
-                z[i] = z_new[i-s]
-
-        for p in range(1, le - 1):
+        for p in range(1, le ):
                 # get proceeding circle (as x,y,z samples)
                 rot_x,rot_z = calc_angle(
                         [data[keys[i]][p - 1] for i in range(len(keys))],
@@ -372,27 +530,103 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                                 rot_z_store[j] += 2*np.pi
 
         
+        x,y,z = cylindrical_convert(data['rho'],data['theta'],data['z'])
+
+        s_ind = np.linspace(1,len(data['rho'])-1,len(interp_points),dtype=int)
+        data['rho'] = [data['rho'][i] for i in s_ind]
+        data['theta'] = [data['theta'][i] for i in s_ind]
+        data['z'] = [data['z'][i] for i in s_ind]
+
+
+        rot_x_store = [rot_x_store[i-1] for i in s_ind]
+        rot_z_store = [rot_z_store[i-1] for i in s_ind]
+
+
+        data['tube_rad'] = [nominal_data['tube_rad_0'] for i in range(len(data['rho']))]
+        # rot_x_store = [0] + rot_x_store
+        # rot_z_store = [0] + rot_z_store
+        # rot_x_store[1] = 0
+        # rot_z_store[1] = 0
+
+        data['x'],data['y'],data['z'] = cylindrical_convert(data['rho'],data['theta'],data['z'])
+
+        n = len(data['x'])
+        p_list = []
+        keys = ['x','y','z']
+        for i in range(n):
+                x, y, z = create_gp_circle(
+                        [data[keys[j]][i] for j in range(len(keys))],interp_points[i],rot_x_store[i],rot_z_store[i]
+                )
+                
+                p_list.append([x,y,z])
 
         fig_p, axs_p = plt.subplots(1, 3, figsize=(10, 3), subplot_kw=dict(projection="3d"))
         le = len(rot_x_store)
+  
+
+        p_list = np.asarray(np.array(p_list))
+
+        p_cylindrical_list = []
+
+        for i in range(len(p_list[0,0,:])):
+                r,theta,z = cartesian_convert(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i])
+                p_cylindrical_list.append([r,theta,z])
+
+        p_cylindrical_list = np.asarray(p_cylindrical_list)
+        p_new_list = [] 
+        for i in range(len(p_cylindrical_list[:,0,0])):
+
+                x,y,z,d_start = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
+                p_new_list.append([x,y,z])
+
+        p_new_list = np.asarray(p_new_list)
+
+        m_x = np.mean(p_new_list[:,0,:],axis=0)
+        m_y = np.mean(p_new_list[:,1,:],axis=0)
+        m_z = np.mean(p_new_list[:,2,:],axis=0)
+        dx = m_x[-1] - m_x[-2]
+        dy = m_y[-1] - m_y[-2]
+        dz = m_z[-1] - m_z[-2]
+
         p_list = []
-        for p in range(le-1):
-                # get proceeding circle (as x,y,z samples)
-                x, y, z = create_circle_known(
-                        [data[keys[i]][p + 1] for i in range(len(keys))],rot_x_store[p],rot_z_store[p]
-                )
+        for i in range(len(p_new_list[:,0,0])):
+                x,y,z = add_end(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:], dx,dy,dz,d_start,fid_ax)
                 p_list.append([x,y,z])
-        p_list = np.array(p_list)
 
-        for i in range(len(p_list[:,:,:])-1):
-                # plot for reference
-                col = 'k'
-                for ax in axs_p:
+        p_list = np.asarray(p_list)
+
+        # plot for reference
+        col = 'k'
+        for ax in axs_p:
+                for i in range(len(p_list[:,0,0])-1):
                         ax.plot3D(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c=col, lw=0.5,alpha=0.25)
-                        for j in np.linspace(0,len(p_list[i,0,:]),10,endpoint=False):
-                                j = int(j)
-                                ax.plot3D([p_list[i,0,j],p_list[i+1,0,j]],[p_list[i,1,j],p_list[i+1,1,j]],[p_list[i,2,j],p_list[i+1,2,j]],c=col,lw=0.5,alpha=0.25)
+                for j in range(len(p_list[0,0,:])-1):
+                        ax.plot3D(p_list[:,0,j],p_list[:,1,j],p_list[:,2,j],c=col,lw=0.5,alpha=0.25)
 
+        axs_p[0].view_init(0, 270)
+        axs_p[1].view_init(0, 180)
+        axs_p[2].view_init(270, 0)
+
+        for ax in axs_p:
+                ax.set_box_aspect(
+                        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+                )
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_zticks([])
+                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+                ax.grid()
+        axs_p[0].set_xlabel("x",fontsize=14)
+        axs_p[0].set_zlabel("z",fontsize=14)
+        axs_p[1].set_ylabel("y",fontsize=14)
+        axs_p[1].set_zlabel("z",fontsize=14)
+        axs_p[2].set_ylabel("y",fontsize=14)
+        axs_p[2].set_xlabel("x",fontsize=14)
+
+        fig_p.tight_layout()
+        fig_p.savefig(path + "/pre-render.png", dpi=600)
 
         c = np.mean(p_list,axis=2)
         s = 0 
@@ -501,62 +735,6 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                                 mesh.add_block(block)
                 s += ds
 
-        for ax in axs[3:]:
-                ax.set_box_aspect(
-                        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
-                )
-                ax.set_xticks([])
-                ax.set_yticks([])
-                ax.set_zticks([])
-                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-
-        axs[3].set_xlabel("x",fontsize=14)
-        axs[3].set_zlabel("z",fontsize=14)
-
-        axs[4].set_ylabel("y",fontsize=14)
-        axs[4].set_zlabel("z",fontsize=14)
-
-        axs[5].set_ylabel("y",fontsize=14)
-        axs[5].set_xlabel("x",fontsize=14)
-
-        axs[3].view_init(0, 270)
-        axs[4].view_init(0, 180)
-        axs[5].view_init(270, 0)
-
-        axs_p[0].view_init(0, 270)
-        axs_p[1].view_init(0, 180)
-        axs_p[2].view_init(270, 0)
-
-        for ax in axs_p:
-                ax.set_box_aspect(
-                        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
-                )
-                ax.set_xticks([])
-                ax.set_yticks([])
-                ax.set_zticks([])
-                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.grid()
-        axs_p[0].set_xlabel("x",fontsize=14)
-        axs_p[0].set_zlabel("z",fontsize=14)
-        axs_p[1].set_ylabel("y",fontsize=14)
-        axs_p[1].set_zlabel("z",fontsize=14)
-        axs_p[2].set_ylabel("y",fontsize=14)
-        axs_p[2].set_xlabel("x",fontsize=14)
-
-
-        # plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
-        # plt.show()
-        # copy existing base mesh folder
-        fig.tight_layout()
-
-        fig_p.tight_layout()
-        fig_p.savefig(path + "/pre-render.png", dpi=600)
-        fig.savefig(path + "/interp.pdf", dpi=200)
-
         # # run script to create mesh
         print("Writing geometry")
         mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
@@ -579,16 +757,14 @@ data['fid_radial'] = 4
 data['fid_axial'] = 40
 
 data['rho_0'] = 0
-# data['z_0'] = np.random.uniform(-0.001,0.001)
-# data['z_1'] = np.random.uniform(-0.001,0.001)
-data['z_0'] = 0
 data['z_1'] = 0
+data['z_0'] = 0
 data['rho_1'] = 0
 for i in range(2,n):
-        data['z_'+str(i)] = 0
-        data['rho_'+str(i)] = 0
-        # data['z_'+str(i)] = np.random.uniform(-0.001,0.001)
-        # data['rho_'+str(i)] = np.random.uniform(-0.0025,0.001)
+        # data['z_'+str(i)] = 0
+        # data['rho_'+str(i)] = 0
+        data['z_'+str(i)] = np.random.uniform(-0.001,0.001)
+        data['rho_'+str(i)] = np.random.uniform(-0.0025,0.001)
 
 z_vals = np.linspace(0, h/2, n)
 theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
@@ -600,4 +776,17 @@ for i in range(n):
         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
         nominal_data["rho_" + str(i)] = rho_vals[i]
 
-create_mesh(data,'mesh_generation/test',n,nominal_data)
+
+n_circ = 6
+n_cross_section = 6
+
+
+x_list = []
+for i in range(n_circ):
+        x_add = []
+        for j in range(n_cross_section):
+                x_add.append(np.random.uniform(0.001,0.002))
+                # x_add.append(0.0025)
+        x_list.append(np.array(x_add))
+
+create_mesh(data,x_list,'mesh_generation/test',n,nominal_data)
