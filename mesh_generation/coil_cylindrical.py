@@ -378,10 +378,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         le = len(rot_x_store)
         p_list = []
         for p in range(le-1):
-        for p in range(le-1):
                 # get proceeding circle (as x,y,z samples)
                 x, y, z = create_circle_known(
-                        [data[keys[i]][p + 1] for i in range(len(keys))],rot_x_store[p],rot_z_store[p]
                         [data[keys[i]][p + 1] for i in range(len(keys))],rot_x_store[p],rot_z_store[p]
                 )
                 p_list.append([x,y,z])
@@ -579,8 +577,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 # N = 2 * np.pi * coils  # angular turns (radians)
 # n = 8  # points to use
 
-data['fid_radial'] = 4
-data['fid_axial'] = 40
+# data['fid_radial'] = 4
+# data['fid_axial'] = 40
 
 # data['fid_radial'] = 2
 # data['fid_axial'] = 20
@@ -604,4 +602,4 @@ data['fid_axial'] = 40
 #         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
 #         nominal_data["rho_" + str(i)] = rho_vals[i]
 
-create_mesh(data,'mesh_generation/test',n,nominal_data)
+# create_mesh(data,'mesh_generation/test',n,nominal_data)

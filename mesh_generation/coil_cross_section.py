@@ -608,7 +608,6 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs_i[2].view_init(270, 0)
 
 
-        for i in np.linspace(0,len(p_list[:,0,0])-1,10):
 
         for i in np.linspace(0,len(p_list[:,0,0])-1,10):
                 i = int(i)
@@ -616,7 +615,6 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
                         ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.25,lw=0.5)
                         ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.25,lw=0.5)
 
-        for i in range(len(p_list[0,0,:])):
         for i in range(len(p_list[0,0,:])):
                 for ax in axs_i:
                         ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.25,lw=0.5)

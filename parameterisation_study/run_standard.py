@@ -49,7 +49,7 @@ def eval_cfd_cross(x: dict):
     case = "parameterisation_study/cross_standard_simulation"
 
     create_mesh_cross_section(x_list,coil_data.copy(),case,debug=False)
-n = 8  # points to use
+    n = 8  # points to use
 
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)
@@ -110,9 +110,6 @@ if flag == 'cylinder':
 
     data['rho_0'] = 0
     data['z_0'] = 0
-    data['z_1'] = 0
-    data['rho_1'] = 0
-    for i in range(2,n):
     data['z_1'] = 0
     data['rho_1'] = 0
     for i in range(2,n):
