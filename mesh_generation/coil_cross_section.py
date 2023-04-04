@@ -184,10 +184,16 @@ def create_circle(d,radius_og):
                 # angles = angles[:,0]
                 # angles = np.append(angles,2*np.pi)
                 # radius = np.append(radius,radius[0])
+                # angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),63)
+                # angles = angles[:,0]
+                # angles = np.append(angles,2*np.pi)
+                # radius = np.append(radius,radius[0])
                 angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),64)
+                angles = angles[:,0]
                 angles = angles[:,0]
                 radius  = radius * r_std + r_mean
         else:
+                angles = np.linspace(0,np.pi*2,64)
                 angles = np.linspace(0,np.pi*2,64)
                 radius = np.array([r_mean for i in range(64)])
 
@@ -292,9 +298,15 @@ def interpolate_split(r,theta,z,fid_ax):
         x_start = x_start[:-1]
         y_start = y_start[:-1]
         z_start = z_start[:-1]
+        x_start = x_start[:-1]
+        y_start = y_start[:-1]
+        z_start = z_start[:-1]
 
         d_start = np.sqrt((x_start[0]-x_start[-1])**2 + (y_start[0]-y_start[-1])**2 + (z_start[0]-z_start[-1])**2)
 
+        x = np.append(x_start,x_m)
+        y = np.append(y_start,y_m)
+        z = np.append(z_start,z_m)
         x = np.append(x_start,x_m)
         y = np.append(y_start,y_m)
         z = np.append(z_start,z_m)
@@ -323,7 +335,30 @@ def interpolate_split(r,theta,z,fid_ax):
         # z_c = np.append(z_start,z_c)
 
         return x,y,z,d_start
+        return x,y,z,d_start
 
+def add_end(x,y,z,dx,dy,dz,d_start,fid_ax):
+
+        d_end = np.sqrt(dx**2+dy**2+dz**2)
+        factor = d_start / d_end
+        
+        x_e = x[-1] + dx * factor
+        y_e = y[-1] + dy * factor
+        z_e = z[-1] + dz * factor
+
+        x_end = interpolate([x[-1],x_e], int(fid_ax/2), "linear")
+        y_end = interpolate([y[-1],y_e], int(fid_ax/2), "linear")
+        z_end = interpolate([z[-1],z_e], int(fid_ax/2), "linear")
+
+        x_end = x_end[1:]
+        y_end = y_end[1:]
+        z_end = z_end[1:]
+
+        x = np.append(x,x_end)
+        y = np.append(y,y_end)
+        z = np.append(z,z_end)
+
+        return x,y,z
 def add_end(x,y,z,dx,dy,dz,d_start,fid_ax):
 
         d_end = np.sqrt(dx**2+dy**2+dz**2)
@@ -416,6 +451,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
                         [data[keys[j]][i] for j in range(len(keys))],interp_points[i]
                 )
                 
+                
                 p_list.append([x,y,z])
                 p_interp.append([x_n,z_n])
                 if i > 0:
@@ -443,6 +479,7 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs[2].set_ylabel("y",fontsize=14)
         axs[2].set_xlabel("x",fontsize=14)
         plt.savefig(path+'/points.pdf', dpi=600)
+        p_list = np.asarray(np.array(p_list))
         p_list = np.asarray(np.array(p_list))
         p_c_list = np.asarray(p_c_list)
         p_interp = np.asarray(p_interp)
@@ -473,11 +510,12 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         fig.savefig(path+'/gp_slices.pdf', dpi=600)
 
         figc,axsc = plt.subplots(2,int((len(interp_points)-3)/2),figsize=(10,6),subplot_kw=dict(projection='polar'),sharey=True)
+        figc,axsc = plt.subplots(2,int((len(interp_points)-3)/2),figsize=(10,6),subplot_kw=dict(projection='polar'),sharey=True)
         figc.tight_layout()
         gridspec = fig.add_gridspec(1, 1)
         angles = np.linspace(0,2*np.pi,len(interp_points[0]),endpoint=False)
 
-        i = 3
+        i = 2
         for ax in axsc.ravel():
                 ax.set_yticks([0,0.001,0.002,0.003,0.004],[0,'1E-3','2E-3','3E-3','4E-3'],fontsize=8)
                 ax.set_xticks(np.linspace(0,2*np.pi,8,endpoint=False),['0',r'$\frac{\pi}{4}$',r'$\frac{\pi}{2}$',r'$\frac{3\pi}{4}$',r'$\pi$',r'$\frac{5\pi}{4}$',r'$\frac{3\pi}{2}$',r'$\frac{7\pi}{4}$'])
@@ -508,6 +546,8 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
                 x,y,z,d_start = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
                 p_new_list.append([x,y,z])
+                x,y,z,d_start = interpolate_split(p_cylindrical_list[i,0,:],p_cylindrical_list[i,1,:],p_cylindrical_list[i,2,:], fid_ax)
+                p_new_list.append([x,y,z])
 
         p_new_list = np.asarray(p_new_list)
 
@@ -518,7 +558,16 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         dy = m_y[-1] - m_y[-2]
         dz = m_z[-1] - m_z[-2]
 
+        m_x = np.mean(p_new_list[:,0,:],axis=0)
+        m_y = np.mean(p_new_list[:,1,:],axis=0)
+        m_z = np.mean(p_new_list[:,2,:],axis=0)
+        dx = m_x[-1] - m_x[-2]
+        dy = m_y[-1] - m_y[-2]
+        dz = m_z[-1] - m_z[-2]
+
         p_list = []
+        for i in range(len(p_new_list[:,0,0])):
+                x,y,z = add_end(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:], dx,dy,dz,d_start,fid_ax)
         for i in range(len(p_new_list[:,0,0])):
                 x,y,z = add_end(p_new_list[i,0,:],p_new_list[i,1,:],p_new_list[i,2,:], dx,dy,dz,d_start,fid_ax)
                 p_list.append([x,y,z])
@@ -560,12 +609,17 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
 
         for i in np.linspace(0,len(p_list[:,0,0])-1,10):
+
+        for i in np.linspace(0,len(p_list[:,0,0])-1,10):
                 i = int(i)
                 for ax in axs_i:
                         ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.25,lw=0.5)
+                        ax.plot(p_list[i,0,:],p_list[i,1,:],p_list[i,2,:], c="k", alpha=0.25,lw=0.5)
 
         for i in range(len(p_list[0,0,:])):
+        for i in range(len(p_list[0,0,:])):
                 for ax in axs_i:
+                        ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.25,lw=0.5)
                         ax.plot(p_list[:,0,i],p_list[:,1,i],p_list[:,2,i], c="k", alpha=0.25,lw=0.5)
 
         for ax in axs_i:
@@ -585,7 +639,8 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
         axs_i[1].set_zlabel("z",fontsize=14)
         axs_i[2].set_ylabel("y",fontsize=14)
         axs_i[2].set_xlabel("x",fontsize=14)
-        plt.savefig(path+'/interpolated_clean.pdf', dpi=600)
+        plt.show()
+        plt.savefig(path+'/pre-render.png', dpi=600)
 
         if debug == True:
                 p_list= p_list[:,:,:3]
@@ -686,8 +741,12 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
                                 curve_76_u = quart[0,:,m_in:m_out].T
                                 curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
                                 curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
+                                curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
+                                curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
                                 curve_45 = inner_quart[k+1,:,m_in:m_out].T
                                 curve_45_u = quart[k+1,:,m_in:m_out].T
+                                curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
+                                curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
                                 curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
                                 curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
 
@@ -903,6 +962,20 @@ def create_mesh_gif(interp_points,x_file: dict,path, pic_num):
 
 # for i in range(30):
 #     create_mesh_gif(combos[i],coil_data,"mesh_generation/gif",i)
+
+# x = {"r_0_0": 0.0026451612903225807, "r_0_1": 0.0023870967741935487, "r_0_2": 0.0035483870967741938, "r_0_3": 0.00232258064516129, "r_0_4": 0.0032258064516129032, "r_0_5": 0.002903225806451613, "r_1_0": 0.0021290322580645163, "r_1_1": 0.002, "r_1_2": 0.0032903225806451613, "r_1_3": 0.0036129032258064514, "r_1_4": 0.002838709677419355, "r_1_5": 0.0037419354838709677, "r_2_0": 0.0032258064516129032, "r_2_1": 0.002903225806451613, "r_2_2": 0.0035483870967741938, "r_2_3": 0.0035483870967741938, "r_2_4": 0.004, "r_2_5": 0.0030967741935483874, "r_3_0": 0.0025806451612903226, "r_3_1": 0.0021935483870967744, "r_3_2": 0.0033548387096774194, "r_3_3": 0.0029677419354838712, "r_3_4": 0.0025806451612903226, "r_3_5": 0.0032258064516129032, "r_4_0": 0.003935483870967742, "r_4_1": 0.0035483870967741938, "r_4_2": 0.0029677419354838712, "r_4_3": 0.003161290322580645, "r_4_4": 0.0025161290322580645, "r_4_5": 0.002838709677419355, "r_5_0": 0.003032258064516129, "r_5_1": 0.0037419354838709677, "r_5_2": 0.0021290322580645163, "r_5_3": 0.003161290322580645, "r_5_4": 0.003806451612903226, "r_5_5": 0.0030967741935483874, "fid_axial": 17.0, "fid_radial": 3.0}
+# coil_data['fid_radial'] = x['fid_radial']
+# coil_data['fid_axial'] = x['fid_axial']
+
+# x_list = []
+# for i in range(n_circ):
+#         x_add = []
+#         for j in range(n_cross_section):
+#                 x_add.append(x['r_' + str(i) + '_' + str(j)])
+
+#         x_list.append(np.array(x_add))
+
+# create_mesh(x_list,coil_data.copy(),case,debug=False)
 
 
 

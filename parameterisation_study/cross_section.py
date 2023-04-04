@@ -8,12 +8,12 @@ from mesh_generation.coil_cross_section import create_mesh
 
 n_circ = 6
 n_cross_section = 6
-coils = 3
-length = np.pi * 2 * 0.0125 * coils
-coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391, "fid_axial": 50, "fid_radial": 5}
+coils = 2
+length = np.pi * 2 * 0.010391 * coils
+coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391}
 z_bounds = {}
-z_bounds["fid_axial"] = [10.55, 30.55]
-z_bounds["fid_radial"] = [2.55, 6.45]
+z_bounds["fid_axial"] = [15.55, 40.45]
+z_bounds["fid_radial"] = [1.55, 4.45]
 
 
 x_bounds = {}
@@ -88,4 +88,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=[True,True])
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,168*60*60,gamma=gamma, beta=beta, p_c=p_c,sample_initial=32,int_fidelities=[True,True])

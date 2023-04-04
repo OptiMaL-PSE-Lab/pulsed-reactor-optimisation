@@ -230,6 +230,7 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         # interpolate x times the points between
         fid_radial = int((data["fid_radial"]))
         fid_rad = int((data["fid_radial"]))
+        fid_rad = int((data["fid_radial"]))
 
         keys = ["rho", "theta", "z", "tube_rad"]
 
@@ -238,37 +239,37 @@ def create_mesh(data, path, n_interp, nominal_data_og):
 
 
 
-        fig = plt.figure(figsize=(12,7))
-        axs = []
-        for i in range(3):
-                axs.append(fig.add_subplot(2, 3, i+1))
+        # fig = plt.figure(figsize=(12,7))
+        # axs = []
+        # for i in range(3):
+        #         axs.append(fig.add_subplot(2, 3, i+1))
 
-        for i in range(3):
-                axs.append(fig.add_subplot(2, 3, i+4, projection='3d'))
+        # for i in range(3):
+        #         axs.append(fig.add_subplot(2, 3, i+4, projection='3d'))
         
-        fig.tight_layout()
-        plt.subplots_adjust(left=0.075,bottom=0.05,wspace=0.3,hspace=0.3)
-        x_ax = np.linspace(0,1,n_interp) * 100 
+        # fig.tight_layout()
+        # plt.subplots_adjust(left=0.075,bottom=0.05,wspace=0.3,hspace=0.3)
+        # x_ax = np.linspace(0,1,n_interp) * 100 
 
-        for ax in axs[:3]:
-                ax.set_xlabel('Coil Length (%)',fontsize=14)
+        # for ax in axs[:3]:
+        #         ax.set_xlabel('Coil Length (%)',fontsize=14)
         
-        axs[0].set_ylabel('z',fontsize=14)
-        axs[1].set_ylabel(r'$\rho$',fontsize=14)
-        axs[2].set_ylabel(r'$\theta$',fontsize=14)
+        # axs[0].set_ylabel('z',fontsize=14)
+        # axs[1].set_ylabel(r'$\rho$',fontsize=14)
+        # axs[2].set_ylabel(r'$\theta$',fontsize=14)
 
         nominal_data = nominal_data_og.copy()
 
-        axs[0].plot(x_ax,[nominal_data['z_'+str(i)] for i in range(n_interp)],c='k')
-        axs[1].plot(x_ax,[nominal_data['rho_'+str(i)] for i in range(n_interp)],c='k')
-        axs[2].plot(x_ax,[nominal_data['theta_'+str(i)] for i in range(n_interp)],c='r')
+        # axs[0].plot(x_ax,[nominal_data['z_'+str(i)] for i in range(n_interp)],c='k')
+        # axs[1].plot(x_ax,[nominal_data['rho_'+str(i)] for i in range(n_interp)],c='k')
+        # axs[2].plot(x_ax,[nominal_data['theta_'+str(i)] for i in range(n_interp)],c='r')
 
 
-        axs[0].scatter(x_ax,[nominal_data['z_'+str(i)]+data['z_'+str(i)] for i in range(n_interp)],c='k',lw=2)
-        axs[1].scatter(x_ax,[nominal_data['rho_'+str(i)]+data['rho_'+str(i)] for i in range(n_interp)],c='k',lw=2)
-        for i in range(n_interp):
-                axs[0].plot([x_ax[i],x_ax[i]],[nominal_data['z_'+str(i)],nominal_data['z_'+str(i)]+data['z_'+str(i)]],c='k',ls='dashed')
-                axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
+        # axs[0].scatter(x_ax,[nominal_data['z_'+str(i)]+data['z_'+str(i)] for i in range(n_interp)],c='k',lw=2)
+        # axs[1].scatter(x_ax,[nominal_data['rho_'+str(i)]+data['rho_'+str(i)] for i in range(n_interp)],c='k',lw=2)
+        # for i in range(n_interp):
+        #         axs[0].plot([x_ax[i],x_ax[i]],[nominal_data['z_'+str(i)],nominal_data['z_'+str(i)]+data['z_'+str(i)]],c='k',ls='dashed')
+        #         axs[1].plot([x_ax[i],x_ax[i]],[nominal_data['rho_'+str(i)],nominal_data['rho_'+str(i)]+data['rho_'+str(i)]],c='k',ls='dashed')
 
         for i in range(n_interp):
                 try:
@@ -317,13 +318,13 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         x,y,z = cylindrical_convert(data['rho'],data['theta'],data['z'])
 
 
-        x_ax = 100*x_ax/x_ax[-1]
+        # x_ax = 100*x_ax/x_ax[-1]
         
-        try:
-                axs[0].plot(x_ax,vals['z'],c='tab:red')
-                axs[1].plot(x_ax,vals['rho'],c='tab:red')
-        except:
-                print('Printing do be broken doe')
+        # try:
+        #         axs[0].plot(x_ax,vals['z'],c='tab:red')
+        #         axs[1].plot(x_ax,vals['rho'],c='tab:red')
+        # except:
+        #         print('Printing do be broken doe')
 
         # x,y,z = cylindrical_convert(vals_og['rho'],vals_og['theta'],vals_og['z'])
         # for ax in axs[3:]:
@@ -377,8 +378,10 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         le = len(rot_x_store)
         p_list = []
         for p in range(le-1):
+        for p in range(le-1):
                 # get proceeding circle (as x,y,z samples)
                 x, y, z = create_circle_known(
+                        [data[keys[i]][p + 1] for i in range(len(keys))],rot_x_store[p],rot_z_store[p]
                         [data[keys[i]][p + 1] for i in range(len(keys))],rot_x_store[p],rot_z_store[p]
                 )
                 p_list.append([x,y,z])
@@ -460,8 +463,12 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                                 curve_76_u = quart[0,:,m_in:m_out].T
                                 curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
                                 curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
+                                curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
+                                curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
                                 curve_45 = inner_quart[k+1,:,m_in:m_out].T
                                 curve_45_u = quart[k+1,:,m_in:m_out].T
+                                curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
+                                curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
                                 curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
                                 curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
 
@@ -501,29 +508,29 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                                 mesh.add_block(block)
                 s += ds
 
-        for ax in axs[3:]:
-                ax.set_box_aspect(
-                        [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
-                )
-                ax.set_xticks([])
-                ax.set_yticks([])
-                ax.set_zticks([])
-                ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-                ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        # for ax in axs[3:]:
+        #         ax.set_box_aspect(
+        #                 [ub - lb for lb, ub in (getattr(ax, f"get_{a}lim")() for a in "xyz")]
+        #         )
+        #         ax.set_xticks([])
+        #         ax.set_yticks([])
+        #         ax.set_zticks([])
+        #         ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        #         ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        #         ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
 
-        axs[3].set_xlabel("x",fontsize=14)
-        axs[3].set_zlabel("z",fontsize=14)
+        # axs[3].set_xlabel("x",fontsize=14)
+        # axs[3].set_zlabel("z",fontsize=14)
 
-        axs[4].set_ylabel("y",fontsize=14)
-        axs[4].set_zlabel("z",fontsize=14)
+        # axs[4].set_ylabel("y",fontsize=14)
+        # axs[4].set_zlabel("z",fontsize=14)
 
-        axs[5].set_ylabel("y",fontsize=14)
-        axs[5].set_xlabel("x",fontsize=14)
+        # axs[5].set_ylabel("y",fontsize=14)
+        # axs[5].set_xlabel("x",fontsize=14)
 
-        axs[3].view_init(0, 270)
-        axs[4].view_init(0, 180)
-        axs[5].view_init(270, 0)
+        # axs[3].view_init(0, 270)
+        # axs[4].view_init(0, 180)
+        # axs[5].view_init(270, 0)
 
         axs_p[0].view_init(0, 270)
         axs_p[1].view_init(0, 180)
@@ -551,11 +558,11 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         # plt.subplots_adjust(left=0.01,right=0.99,wspace=0,top=1)
         # plt.show()
         # copy existing base mesh folder
-        fig.tight_layout()
+        # fig.tight_layout()
 
         fig_p.tight_layout()
         fig_p.savefig(path + "/pre-render.png", dpi=600)
-        fig.savefig(path + "/interp.pdf", dpi=200)
+        # fig.savefig(path + "/interp.pdf", dpi=200)
 
         # # run script to create mesh
         print("Writing geometry")
@@ -567,37 +574,34 @@ def create_mesh(data, path, n_interp, nominal_data_og):
         return
 
 
-coils = 2  # number of coils
-h = coils * 0.010391  # max height
-N = 2 * np.pi * coils  # angular turns (radians)
-n = 8  # points to use
-
-data = {}
-nominal_data = {}
+# coils = 3  # number of coils
+# h = coils * 0.010391  # max height
+# N = 2 * np.pi * coils  # angular turns (radians)
+# n = 8  # points to use
 
 data['fid_radial'] = 4
 data['fid_axial'] = 40
 
-data['rho_0'] = 0
-# data['z_0'] = np.random.uniform(-0.001,0.001)
-# data['z_1'] = np.random.uniform(-0.001,0.001)
-data['z_0'] = 0
-data['z_1'] = 0
-data['rho_1'] = 0
-for i in range(2,n):
-        data['z_'+str(i)] = 0
-        data['rho_'+str(i)] = 0
-        # data['z_'+str(i)] = np.random.uniform(-0.001,0.001)
-        # data['rho_'+str(i)] = np.random.uniform(-0.0025,0.001)
+# data['fid_radial'] = 2
+# data['fid_axial'] = 20
 
-z_vals = np.linspace(0, h/2, n)
-theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
-rho_vals = [0.0125/2 for i in range(n)]
-tube_rad_vals = [0.0025/2 for i in range(n)]
-for i in range(n):
-        nominal_data["z_" + str(i)] = z_vals[i]
-        nominal_data["theta_" + str(i)] = theta_vals[i]
-        nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-        nominal_data["rho_" + str(i)] = rho_vals[i]
+# data['rho_0'] = 0
+# data['z_0'] = np.random.uniform(-0.002,0.002)
+# data['z_1'] = np.random.uniform(-0.002,0.002)
+# data['rho_1'] = 0
+# for i in range(2,n):
+#         # data['z_'+str(i)] = 0
+#         # data['rho_'+str(i)] = 0
+#         data['z_'+str(i)] = np.random.uniform(-0.002,0.002)
+#         data['rho_'+str(i)] = np.random.uniform(-0.0075,0.002)
+# z_vals = np.linspace(0, h, n)
+# theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+# rho_vals = [0.0125 for i in range(n)]
+# tube_rad_vals = [0.0025 for i in range(n)]
+# for i in range(n):
+#         nominal_data["z_" + str(i)] = z_vals[i]
+#         nominal_data["theta_" + str(i)] = theta_vals[i]
+#         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+#         nominal_data["rho_" + str(i)] = rho_vals[i]
 
 create_mesh(data,'mesh_generation/test',n,nominal_data)

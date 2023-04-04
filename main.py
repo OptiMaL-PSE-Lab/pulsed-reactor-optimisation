@@ -60,6 +60,7 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
     if sample_initial != False:
         # perform initial sample of joint space
         samples = sample_bounds(joint_bounds, sample_initial)
+        print(samples)
         # intialise data json
         data = {"data": []}
         for sample in samples:
