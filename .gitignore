@@ -28,3 +28,5 @@ parameterisation_study/cross_section
 mesh_generation/coil_cylinder_test
 parameterisation_study/standard_simulation
 parameterisation_study/standard_pulsed_flow
+parameterisation_study/control_cylinder
+parameterisation_study/control_standard

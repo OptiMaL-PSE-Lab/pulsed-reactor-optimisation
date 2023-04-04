@@ -23,15 +23,15 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         60;
+endTime         70;
 
 deltaT          0.000001;
 
 writeControl    adjustableRunTime;
 
-writeInterval   100;
+writeInterval   5;
 
-purgeWrite      0;
+purgeWrite      1;
 
 writeFormat     ascii;
 
@@ -74,25 +74,25 @@ functions
       phi "phi";
   }
   
-  vorticity1
- {
-    // Mandatory entries (unmodifiable)
-    type        vorticity;
-    libs        ("fieldFunctionObjects.so");
+//   vorticity1
+//  {
+//     // Mandatory entries (unmodifiable)
+//     type        vorticity;
+//     libs        ("fieldFunctionObjects.so");
 
-    // Optional (inherited) entries
-    field           U;
-    result          vorticityField;
-    region          region0;
-    enabled         true;
-    log             true;
-    timeStart       0.00;
-    timeEnd         100;
-    executeControl  adjustableRunTime;
-    executeInterval 0.01;
-    writeControl    adjustableRunTime;
-    writeInterval   0.5;
-  }
+//     // Optional (inherited) entries
+//     field           U;
+//     result          vorticityField;
+//     region          region0;
+//     enabled         true;
+//     log             true;
+//     timeStart       0.00;
+//     timeEnd         100;
+//     executeControl  adjustableRunTime;
+//     executeInterval 0.01;
+//     writeControl    timeStep;
+//     writeInterval   1;
+//   }
   
    massfraction
    {
