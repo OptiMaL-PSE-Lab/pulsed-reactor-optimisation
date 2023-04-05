@@ -461,12 +461,8 @@ def create_mesh(data, path, n_interp, nominal_data_og):
                                 curve_76_u = quart[0,:,m_in:m_out].T
                                 curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
                                 curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
-                                curve_76 = list([list(curve_76[int(i),:]) for i in np.linspace(0,len(curve_76[:,0])-1,fid_rad)])
-                                curve_76_u = list([list(curve_76_u[int(i),:]) for i in np.linspace(0,len(curve_76_u[:,0])-1,fid_rad)])
                                 curve_45 = inner_quart[k+1,:,m_in:m_out].T
                                 curve_45_u = quart[k+1,:,m_in:m_out].T
-                                curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
-                                curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
                                 curve_45 = list([list(curve_45[int(i),:]) for i in np.linspace(0,len(curve_45[:,0])-1,fid_rad)])
                                 curve_45_u = list([list(curve_45_u[int(i),:]) for i in np.linspace(0,len(curve_45_u[:,0])-1,fid_rad)])
 
