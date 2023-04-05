@@ -53,6 +53,8 @@ def plot_fidelities(path):
                 grid[i,j] = grid[i,j]/g_count[i,j]
             else:
                 grid[i,j] = np.nan
+                g_count[i,j] = np.nan
+
 
     divider = make_axes_locatable(axs[0])
     cax = divider.append_axes("right", size="3%", pad=0.05)
@@ -67,12 +69,17 @@ def plot_fidelities(path):
     cb = fig.colorbar(sc_count, cax=cax, orientation="vertical")
     cax.tick_params(labelsize=14)
     cb.set_label(label="Evaluations", size=14)
+    min1 = np.min(z_vals[:,0])
+    max1 = np.max(z_vals[:,0])
+    min2 = np.min(z_vals[:,1])
+    max2 = np.max(z_vals[:,1])
 
     for ax in axs:
         ax.set_ylabel("Radial Fidelity", fontsize=14)
         ax.set_xlabel("Axial Fidelity", fontsize=14)
-        ax.set_yticks([0,1,2,3,4], [1, 2, 3, 4, 5])
-        ax.set_xticks(np.array([1,11,21,31]), np.array([1,11,21,31])+min_z[0])
+        ax.set_xticks(range(int(max1-min1+1)), range(int(min1),int(max1)+1))
+        ax.set_yticks(range(int(max2-min2+1)), range(int(min2),int(max2)+1))
+        # ax.set_xticks(np.array([1,11,21,31]), np.array([1,11,21,31])+min_z[0])
     fig.tight_layout()
     # fig.subplots_adjust(right=1.05, left=0.075, top=0.95, bottom=0.15)
     # for i, c in zip(range(len(z_vals)-1), color):
@@ -240,6 +247,7 @@ def plot_results(path):
                 init_n += 1
                 pass
 
+
     init_data = data[:init_n]
     init_obj = list_from_dict(init_data, "obj")
     init_cost = list_from_dict(init_data, "cost")
@@ -254,6 +262,9 @@ def plot_results(path):
     full_it = np.arange(-init_n, len(obj))
     cost = np.append(init_cost, cost, axis=0)
     obj = np.append(init_obj, obj, axis=0)
+    obj = list((np.array(obj) - np.min(obj))/(np.max(obj) - np.min(obj)))
+
+
 
     b = 0
     best_obj = []
@@ -288,25 +299,26 @@ def plot_results(path):
 
     from matplotlib import cm
 
-    norm = colors.LogNorm(vmin=np.min(cost), vmax=np.max(cost))
+    norm = colors.LogNorm(vmin=np.percentile(cost,5), vmax=np.percentile(cost,95))
 
     rgba_color = [np.array(cm.Spectral_r(norm(c), bytes=True)) / 255 for c in cost]
-    im1 = ax[0].scatter(
-        full_it,
-        obj,
-        c=rgba_color,
-        marker=mar,
-        s=ms,
-        lw=0,
-        edgecolor="w",
-        norm=norm,
-        alpha=m_alpha,
-    )
+    # im1 = ax[0].scatter(
+    #     full_it,
+    #     obj,
+    #     c=rgba_color,
+    #     marker=mar,
+    #     s=ms,
+    #     lw=0,
+    #     edgecolor="w",
+    #     norm=norm,
+    #     alpha=m_alpha,
+    # )
     ax[0].plot(full_it, best_obj, c="k", lw=2, zorder=-1, label="Best")
     # ax[0,0].legend(frameon=False,fontsize=14)
     ax[0].set_xlabel(r"Iteration", fontsize=font_size)
     ax[0].set_ylabel(
-        "Objective",
+        "Normalised \nObjective",
+
         fontsize=font_size,
     )
     divider = make_axes_locatable(ax[0])
@@ -353,24 +365,24 @@ def plot_results(path):
     #         zorder=-1,
     #     )
 
-    im2 = ax[1].scatter(
-        full_time,
-        obj,
-        c=rgba_color,
-        marker=mar,
-        s=ms,
-        lw=0,
-        edgecolor="w",
-        norm=norm,
-        alpha=m_alpha,
-    )
+    # im2 = ax[1].scatter(
+    #     full_time,
+    #     obj,
+    #     c=rgba_color,
+    #     marker=mar,
+    #     s=ms,
+    #     lw=0,
+    #     edgecolor="w",
+    #     norm=norm,
+    #     alpha=m_alpha,
+    # )
     ax[1].plot(full_time, best_obj, c="k", zorder=-1, lw=2, label="Best")
     # ax[1,0].legend(frameon=False,fontsize=14)
     ax[1].ticklabel_format(style="sci", axis="x", scilimits=(0, 4))
 
     ax[1].set_xlabel(r"Wall-clock time (s)", fontsize=font_size)
     ax[1].set_ylabel(
-        "Objective",
+        "Normalised \nObjective",
         fontsize=font_size,
     )
     for i in range(len(full_it) - 1):
