@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N sym_dat
+#PBS -N sym_dat_low
 #PBS -j oe
 #PBS -o symbolic_mf_data_generation/low/logs.out
 #PBS -e symbolic_mf_data_generation/low/logs.err

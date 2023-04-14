@@ -5,6 +5,7 @@ import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, "mesh_generation/classy_blocks/src/")
 from classy_blocks.classes.primitives import Edge
 from classy_blocks.classes.block import Block
 from classy_blocks.classes.mesh import Mesh

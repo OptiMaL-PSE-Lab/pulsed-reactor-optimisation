@@ -62,8 +62,8 @@ x_bounds["coil_rad"] = [0.0035, 0.0125]
 try:
     data_path = str(sys.argv[1])
     cpus = int(sys.argv[2])
-    fid_rad = int(sys.argv[3])
-    fid_ax = int(sys.argv[4])
+    fid_rad = int(sys.argv[4])
+    fid_ax = int(sys.argv[3])
     n_s = int(sys.argv[5])
 except IndexError:
     data_path = 'symbolic_mf_data_generation/low/data.json'
