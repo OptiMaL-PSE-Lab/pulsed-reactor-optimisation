@@ -34,7 +34,7 @@ import optax as ox
 import jax
 from matplotlib import rc
 
-parallel = False
+parallel = True
 
 def format_data(data):
     # Reads a data file and returns inputs, outputs, costs
@@ -168,7 +168,7 @@ def loss_sq(N: list, theta: list, etheta: list) -> float:
 
     # I found this is most robust by quantifying the loss as: 
     error_sq = sum((etheta[i] - et[i]) ** 2 for i in range(len(etheta)))/len(etheta)
-    return error_sq
+    return (max(etheta) - max(et)) ** 2,error_sq
 
 
 class CompactAnalyzer(BoundingLogAnalyzer):
@@ -278,9 +278,9 @@ def calculate_N_clean(value, time, path):
     # forgo any optimisation here because this is more robust
     best = np.Inf
     for n0 in n0_list:
-        l = loss_sq(n0, t_d, et_d)
-        if l < best:
-            best = l
+        l,le = loss_sq(n0, t_d, et_d)
+        if le < best:
+            best = le
             N = n0
     best = best * 100
     # plot this is you want 

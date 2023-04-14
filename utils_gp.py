@@ -1,4 +1,7 @@
 from utils import *
+from jax.config import config
+config.update("jax_enable_x64", True)
+
 
 
 def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
@@ -26,13 +29,13 @@ def greedy_function(x, gp, fid_high):
 def train_gp(inputs, outputs, ms):
     # creating a set of initial GP hyper parameters (log-spaced)
     init_params = lhs(
-        np.array([[1, 10] for i in range(len(inputs[0, :]))]), ms, log=True
+        np.array([[0.1, 1] for i in range(len(inputs[0, :]))]), ms, log=True
     )
     # defining dataset
     D = gpx.Dataset(X=inputs, y=outputs)
     # for each intital list of hyperparameters
+    best_nll = 1e30
     for p in init_params:
-        best_nll = 1e30
         # define kernel function 
         kern = gpx.Matern52(active_dims=[i for i in range(D.in_dim)])
         # define prior GP
@@ -43,18 +46,22 @@ def train_gp(inputs, outputs, ms):
         # negative log likelihood
         mll = jit(posterior.marginal_log_likelihood(D, negative=True))
         # initialise optimizer
-        opt = ox.adam(learning_rate=1e-3)
+        opt = ox.adam(learning_rate=0.01)
 
         # define intial hyper parameters 
         parameter_state = gpx.initialise(posterior)
-        # parameter_state.trainables['likelihood']['obs_noise'] = False
-        # parameter_state.params['likelihood']['obs_noise'] = 0.01
+        parameter_state.trainables['likelihood']['obs_noise'] = False
+        parameter_state.params['likelihood']['obs_noise'] = 0
         parameter_state.params["kernel"]["lengthscale"] = p
 
         # run optimiser
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=150000)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000,log_rate=100)
         # get last NLL value
-        nll = float(inference_state.history[-1])
+        # get last NLL value that isn't a NaN
+        inf_history = inference_state.history
+        # remore nan values
+        inf_history = [x for x in inf_history if str(x) != "nan"]
+        nll = float(inf_history[-1])
         # if this is the best, then store this 
         if nll < best_nll:
             best_nll = nll

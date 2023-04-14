@@ -254,8 +254,6 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
 
         sample = sample_to_dict(x_opt, joint_bounds)
 
-        # initialise sample results
-        print("Running ", sample)
         run_info = {
             "flag": flag,
             "id": "running",
@@ -279,9 +277,8 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
             "norm_time_left_at_beginning_of_iteration": np.float64(norm_time_left[0]),
             "time_left_at_beginning_of_iteration": np.float64(time_left),
         }
-
-        data["data"].append(run_info)
-        save_json(data, data_path)
+        data['data'].append(run_info)
+        save_json(data,data_path)
 
         end_time = time.time()
 
@@ -294,7 +291,6 @@ def mfbo(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, beta=2.5, p_c=2
 
         time_left = time_left - run_info["cost"] - other_time
         run_info["time_left_at_end_of_iteration"] = time_left
-
 
         # make last thing in data list this evaluation and not the placeholder
         data["data"][-1] = run_info

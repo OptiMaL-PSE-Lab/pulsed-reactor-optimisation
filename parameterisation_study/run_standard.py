@@ -11,17 +11,17 @@ try:
     flag = sys.argv[2]
 except:
     flag = 'standard'
-coils = 3  # number of coils
+coils = 2  # number of coils
 try: 
     flag = sys.argv[2]
 except:
     flag = 'standard'
-coils = 3  # number of coils
+coils = 2  # number of coils
 pitch = 0.010391
 rad = 0.0125
 h = coils * pitch  # max height
 N = 2 * np.pi * coils  # angular turns (radians)
-n = 8  # points to use
+n = 6  # points to use
 
 n_circ = 6
 n_cross_section = 6
@@ -125,7 +125,7 @@ if flag == 'cylinder':
         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
         nominal_data["rho_" + str(i)] = rho_vals[i]
 
-    z_high = {'fid_axial': 20, 'fid_radial': 4}
+    z_high = {'fid_axial': 40, 'fid_radial': 4}
     f = eval_cfd_cylinder
 
 
@@ -134,7 +134,7 @@ if flag == 'cross':
     for i in range(n_circ):
         for j in range(n_cross_section):
             data["r_" + str(i)+'_'+str(j)] = [0.002, 0.004]
-    z_high = {'fid_axial': 20, 'fid_radial': 4}
+    z_high = {'fid_axial': 40, 'fid_radial': 4}
     f = eval_cfd_cross
 
 

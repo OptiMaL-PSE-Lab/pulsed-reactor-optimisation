@@ -28,7 +28,7 @@ x_bounds = {}
 x_bounds['z_1'] = [-0.001,0.001]
 for i in range(2,n):
 	x_bounds['z_'+str(i)] = [-0.001,0.001]
-	x_bounds['rho_'+str(i)] = [-0.0025,0.00125]
+	x_bounds['rho_'+str(i)] = [-0.0035,0.0035]
 
 z_bounds = {}
 z_bounds["fid_axial"] = [15.55, 40.45]
@@ -85,4 +85,4 @@ def eval_cfd(x: dict):
     return {"obj": N-penalty, "TIS": N, "penalty": penalty, "cost": end - start, "id": ID}
 
 
-mfbo(eval_cfd, data_path, x_bounds, z_bounds,120*60*60,gamma=gamma,gp_ms=4,opt_ms=8, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=[True,True])
+mfbo(eval_cfd, data_path, x_bounds, z_bounds,72*60*60,gamma=gamma,gp_ms=8,opt_ms=8, beta=beta, p_c=p_c,sample_initial=False,int_fidelities=[True,True])

@@ -186,10 +186,8 @@ def create_circle(d,radius_og):
                 # radius = np.append(radius,radius[0])
                 angles,radius = gp_interpolate_polar(angles.reshape(-1,1),radius.reshape(-1,1),64)
                 angles = angles[:,0]
-                angles = angles[:,0]
                 radius  = radius * r_std + r_mean
         else:
-                angles = np.linspace(0,np.pi*2,64)
                 angles = np.linspace(0,np.pi*2,64)
                 radius = np.array([r_mean for i in range(64)])
 
@@ -784,12 +782,12 @@ def create_mesh(interp_points,x_file: dict, path: str,debug: bool):
 
         plt.savefig(path+'/blocks.pdf', dpi=600)
 
-        # # run script to create mesh
-        # print("Writing geometry")
-        # mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
-        # print("Running blockMesh")
-        # os.system("chmod +x " + path + "/Allrun.mesh")
-        # os.system(path + "/Allrun.mesh")
+        # run script to create mesh
+        print("Writing geometry")
+        mesh.write(output_path=os.path.join(path, "system", "blockMeshDict"), geometry=None)
+        print("Running blockMesh")
+        os.system("chmod +x " + path + "/Allrun.mesh")
+        os.system(path + "/Allrun.mesh")
         return
 
 def create_mesh_gif(interp_points,x_file: dict,path, pic_num):

@@ -24,6 +24,8 @@ delete.sh
 
 plotting.py
 parameterisation_study/cylindrical_discrepancy 
+parameterisation_study/cylindrical_discrepancy_two
+parameterisation_study/failed_cylindrical_run
 parameterisation_study/cross_section
 mesh_generation/coil_cylinder_test
 parameterisation_study/standard_simulation
