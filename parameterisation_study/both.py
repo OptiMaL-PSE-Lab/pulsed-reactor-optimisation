@@ -6,15 +6,13 @@ from main import mfbo
 from mesh_generation.coil_both import create_mesh
 
 
-n_circ = 6
-n_cross_section = 6
-coils = 2
-length = np.pi * 2 * 0.010391 * coils
-coil_data = {"start_rad":0.0025,"radius_center":0.00125,"length":length,"a": 0.0009999999310821295, "f": 2.0, "re": 50.0, "pitch": 0.010391080752015114, "coil_rad": 0.012500000186264515, "inversion_loc": 0.6596429944038391}
+
 z_bounds = {}
 z_bounds["fid_axial"] = [15.55, 40.45]
 z_bounds["fid_radial"] = [1.55, 4.45]
 
+n_circ = 6
+n_cross_section = 6
 
 x_bounds = {}
 for i in range(n_circ):
@@ -58,8 +56,42 @@ except FileExistsError:
 
 def eval_cfd(x: dict):
 
-    coil_data['fid_radial'] = x['fid_radial']
-    coil_data['fid_axial'] = x['fid_axial']
+    # data['fid_radial'] = x['fid_radial']
+    # data['fid_axial'] = x['fid_axial']
+
+    data = {}
+    # data['fid_radial'] = x['fid_radial']
+    # data['fid_axial'] = x['fid_axial']
+    data['fid_radial'] = 3
+    data['fid_axial'] = 20
+    nominal_data = {}
+
+    resdata = read_json('parameterisation_study/cylindrical_discrepancy/data.json')['data']
+    data_item = resdata[-1]['x']
+    n_circ = 6
+    n_cross_section = 6
+    coils = 2
+    h = coils * 0.010391  # max height
+    N = 2*np.pi *coils  # angular turns (radians)
+    n = 6
+
+    data['rho_0'] = 0
+    data['z_0'] = 0
+    data['rho_1'] = 0
+    data['z_1'] = data_item['z_1']
+    for i in range(2,n):
+            data['z_'+str(i)] = data_item['z_'+str(i)] * 2
+            data['rho_'+str(i)] = data_item['rho_'+str(i)] * 2
+
+    z_vals = np.linspace(0, h, n)
+    theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+    rho_vals = [0.0125 for i in range(n)]
+    tube_rad_vals = [0.0025 for i in range(n)]
+    for i in range(n):
+            nominal_data["z_" + str(i)] = z_vals[i]
+            nominal_data["theta_" + str(i)] = theta_vals[i]
+            nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+            nominal_data["rho_" + str(i)] = rho_vals[i]
 
     x_list = []
     for i in range(n_circ):
@@ -74,9 +106,10 @@ def eval_cfd(x: dict):
     re = 50
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    case = data_path.split("data.json")[0] + "simulations/" + ID
+    # case = data_path.split("data.json")[0] + "simulations/" + ID
+    case = "parameterisation_study/both/simulations/" + str('test')
 
-    create_mesh(x_list,coil_data.copy(),case,debug=False)
+    create_mesh(data,x_list,case,n,nominal_data)
 
     parse_conditions_given(case, a, f, re)
     times, values = run_cfd(case)

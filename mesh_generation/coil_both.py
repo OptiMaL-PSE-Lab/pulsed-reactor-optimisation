@@ -255,11 +255,13 @@ def interpolate_path(r,theta,z,f):
 
         d_int = [d_store[s+0],d_store[s+1],d_store[e-2],d_store[e-1]]
         z_int = [z[s+0],z[s+1],z[e-2],z[e-1]]
-        
+
         z_new,_ = interpolate_num_same(d_int,d_store[s:e],z_int,"quadratic")
+
 
         for i in range(s,e):
                 z[i] = z_new[i-s]
+
         rho,theta,z = cartesian_convert(x,y,z)
         return rho,theta,z
 
@@ -410,12 +412,22 @@ def interpolate_split(r,theta,z,fid_ax):
         e = len_s + int(fid_ax/2)
 
         d_int = [d_store[s+0],d_store[s+1],d_store[e-2],d_store[e-1]]
+
+
         z_int = [z[s+0],z[s+1],z[e-2],z[e-1]]
+        x_int = [x[s+0],x[s+1],x[e-2],x[e-1]]
+        y_int = [y[s+0],y[s+1],y[e-2],y[e-1]]
+
         
         z_new,_ = interpolate_num_same(d_int,d_store[s:e],z_int,"quadratic")
+        x_new,_ = interpolate_num_same(d_int,d_store[s:e],x_int,"quadratic")
+        y_new,_ = interpolate_num_same(d_int,d_store[s:e],y_int,"quadratic")
+
 
         for i in range(s,e):
                 z[i] = z_new[i-s]
+                x[i] = x_new[i-s]
+                y[i] = y_new[i-s]
 
         # r = np.append(r_start,r)
         # theta = np.append(theta_start,theta)
@@ -471,7 +483,7 @@ def create_mesh(data,interp_points, path, n_interp, nominal_data_og):
         # do interpolation between points
         vals = {}
 
-        for i in range(n_interp):
+        for i in range(6):
                 try:
                         nominal_data["rho_" + str(i)] += data["rho_" + str(i)]
                 except:
@@ -500,12 +512,28 @@ def create_mesh(data,interp_points, path, n_interp, nominal_data_og):
 
 
         x,y,z = cylindrical_convert(vals['rho'],vals['theta'],vals['z'])
+
+        
+
         y = -y 
         vals['rho'],vals['theta'],vals['z'] = cartesian_convert(x,y,z)
         vals['rho'],vals['theta'],vals['z'] = add_start(vals['rho'],vals['theta'],vals['z'],rho)
+        vals['rho'] = vals['rho'][:-1]
+        vals['theta'] = vals['theta'][:-1]
+        vals['z'] = vals['z'][:-1]
         data['rho'],data['theta'],data['z'] = interpolate_path(vals['rho'],vals['theta'],vals['z'],interpolation_factor)
+        # x,y,z = cylindrical_convert(vals['rho'],vals['theta'],vals['z'])
+        # fig,ax = plt.subplots(1,1,subplot_kw={'projection':'3d'})
+        # ax.plot(x,y,z)
+        # plt.show()
         data['tube_rad'] = [nominal_data['tube_rad_0'] for i in range(len(data['rho']))]
         le = len(data['z'])
+
+        x,y,z = cylindrical_convert(data['rho'],data['theta'],data['z'])
+        # fig,ax = plt.subplots(1,1,subplot_kw={'projection':'3d'})
+        # ax.plot(x,y,z)
+        # plt.show()
+
 
         data["fid_radial"] = fid_radial
 
@@ -627,7 +655,7 @@ def create_mesh(data,interp_points, path, n_interp, nominal_data_og):
 
         fig_p.tight_layout()
         fig_p.savefig(path + "/pre-render.png", dpi=600)
-
+        p_list = p_list.T
         c = np.mean(p_list,axis=2)
         s = 0 
         ds = int((len(p_list[0,0,:]))/4)
@@ -745,48 +773,48 @@ def create_mesh(data,interp_points, path, n_interp, nominal_data_og):
         return
 
 
-coils = 2  # number of coils
-h = coils * 0.010391  # max height
-N = 2 * np.pi * coils  # angular turns (radians)
-n = 8  # points to use
+# coils = 2  # number of coils
+# h = coils * 0.010391  # max height
+# N = 2 * np.pi * coils  # angular turns (radians)
+# n = 8  # points to use
 
-data = {}
-nominal_data = {}
+# data = {}
+# nominal_data = {}
 
-data['fid_radial'] = 4
-data['fid_axial'] = 40
+# data['fid_radial'] = 4
+# data['fid_axial'] = 40
 
-data['rho_0'] = 0
-data['z_1'] = 0
-data['z_0'] = 0
-data['rho_1'] = 0
-for i in range(2,n):
-        # data['z_'+str(i)] = 0
-        # data['rho_'+str(i)] = 0
-        data['z_'+str(i)] = np.random.uniform(-0.001,0.001)
-        data['rho_'+str(i)] = np.random.uniform(-0.0025,0.001)
+# data['rho_0'] = 0
+# data['z_1'] = 0
+# data['z_0'] = 0
+# data['rho_1'] = 0
+# for i in range(2,n):
+#         # data['z_'+str(i)] = 0
+#         # data['rho_'+str(i)] = 0
+#         data['z_'+str(i)] = np.random.uniform(-0.001,0.001)
+#         data['rho_'+str(i)] = np.random.uniform(-0.0025,0.001)
 
-z_vals = np.linspace(0, h/2, n)
-theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
-rho_vals = [0.0125/2 for i in range(n)]
-tube_rad_vals = [0.0025/2 for i in range(n)]
-for i in range(n):
-        nominal_data["z_" + str(i)] = z_vals[i]
-        nominal_data["theta_" + str(i)] = theta_vals[i]
-        nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
-        nominal_data["rho_" + str(i)] = rho_vals[i]
-
-
-n_circ = 6
-n_cross_section = 6
+# z_vals = np.linspace(0, h/2, n)
+# theta_vals = np.flip(np.linspace(0+np.pi/2, N+np.pi/2, n))
+# rho_vals = [0.0125/2 for i in range(n)]
+# tube_rad_vals = [0.0025/2 for i in range(n)]
+# for i in range(n):
+#         nominal_data["z_" + str(i)] = z_vals[i]
+#         nominal_data["theta_" + str(i)] = theta_vals[i]
+#         nominal_data["tube_rad_" + str(i)] = tube_rad_vals[i]
+#         nominal_data["rho_" + str(i)] = rho_vals[i]
 
 
-x_list = []
-for i in range(n_circ):
-        x_add = []
-        for j in range(n_cross_section):
-                x_add.append(np.random.uniform(0.001,0.002))
-                # x_add.append(0.0025)
-        x_list.append(np.array(x_add))
+# n_circ = 6
+# n_cross_section = 6
 
-create_mesh(data,x_list,'mesh_generation/test',n,nominal_data)
+
+# x_list = []
+# for i in range(n_circ):
+#         x_add = []
+#         for j in range(n_cross_section):
+#                 x_add.append(np.random.uniform(0.001,0.002))
+#                 # x_add.append(0.0025)
+#         x_list.append(np.array(x_add))
+
+# create_mesh(data,x_list,'mesh_generation/test',n,nominal_data)
