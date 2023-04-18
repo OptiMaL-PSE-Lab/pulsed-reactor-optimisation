@@ -60,13 +60,11 @@ def eval_cfd(x: dict):
     # data['fid_axial'] = x['fid_axial']
 
     data = {}
-    # data['fid_radial'] = x['fid_radial']
-    # data['fid_axial'] = x['fid_axial']
-    data['fid_radial'] = 3
-    data['fid_axial'] = 20
+    data['fid_radial'] = x['fid_radial']
+    data['fid_axial'] = x['fid_axial']
     nominal_data = {}
 
-    resdata = read_json('parameterisation_study/cylindrical_discrepancy/data.json')['data']
+    resdata = read_json('parameterisation_study/cylindrical_discrepancy_two/data.json')['data']
     data_item = resdata[-1]['x']
     n_circ = 6
     n_cross_section = 6
@@ -106,8 +104,8 @@ def eval_cfd(x: dict):
     re = 50
     start = time.time()
     ID = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    # case = data_path.split("data.json")[0] + "simulations/" + ID
-    case = "parameterisation_study/both/simulations/" + str('test')
+    case = data_path.split("data.json")[0] + "simulations/" + ID
+    # case = "parameterisation_study/both/simulations/" + str('test')
 
     create_mesh(data,x_list,case,n,nominal_data)
 

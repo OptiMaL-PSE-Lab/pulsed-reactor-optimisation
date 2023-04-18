@@ -13,7 +13,7 @@ module load intel-suite
 
 
 cd $PBS_O_WORKDIR
-cd parameterisation_study/cross_section/simulations/2023_04_14_02_54_39
+cd parameterisation_study/cylindrical_discrepancy_two/simulations/2023_04_14_15_54_30
 
 blockMesh
 checkMesh -constant

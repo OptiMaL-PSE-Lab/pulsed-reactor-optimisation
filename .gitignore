@@ -36,3 +36,6 @@ symbolic_mf_data_generation/high_full
 parameterisation_study/standard_pulsed_flow
 parameterisation_study/control_cylinder
 parameterisation_study/control_standard
+parameterisation_study/cross_section_pf
+parameterisation_study/cylindrical_discrepancy_pf 
+parameterisation_study/full 

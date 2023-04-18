@@ -56,8 +56,8 @@ x_bounds = {}
 x_bounds["a"] = [0.001, 0.008]
 x_bounds["f"] = [2, 8]
 x_bounds["re"] = [10, 50]
-x_bounds["pitch"] = [0.0075, 0.02]
-x_bounds["coil_rad"] = [0.0035, 0.0125]
+x_bounds["pitch"] = [0.0075, 0.015]
+x_bounds["coil_rad"] = [0.005, 0.015]
 
 try:
     data_path = str(sys.argv[1])
