@@ -12,10 +12,6 @@ try:
 except:
     flag = 'standard'
 coils = 2  # number of coils
-try: 
-    flag = sys.argv[2]
-except:
-    flag = 'standard'
 coils = 2  # number of coils
 pitch = 0.010391
 rad = 0.0125
@@ -156,7 +152,7 @@ if flag == 'standard':
     
 standard_input = data | z_high
 
-cpus = int(sys.argv[1])
+cpus = 1
 cpu_vals = derive_cpu_split(cpus)
 
 shutil.copy("mesh_generation/mesh/system/default_decomposeParDict","mesh_generation/mesh/system/decomposeParDict")

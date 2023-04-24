@@ -3,6 +3,18 @@ from jax.config import config
 config.update("jax_enable_x64", True)
 
 
+def exp_design_function(x, gp, cost_gp, fid_high, gamma, cost_offset):
+    # obtain predicted cost 
+    cost, cost_var = inference(cost_gp, jnp.array([x]))
+    # fixing fidelity
+    for i in range(len(fid_high)):
+        i += 1
+        x = x.at[-i].set(fid_high[-i])
+    # obtain predicted objective
+    mean, cov = inference(gp, jnp.array([x]))
+    # weighted acquisition function. note cost offset required for non -inf values
+    return -((cov[0]) / ((gamma * (cost[0] - cost_offset)))[0])[0]
+
 
 def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
     # obtain predicted cost 

@@ -434,3 +434,7 @@ def plot_results(path):
 
     return
 
+data_path = 'parameterisation_study/cross_section/data.json'
+plot_results(data_path)
+plot_fidelities(data_path)
+plot_data_file(data_path)
