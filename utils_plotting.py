@@ -1,6 +1,5 @@
 from utils import *
 import matplotlib as mpl 
-rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
 
 def plot_fidelities(path):
     data = read_json(path)
@@ -324,7 +323,7 @@ def plot_results(path):
     divider = make_axes_locatable(ax[0])
     cax = divider.append_axes("right", size="3%", pad=0.05)
     cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.Spectral_r), cax=cax, orientation="vertical")
-
+    cb.outline.set_visible(False)
     cax.tick_params(labelsize=14)
     cb.set_label(label="Simulation Cost (s)", size=14)
     for i in range(len(full_it) - 1):
@@ -408,6 +407,7 @@ def plot_results(path):
     divider = make_axes_locatable(ax[1])
     cax = divider.append_axes("right", size="3%", pad=0.05)
     cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.Spectral_r), cax=cax, orientation="vertical")
+    cb.outline.set_visible(False)
     cax.tick_params(labelsize=14)
     cb.set_label(label="Simulation Cost (s)", size=14)
 
@@ -434,7 +434,7 @@ def plot_results(path):
 
     return
 
-data_path = 'parameterisation_study/cross_section/data.json'
-plot_results(data_path)
-plot_fidelities(data_path)
-plot_data_file(data_path)
+# data_path = 'parameterisation_study/cross_section/data.json'
+# plot_results(data_path)
+# plot_fidelities(data_path)
+# plot_data_file(data_path)

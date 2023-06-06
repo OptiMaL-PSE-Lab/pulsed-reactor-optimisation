@@ -34,7 +34,7 @@ import optax as ox
 import jax
 from matplotlib import rc
 
-parallel = True
+parallel = False
 
 def format_data(data):
     # Reads a data file and returns inputs, outputs, costs

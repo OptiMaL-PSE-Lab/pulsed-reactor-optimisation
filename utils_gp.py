@@ -43,11 +43,13 @@ def train_gp(inputs, outputs, ms):
     init_params = lhs(
         np.array([[0.1, 1] for i in range(len(inputs[0, :]))]), ms, log=True
     )
+    print(inputs.shape)
     # defining dataset
     D = gpx.Dataset(X=inputs, y=outputs)
     # for each intital list of hyperparameters
     best_nll = 1e30
     for p in init_params:
+        
         # define kernel function 
         kern = gpx.Matern52(active_dims=[i for i in range(D.in_dim)])
         # define prior GP
@@ -62,12 +64,13 @@ def train_gp(inputs, outputs, ms):
 
         # define intial hyper parameters 
         parameter_state = gpx.initialise(posterior)
-        parameter_state.trainables['likelihood']['obs_noise'] = False
-        parameter_state.params['likelihood']['obs_noise'] = 0
+        # parameter_state.trainables['likelihood']['obs_noise'] = False
+        # parameter_state.params['likelihood']['obs_noise'] = 0
         parameter_state.params["kernel"]["lengthscale"] = p
 
         # run optimiser
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000,log_rate=100)
+        # inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000,log_rate=100)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000,log_rate=100)
         # get last NLL value
         # get last NLL value that isn't a NaN
         inf_history = inference_state.history

@@ -9,7 +9,7 @@ from utils_plotting import *
 from utils_gp import *
 
 
-def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=8,ms_num=8,sample_initial=True,int_fidelities=False):
+def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=4,sample_initial=True,int_fidelities=False):
 
     """
     # Multi-fidelity Bayesian Optimisation with stopping criteria and cost adjustment
@@ -98,9 +98,6 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=8,ms_num=
             # save to file
             save_json(data, data_path)
 
-        for d in data['data']:
-            print(d['x']['fid_radial'])
-            print(d['x']['fid_axial'])
     data = read_json(data_path) 
     data['gamma'] = gamma
     data['gp_ms'] = gp_ms
@@ -199,6 +196,7 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=8,ms_num=
                 x_opt[len(x_bounds)+i] = int(x_opt[len(x_bounds)+i])
 
         sample = sample_to_dict(x_opt, joint_bounds)
+        print(sample)
 
         run_info = {
             "flag": flag,
@@ -239,7 +237,5 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=8,ms_num=
 
         # do all plotting you desire
         save_json(data, data_path)
-        plot_results(data_path)
-        plot_fidelities(data_path)
-        plot_data_file(data_path)
+ 
 
