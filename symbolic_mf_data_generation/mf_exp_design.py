@@ -1,9 +1,15 @@
 import sys
 import os
+from utils_ed import * 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from utils import *
-from main_ed import mfed
+from symbolic_mf_data_generation.main_ed import mfed
 from mesh_generation.coil_basic import create_mesh
+from jax import grad, jit, value_and_grad
+import jax.numpy as jnp
+from utils_plotting import *
+from utils_gp import *
+
 
 x_bounds = {}
 x_bounds["a"] = [0.001, 0.008]
@@ -60,5 +66,11 @@ def eval_cfd(x: dict):
     end = time.time()
     return {"obj": N, "cost": end - start, "id": ID}
 
-mfed(eval_cfd, data_path, x_bounds, z_bounds,120*48*48,gamma=gamma,sample_initial=8,int_fidelities=[True,True])
+
+
+
+# gen_data(eval_cfd, data_path, x_bounds, {"fid_axial": fid_ax,"fid_radial":fid_rad}, n_s)
+
+
+# mfed(eval_cfd, data_path, x_bounds, z_bounds,120*48*48,gamma=gamma,sample_initial=8,int_fidelities=[True,True])
 

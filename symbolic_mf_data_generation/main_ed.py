@@ -8,7 +8,6 @@ from utils import *
 from utils_plotting import *
 from utils_gp import *
 
-
 def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=4,sample_initial=True,int_fidelities=False):
 
     """
@@ -103,7 +102,7 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
     data['gp_ms'] = gp_ms
     save_json(data,data_path)
     
-
+    iteration = 0 
     while True:
 
         start_time = time.time()
@@ -135,6 +134,40 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
         gp = build_gp_dict(*train_gp(inputs, outputs, gp_ms))
         # inputs and fidelities against cost
         cost_gp = build_gp_dict(*train_gp(inputs, cost, gp_ms))
+
+
+        if len(x_mean) == 1:
+            xk = list(x_bounds.keys())[0]
+            zk = list(z_bounds.keys())[0]
+            x_sample = np.linspace(x_bounds[xk][0],x_bounds[xk][1], 300)
+            mean = []
+            cov = []
+            for x in (x_sample):
+                conditioned_sample = jnp.array([[x,z_bounds[zk][1]]])
+                mean_v, cov_v = inference(gp, conditioned_sample)
+                mean.append(mean_v)
+                cov.append(cov_v)
+
+            y = []
+            c = []
+            x = np.linspace(x_bounds_og[xk][0],x_bounds_og[xk][1], 300)
+            x_sample = {}
+            for xi in x:
+                    x_sample[xk] = xi
+                    x_sample[zk] = z_bounds_og[zk][1]
+                    e = f(x_sample)
+                    y.append(e['obj'])
+                    c.append(e['cost'])
+            mean = unnormalise(np.array(mean),o_mean,o_std)[:,0]
+            var = unnormalise(np.sqrt(np.array(cov)),o_mean,o_std)[:,0,0]
+            print(mean)
+            plt.figure()
+            plt.plot(x,y,c='k',lw=3,label='Highest Fidelity Function')
+            plt.plot(x,mean,c='k',ls='--',lw=3,label='Highest Fidelity Model')
+            plt.fill_between(x,mean+var,mean-var,alpha=0.1,color='k',lw=0,label='Model Variance')
+            plt.legend()
+            plt.savefig('symbolic_mf_data_generation/toy/iteration_'+str(iteration)+'.png')
+            iteration += 1
 
         # optimising the aquisition of inputs, disregarding fidelity
         print("Optimising aquisition function")

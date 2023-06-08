@@ -12,6 +12,8 @@ time_gp_test.py
 todo 
 pulsed_flow_helical_tube/**/
 *data.json
+failures
+results
 debug.vtk
 visualisation/
 environment_old.yml

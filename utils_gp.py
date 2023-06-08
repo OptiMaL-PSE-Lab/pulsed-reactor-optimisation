@@ -1,5 +1,6 @@
 from utils import *
 from jax.config import config
+from jax import numpy as jnp
 config.update("jax_enable_x64", True)
 
 
@@ -12,8 +13,12 @@ def exp_design_function(x, gp, cost_gp, fid_high, gamma, cost_offset):
         x = x.at[-i].set(fid_high[-i])
     # obtain predicted objective
     mean, cov = inference(gp, jnp.array([x]))
+
+    cost = cost[0]
+    cov = jnp.sqrt(cov[0,0])
     # weighted acquisition function. note cost offset required for non -inf values
-    return -((cov[0]) / ((gamma * (cost[0] - cost_offset)))[0])[0]
+    val = -(cov/ ((gamma * (cost - cost_offset))))
+    return val[0]
 
 
 def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
@@ -60,7 +65,7 @@ def train_gp(inputs, outputs, ms):
         # negative log likelihood
         mll = jit(posterior.marginal_log_likelihood(D, negative=True))
         # initialise optimizer
-        opt = ox.adam(learning_rate=0.01)
+        opt = ox.adam(learning_rate=0.05)
 
         # define intial hyper parameters 
         parameter_state = gpx.initialise(posterior)
@@ -70,7 +75,7 @@ def train_gp(inputs, outputs, ms):
 
         # run optimiser
         # inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000,log_rate=100)
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=100000,log_rate=100)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=10000,log_rate=100)
         # get last NLL value
         # get last NLL value that isn't a NaN
         inf_history = inference_state.history
