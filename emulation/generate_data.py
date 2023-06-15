@@ -9,16 +9,16 @@ x_bounds["nu"] = [5e-7, 2e-6]
 x_bounds["vel"] = [0.005,0.02]
 
 
-data_path = "monitoring/data.json"
+data_path = "emulation/data.json"
 # try:
 #     print('Building simulation folder')
 #     os.mkdir(data_path.split("data.json")[0] + "simulations/")
 # except FileExistsError:
 #     print('Simulation folder already exists')
 
-n = 1028
+n = 1
 s = sample_bounds(x_bounds,n)
-save_json({'samples':list([list(si) for si in s])},'monitoring/samples.json')
+save_json({'samples':list([list(si) for si in s])},'emulation/samples.json')
 data = {}
 for s_i in s:
     # define sample
@@ -46,6 +46,6 @@ for s_i in s:
             continue
         if t != 0:
             break 
-    copy_tree(case+"/"+str(t),'monitoring/simulations/'+ID+'_r') 
+    copy_tree(case+"/"+str(t),'emulation/simulations/'+ID+'_r') 
     data[str(ID)] = sample
     shutil.rmtree(case)
