@@ -41,6 +41,20 @@ $ conda activate mf_design_env
 ## References 
 
 ```
+
+@misc{darts,
+  doi = {10.48550/ARXIV.2305.00710},
+  url = {https://arxiv.org/abs/2305.00710},
+  author = {Savage,  Tom and Basha,  Nausheen and McDonough,  Jonathan and Matar,  Omar K and Chanona,  Ehecatl Antonio del Rio},
+  keywords = {Computational Engineering,  Finance,  and Science (cs.CE),  Optimization and Control (math.OC),  FOS: Computer and information sciences,  FOS: Computer and information sciences,  FOS: Mathematics,  FOS: Mathematics},
+  title = {Multi-Fidelity Data-Driven Design and Analysis of Reactor and Tube Simulations},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {Creative Commons Attribution Non Commercial Share Alike 4.0 International}
+}
+
+
+
 @misc{dgp_based_mfbo,
   doi = {10.48550/ARXIV.2210.17213},
   url = {https://arxiv.org/abs/2210.17213},
