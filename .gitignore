@@ -3,6 +3,7 @@ data/
 .flake8
 *__pycache__
 debug.vtk
+.vscode
 .DS_Store
 pulsed_flow_helical_tube/simulations/
 parameterisation_study/simulations/
