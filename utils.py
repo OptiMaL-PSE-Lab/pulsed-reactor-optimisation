@@ -360,6 +360,25 @@ def run_cfd(case):
     return time, value
 
 
+def run_cfd_simple(case):
+    # run a casefile
+
+    # multiple procs if true
+    if parallel is True:
+        run_command = f"mpiexec simpleFoam -parallel"
+    else:
+        run_command = f"simpleFoam"
+
+    run = AnalyzedRunner(
+        CompactAnalyzer(),
+        argv=[run_command, "-case", case],
+        logname="solution",
+    )
+    # running CFD
+    run.start()
+    return
+
+
 def list_from_dict(list_of_dicts, key):
     # returns a list of values from a list of dictionarys and 
     # a given key 

@@ -97,9 +97,9 @@ mfed(
     x_bounds,
     z_bounds,
     100,
-    gamma=0.01,
-    sample_initial=16,
-    gp_ms = 1,
+    gamma=0.5, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
+    sample_initial=8,
+    gp_ms = 2,
     int_fidelities=[False],
 )
 

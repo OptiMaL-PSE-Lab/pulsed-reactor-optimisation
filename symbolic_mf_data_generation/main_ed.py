@@ -63,7 +63,6 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
     if sample_initial != False:
         # perform initial sample of joint space
         samples = sample_bounds(joint_bounds, sample_initial)
-        print(samples)
         # intialise data json
         data = {"data": []}
         for sample in samples:
@@ -139,7 +138,7 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
         if len(x_mean) == 1:
             xk = list(x_bounds.keys())[0]
             zk = list(z_bounds.keys())[0]
-            x_sample = np.linspace(x_bounds[xk][0],x_bounds[xk][1], 300)
+            x_sample = np.linspace(x_bounds[xk][0],x_bounds[xk][1], 500)
             mean = []
             cov = []
             for x in (x_sample):
@@ -150,7 +149,7 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
 
             y = []
             c = []
-            x = np.linspace(x_bounds_og[xk][0],x_bounds_og[xk][1], 300)
+            x = np.linspace(x_bounds_og[xk][0],x_bounds_og[xk][1], 500)
             x_sample = {}
             for xi in x:
                     x_sample[xk] = xi
@@ -160,7 +159,6 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
                     c.append(e['cost'])
             mean = unnormalise(np.array(mean),o_mean,o_std)[:,0]
             var = unnormalise(np.sqrt(np.array(cov)),o_mean,o_std)[:,0,0]
-            print(mean)
             plt.figure()
             plt.plot(x,y,c='k',lw=3,label='Highest Fidelity Function')
             plt.plot(x,mean,c='k',ls='--',lw=3,label='Highest Fidelity Model')
@@ -229,7 +227,6 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
                 x_opt[len(x_bounds)+i] = int(x_opt[len(x_bounds)+i])
 
         sample = sample_to_dict(x_opt, joint_bounds)
-        print(sample)
 
         run_info = {
             "flag": flag,

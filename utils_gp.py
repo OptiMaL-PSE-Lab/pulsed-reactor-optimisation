@@ -2,23 +2,45 @@ from utils import *
 from jax.config import config
 from jax import numpy as jnp
 config.update("jax_enable_x64", True)
+import jax.numpy as jnp
+from jax.scipy.linalg import cho_factor, cho_solve
 
-
-def exp_design_function(x, gp, cost_gp, fid_high, gamma, cost_offset):
-    # obtain predicted cost 
-    cost, cost_var = inference(cost_gp, jnp.array([x]))
-    # fixing fidelity
+def compute_mutual_info(gp, x, fid_high):
+    # Fix the fidelity of x to the highest level
     for i in range(len(fid_high)):
         i += 1
         x = x.at[-i].set(fid_high[-i])
-    # obtain predicted objective
-    mean, cov = inference(gp, jnp.array([x]))
 
+    # Compute the covariance matrix of the GP at x and the training point
+
+    kern = gpx.Matern52()
+    kern.init_params(gp["learned_params"]["kernel"])
+    K = kern(gp["learned_params"]["kernel"], jnp.array([[x]]), gp["D"].X)
+
+    print(K)
+    # Compute the Cholesky decomposition of the covariance matrix
+    L = cho_factor(K)
+
+    # Compute the mutual information
+    mutual_info = 0.5 * jnp.log(jnp.linalg.det(K) / jnp.linalg.det(cho_solve(L, K)))
+
+    return mutual_info
+
+
+def exp_design_function(x, gp, cost_gp, fid_high, gamma, cost_offset):
+    #obtain predicted cost 
+    cost, cost_var = inference(cost_gp, jnp.array([x]))
     cost = cost[0]
-    cov = jnp.sqrt(cov[0,0])
-    # weighted acquisition function. note cost offset required for non -inf values
-    val = -(cov/ ((gamma * (cost - cost_offset))))
+
+    # Compute mutual information between high fidelity model and new observation
+    mutual_info = compute_mutual_info(gp, x, fid_high)
+
+    # Compute acquisition function value
+    val = -((1-gamma)*mutual_info/ ((gamma * (cost - cost_offset))))
     return val[0]
+
+
+
 
 
 def aquisition_function(x, gp, cost_gp, fid_high, gamma, beta, cost_offset):
@@ -92,6 +114,7 @@ def train_gp(inputs, outputs, ms):
     learned_params, _ = best_inference_state.unpack()
     # return everything that defines a GP!
     return best_posterior, learned_params, D, best_likelihood
+
 
 
 def inference(gp, inputs):

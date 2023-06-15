@@ -8,12 +8,12 @@
 Build  : _76d719d1-20220624 OPENFOAM=2206 version=2206
 Arch   : "LSB;label=32;scalar=64"
 Exec   : checkMesh -constant
-Date   : Mar 13 2023
-Time   : 14:15:24
+Date   : Jun 12 2023
+Time   : 10:14:22
 Host   : 48890fced8bd
-PID    : 48359
+PID    : 26801
 I/O    : uncollated
-Case   : /root/pulsed-reactor-optimisation/mesh_generation/steady_state_case_new
+Case   : /root/pulsed-reactor-optimisation/mesh_generation/ssc
 nProcs : 1
 trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
 fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
@@ -27,10 +27,10 @@ Create mesh for time = constant
 Time = constant
 
 Mesh stats 
-    points:           32813
-    faces:            92544
-    internal faces:   87168
-    cells:            29952
+    points:           134126
+    faces:            387792
+    internal faces:   374448
+    cells:            127040
     faces per cell:   6
     boundary patches: 3
     point zones:      0
@@ -38,7 +38,7 @@ Mesh stats
     cell zones:       0
 
 Overall number of cells of each type:
-    hexahedra:     29952
+    hexahedra:     127040
     prisms:        0
     wedges:        0
     pyramids:      0
@@ -56,9 +56,9 @@ Checking topology...
 
 Checking patch topology for multiply connected surfaces...
     Patch               Faces    Points   Surface topology                  
-    inlet               192      209      ok (non-closed singly connected)  
-    outlet              192      209      ok (non-closed singly connected)  
-    wall                4992     5024     ok (non-closed singly connected)  
+    wall                12704    12736    ok (non-closed singly connected)  
+    inlet               320      337      ok (non-closed singly connected)  
+    outlet              320      337      ok (non-closed singly connected)  
 
 Checking faceZone topology for multiply connected surfaces...
     No faceZones found.
@@ -67,18 +67,18 @@ Checking basic cellZone addressing...
     No cellZones found.
 
 Checking geometry...
-    Overall domain bounding box (-0.0152755 -0.0154443 -0.0024784) (0.0158044 0.0159197 0.0232575)
+    Overall domain bounding box (-0.019356 -0.0150324 -0.00292329) (0.0159286 0.0161212 0.0214606)
     Mesh has 3 geometric (non-empty/wedge) directions (1 1 1)
     Mesh has 3 solution (non-empty) directions (1 1 1)
-    Boundary openness (2.46394e-17 6.2363e-18 6.11724e-19) OK.
-    Max cell openness = 2.57402e-16 OK.
-    Max aspect ratio = 12.209 OK.
-    Minimum face area = 3.35295e-08. Maximum face area = 1.39283e-06.  Face area magnitudes OK.
-    Min volume = 3.50101e-11. Max volume = 6.99657e-10.  Total volume = 4.17688e-06.  Cell volumes OK.
-    Mesh non-orthogonality Max: 60.0015 average: 13.245
+    Boundary openness (-6.37278e-17 -4.57827e-17 -9.8377e-16) OK.
+    Max cell openness = 2.80805e-16 OK.
+    Max aspect ratio = 6.09656 OK.
+    Minimum face area = 2.01937e-08. Maximum face area = 5.02216e-07.  Face area magnitudes OK.
+    Min volume = 7.99398e-12. Max volume = 1.61739e-10.  Total volume = 3.63718e-06.  Cell volumes OK.
+    Mesh non-orthogonality Max: 50.678 average: 13.0193
     Non-orthogonality check OK.
     Face pyramids OK.
-    Max skewness = 0.98694 OK.
+    Max skewness = 1.4972 OK.
     Coupled point location match (average 0) OK.
 
 Mesh OK.
