@@ -91,29 +91,47 @@ mf_path = "symbolic_mf_data_generation/toy/mf_data_"
 # img = 'symbolic_mf_data_generation/toy/cum_cost.png'
 # plot_cum_cost(path_names,img)
 
-for i in range(20):
-        mfed(
-        eval,
-        mf_path+str(i)+".json",
-        x_bounds,
-        z_bounds,
-        50,
-        gamma=0.5, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
-        sample_initial=4,
-        # sample_initial=False,
-        gp_ms = 4,
-        int_fidelities=[False],
-        )
+for init in [4,8,16]:
+        for i in range(20):
 
+                ed_hf(
+                eval,
+                hf_path+str(i)+'_'+str(init)+".json",
+                x_bounds,
+                z_bounds,
+                50,
+                sample_initial=init,
+                # sample_initial=False,
+                gp_ms = 4,
+                int_fidelities=[False],
+                )
 
-        ed_hf(
-        eval,
-        hf_path+str(i)+".json",
-        x_bounds,
-        z_bounds,
-        50,
-        sample_initial=4,
-        # sample_initial=False,
-        gp_ms = 4,
-        int_fidelities=[False],
-        )
+for init in [4,8,16]:
+        for i in range(20):
+                mfed(
+                eval,
+                mf_path+str(i)+'_'+str(init)+".json",
+                x_bounds,
+                z_bounds,
+                50,
+                gamma=0.5, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
+                sample_initial=init,
+                # sample_initial=False,
+                gp_ms = 4,
+                int_fidelities=[False],
+                )
+
+for gamma in [0.25,0.5,1,2]:
+        for i in range(20):
+                mfed(
+                eval,
+                mf_path+str(i)+'_gam'+str(init)+".json",
+                x_bounds,
+                z_bounds,
+                50,
+                gamma=gamma, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
+                sample_initial=init,
+                # sample_initial=False,
+                gp_ms = 4,
+                int_fidelities=[False],
+                )
