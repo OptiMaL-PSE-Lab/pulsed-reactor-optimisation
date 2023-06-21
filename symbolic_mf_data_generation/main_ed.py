@@ -136,7 +136,7 @@ def mfed(f, data_path, x_bounds, z_bounds,time_budget,gamma=1.5, gp_ms=4,ms_num=
         cost_gp = build_gp_dict(*train_gp(inputs, cost, gp_ms))
 
         if eval_error == True:
-            n_test = 500
+            n_test = 100
             x_test = sample_bounds(x_bounds_og,n_test)
             y_true = []
             y_test = []
@@ -410,7 +410,7 @@ def ed_hf(f, data_path, x_bounds, z_bounds,time_budget,sample_initial=True,gp_ms
         gp = build_gp_dict(*train_gp(inputs[:,:-n_fid], outputs, gp_ms))
 
         if eval_error == True:
-            n_test = 500
+            n_test = 100
             x_test = sample_bounds(x_bounds_og,n_test)
             y_true = []
             y_test = []
