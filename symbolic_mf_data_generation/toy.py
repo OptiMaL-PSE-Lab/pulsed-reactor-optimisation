@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from utils_ed import *
 import numpy as np 
 from utils import * 
-from main_ed import mfed
+from main_ed import mfed,ed_hf
 # from mesh_generation.coil_basic import create_mesh
 import uuid
 import matplotlib
@@ -79,28 +79,41 @@ plt.savefig('symbolic_mf_data_generation/toy/vis.png',dpi=300)
 
 
 
-# hf_path = "symbolic_mf_data_generation/toy/hf_data.json"
+hf_path = "symbolic_mf_data_generation/toy/hf_data_"
 # lf_path = "symbolic_mf_data_generation/toy/lf_data.json"
-mf_path = "symbolic_mf_data_generation/toy/mf_data.json"
+mf_path = "symbolic_mf_data_generation/toy/mf_data_"
 
 # gen_data(eval, hf_path, x_bounds, 1, 40)
 # gen_data(eval, lf_path, x_bounds, 0, 100)
 
-# # path_names = {'Highest Fidelity Data': hf_path,'Lowest Fidelity Data': lf_path,'Multi-fidelity Experimental Design':mf_path}
-# path_names = {'Highest Fidelity Data': hf_path,'Lowest Fidelity Data': lf_path}
+# path_names = {'Highest Fidelity Data': hf_path,'Lowest Fidelity Data': lf_path,'Multi-fidelity Experimental Design':mf_path}
+# #path_names = {'Highest Fidelity Data': hf_path,'Lowest Fidelity Data': lf_path}
 # img = 'symbolic_mf_data_generation/toy/cum_cost.png'
 # plot_cum_cost(path_names,img)
 
-mfed(
-    eval,
-    mf_path,
-    x_bounds,
-    z_bounds,
-    100,
-    gamma=0.5, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
-    sample_initial=8,
-    gp_ms = 2,
-    int_fidelities=[False],
-)
+for i in range(20):
+        mfed(
+        eval,
+        mf_path+str(i)+".json",
+        x_bounds,
+        z_bounds,
+        50,
+        gamma=0.5, # weight between 0-1 of cost. 1 = only cost, 0 = only objective
+        sample_initial=4,
+        # sample_initial=False,
+        gp_ms = 4,
+        int_fidelities=[False],
+        )
 
 
+        ed_hf(
+        eval,
+        hf_path+str(i)+".json",
+        x_bounds,
+        z_bounds,
+        50,
+        sample_initial=4,
+        # sample_initial=False,
+        gp_ms = 4,
+        int_fidelities=[False],
+        )

@@ -31,6 +31,8 @@ def plot_cum_cost(path_names,fig_path):
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
 	fig.savefig(fig_path,dpi=300,bbox_inches='tight')
+# plot_cum_cost({'MF data':"symbolic_mf_data_generation/toy/mf_data.json"},"symbolic_mf_data_generation/toy/cost.png")
+
 
 
 def gen_data(f, data_path, x_bounds, fid, n_w):
@@ -62,7 +64,7 @@ def gen_data(f, data_path, x_bounds, fid, n_w):
                         sample_dict = data['data'][i]['x']
                         fid = data['data'][i]['z']
                         # perform function evaluation
-                        res = f(sample_dict,fid)
+                        res = f(sample_dict|{'z1':fid})
                         run_info = {
                         "id": res["id"],
                         "x": sample_dict,
@@ -74,7 +76,6 @@ def gen_data(f, data_path, x_bounds, fid, n_w):
                         # save to file
                         save_json(data, data_path)
         return 
-
 
 
 def gen_equation(path,inputs,outputs,keys):

@@ -16,6 +16,7 @@ pulsed_flow_helical_tube/**/
 failures
 results
 debug.vtk
+emulation/simulations
 visualisation/
 environment_old.yml
 mesh_generation/test

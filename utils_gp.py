@@ -5,40 +5,44 @@ config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 from jax.scipy.linalg import cho_factor, cho_solve
 
-def compute_mutual_info(gp, x, fid_high):
-    # Fix the fidelity of x to the highest level
-    for i in range(len(fid_high)):
-        i += 1
-        x = x.at[-i].set(fid_high[-i])
-
+def compute_mutual_info(gp, x, x_cond):
     # Compute the covariance matrix of the GP at x and the training point
-
     kern = gpx.Matern52()
     kern.init_params(gp["learned_params"]["kernel"])
-    K = kern(gp["learned_params"]["kernel"], jnp.array([[x]]), gp["D"].X)
-
-    print(K)
-    # Compute the Cholesky decomposition of the covariance matrix
-    L = cho_factor(K)
-
-    # Compute the mutual information
-    mutual_info = 0.5 * jnp.log(jnp.linalg.det(K) / jnp.linalg.det(cho_solve(L, K)))
-
-    return mutual_info
+    K = kern(gp["learned_params"]["kernel"], x,x_cond)
+    info = jnp.sqrt(1-K**2)
+    # if correlation between data is LOW then info is HIGH 
+    return info
 
 
 def exp_design_function(x, gp, cost_gp, fid_high, gamma, cost_offset):
     #obtain predicted cost 
-    cost, cost_var = inference(cost_gp, jnp.array([x]))
-    cost = cost[0]
+    c_m,c_v = inference(cost_gp, jnp.array([x]))
 
-    # Compute mutual information between high fidelity model and new observation
-    mutual_info = compute_mutual_info(gp, x, fid_high)
+    x_cond = jnp.copy(x)
+    for i in range(len(fid_high)):
+        i += 1
+        x_cond = x_cond.at[-i].set(fid_high[-i])
 
-    # Compute acquisition function value
-    val = -((1-gamma)*mutual_info/ ((gamma * (cost - cost_offset))))
-    return val[0]
+    f_m, f_v = inference(gp, jnp.array([x_cond]))
+    f_v = jnp.sqrt(f_v[0,0])
+    c_m = c_m[0]+cost_offset
 
+
+    # # Compute mutual information between high fidelity model and new observation
+    mutual_info = -compute_mutual_info(gp, x,x_cond)
+
+    val = ((-f_v)/(c_m*mutual_info))[0]
+    return val
+
+
+def exp_design_hf(x, gp):
+    #obtain predicted cost 
+
+    f_m, f_v = inference(gp, jnp.array([x]))
+    f_v = jnp.sqrt(f_v[0,0])
+    val = ((-f_v))
+    return val
 
 
 
@@ -68,9 +72,8 @@ def greedy_function(x, gp, fid_high):
 def train_gp(inputs, outputs, ms):
     # creating a set of initial GP hyper parameters (log-spaced)
     init_params = lhs(
-        np.array([[0.1, 1] for i in range(len(inputs[0, :]))]), ms, log=True
+        np.array([[0.1, 10] for i in range(len(inputs[0, :]))]), ms, log=True
     )
-    print(inputs.shape)
     # defining dataset
     D = gpx.Dataset(X=inputs, y=outputs)
     # for each intital list of hyperparameters
@@ -91,13 +94,13 @@ def train_gp(inputs, outputs, ms):
 
         # define intial hyper parameters 
         parameter_state = gpx.initialise(posterior)
-        # parameter_state.trainables['likelihood']['obs_noise'] = False
-        # parameter_state.params['likelihood']['obs_noise'] = 0
+        parameter_state.trainables['likelihood']['obs_noise'] = False
+        parameter_state.params['likelihood']['obs_noise'] = 0
         parameter_state.params["kernel"]["lengthscale"] = p
 
         # run optimiser
         # inference_state = gpx.fit(mll, parameter_state, opt, num_iters=50000,log_rate=100)
-        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=10000,log_rate=100)
+        inference_state = gpx.fit(mll, parameter_state, opt, num_iters=25000,log_rate=100)
         # get last NLL value
         # get last NLL value that isn't a NaN
         inf_history = inference_state.history
