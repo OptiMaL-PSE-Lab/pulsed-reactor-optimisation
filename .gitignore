@@ -25,7 +25,7 @@ plot_data.py
 plot_data.sh
 plot.out
 delete.sh
-generative_design/gen_2d_data.sh
+
 plotting.py
 parameterisation_study/cylindrical_discrepancy 
 parameterisation_study/cylindrical_discrepancy_two
