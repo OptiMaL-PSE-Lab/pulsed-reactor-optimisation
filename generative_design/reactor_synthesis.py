@@ -70,17 +70,17 @@ def remove_holes(d_lab):
     d = np.where((d_lab == d_ind[0]) | (d_lab == d_ind[1]), 1, 0)
     return d
 
-r = 4
-n = 8
-b = 1
-d_store = []
-for i in tqdm(range(1000000)):
-    d = grf(n,r)
-    d = add_border(d,b)
-    d = add_inlet_outlet(d,b)
-    d = identify_holes(d)
-    d = remove_holes(d)
-    d_store.append(d)
+# r = 4
+# n = 8
+# b = 1
+# d_store = []
+# for i in tqdm(range(1000000)):
+#     d = grf(n,r)
+#     d = add_border(d,b)
+#     d = add_inlet_outlet(d,b)
+#     d = identify_holes(d)
+#     d = remove_holes(d)
+#     d_store.append(d)
 
-d_store = np.asarray(d_store)
-np.save('generative_design/2d.npy',d_store)
+# d_store = np.asarray(d_store)
+# np.save('generative_design/2d.npy',d_store)
