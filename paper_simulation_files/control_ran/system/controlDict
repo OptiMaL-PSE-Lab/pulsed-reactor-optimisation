@@ -1,0 +1,282 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         70;
+
+deltaT          0.000001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   5;
+
+purgeWrite      1;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression on;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           5.0;
+
+libs (
+"libOpenFOAM.so"
+"libsimpleSwakFunctionObjects.so"
+"libswakFunctionObjects.so"
+"libgroovyBC.so"
+);
+
+
+
+functions 
+{
+  #includeFunc  scalarTransport
+  scalar1
+  {
+    type scalarTransport;
+    libs ("libsolverFunctionObjects.so");
+      enabled true;
+      writeControl outputTime;
+      log yes;
+      nCorr 1;
+      D 1e-10;
+      
+      phi "phi";
+  }
+  
+//   vorticity1
+//  {
+//     // Mandatory entries (unmodifiable)
+//     type        vorticity;
+//     libs        ("fieldFunctionObjects.so");
+
+//     // Optional (inherited) entries
+//     field           U;
+//     result          vorticityField;
+//     region          region0;
+//     enabled         true;
+//     log             true;
+//     timeStart       0.00;
+//     timeEnd         100;
+//     executeControl  adjustableRunTime;
+//     executeInterval 0.01;
+//     writeControl    timeStep;
+//     writeInterval   1;
+//   }
+  
+   massfraction
+   {
+       type  patchAverage; //patchIntegrate; //patchAverage;
+       functionObjectLibs
+        (
+           "libsimpleFunctionObjects.so"
+        );
+       verbose true;
+	   fields (s);
+       patches
+	   (
+           outlet
+        );
+       factor 1.0;
+       outputControl timeStep;
+       outputInterval 1;
+       writeControl    adjustableRunTime;
+       writeInterval   0.5;
+    }
+	
+	velocity1
+   {
+       type  patchAverage; //patchIntegrate; //patchAverage;
+       functionObjectLibs
+        (
+           "libsimpleFunctionObjects.so"
+        );
+       verbose true;
+	   fields (U);
+       patches
+	   (
+           inlet
+		   outlet
+        );
+       factor 1.0;
+       outputControl timeStep;
+       outputInterval 1;
+       writeControl    adjustableRunTime;
+       writeInterval   0.5;
+    }
+
+   surfaceFieldValue1
+   {
+      // Mandatory entries (unmodifiable)
+      type            surfaceFieldValue;
+      libs            ("fieldFunctionObjects.so");
+
+      // Mandatory entries (runtime modifiable)
+      fields          (s);
+      operation       areaAverage;
+      regionType      patch;
+      name            outlet;
+
+      // Optional (inherited) entries
+      writeFields     false;
+      region          region0;
+      enabled         true;
+      log             true;
+      executeControl  timeStep;
+      executeInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
+
+   compute_vrad
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName vradial;
+      valueType internalField;
+      expression "((U.z*pos().z+U.y*pos().y)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+   compute_vtan
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName vtangential;
+      valueType internalField;
+      expression "((U.z*pos().y-U.y*pos().z)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+
+   compute_teetaDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName teetaDash;
+      valueType internalField;
+      expression "U.x*((U.z*pos().y-U.y*pos().z)/pow((pow(pos().y,2)+pow(pos().z,2)),0.5))*(pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+
+   compute_rDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName rDash;
+      valueType internalField;
+      expression "U.x*((U.z*pos().z+U.y*pos().y)/pow(pow(pos().y,2)+pow(pos().z,2),0.5))";
+      autowrite true;
+   }
+   compute_zDash
+   {
+      type expressionField;
+      outputControl timeStep;
+      outputInterval 1;
+      fieldName zDash;
+      valueType internalField;
+      expression "U.x*U.x";
+      autowrite true;
+   }
+  
+      stest
+   {      
+      type writeAndEndSwakExpression;
+      valueType patch;
+      patchName outlet;
+      logicalExpression "(test<threshold)";
+      logicalAccumulation and;
+
+      variables
+      (
+         "c=count;"
+         "c1=1;"
+         "count= (time()>20.1) ? (c+c1):0;"
+
+         "start= (count>20) ? 0:count;"
+         "count=start;"
+
+         //"s1=s;"
+         //"storeS= (count!=0) ? s1:0;"
+
+         "s1=s;"
+         "s2=storeS;"
+         "storeS= (count!=0) ? (s1+s2):0;"
+
+         "test= (count==20) ? storeS:1;"
+
+         "threshold=0.0000001;"
+
+         //"count= c+c1;"
+      );
+
+      storedVariables
+      (
+         {  name count;
+            initialValue "0";
+         }
+         {  
+            name storeS;
+            initialValue "0";
+         }
+      );
+
+      accumulations
+      (
+        average
+      );
+
+      expression "test";
+      verbose true;
+      autoInterpolate true;
+      outputControlMode timeStep;
+      outputInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+   }
+
+
+}  
+
+DebugSwitches
+{
+   sampledPlane 1;
+}
+
+
+
+
+
+// ************************************************************************* //
