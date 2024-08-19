@@ -25,7 +25,9 @@ plot_data.py
 plot_data.sh
 plot.out
 delete.sh
-
+symbolic_mf_data_generation
+generative_design
+emulation
 plotting.py
 parameterisation_study/cylindrical_discrepancy 
 parameterisation_study/cylindrical_discrepancy_two
